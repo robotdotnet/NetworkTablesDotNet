@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using NetworkTablesDotNet.Tables;
 using NetworkTablesDotNet.NetworkTables2.Thread;
 
@@ -13,6 +14,58 @@ namespace NetworkTablesDotNet.NetworkTables
 
         public static readonly char PATH_SEPARATOR = '/';
         public static readonly int DEFAULT_PORT = 1735;
+
+        private static NetworkTableProvider staticProvider = null;//This needs to be NetworkTableProvider
+
+        private object m_lockObject = new object();
+        private static object s_lockObject = new object();
+
+        private static void CheckInit()
+        {
+            lock (s_lockObject)
+            {
+                if (staticProvider != null)
+                    throw new InvalidOperationException("Network tables has already been initialized");
+            }
+        }
+
+        public static void Initialize()
+        {
+            lock (s_lockObject)
+            {
+                CheckInit();
+                staticProvider = new NetworkTableProvider();
+            }
+        }
+
+        public static NetworkTable GetTable(string key)
+        {
+            lock (s_lockObject)
+            {
+                if (staticProvider == null)
+                {
+                    try
+                    {
+                        Initialize();
+                    }
+                    catch (IOException e)
+                    {
+                        throw new SystemException("NetworkTable could not be initialized: " + e);
+                    }
+                }
+                return (NetworkTable) staticProvider.GetTable(PATH_SEPARATOR + key);
+            }
+        }
+
+        private readonly string path;
+        private readonly NetworkTableProvider provider;
+
+        internal NetworkTable(string path, NetworkTableProvider provider)
+        {
+            this.path = path;
+            this.provider = provider;
+        }
+
 
         public bool ContainsKey(string key)
         {

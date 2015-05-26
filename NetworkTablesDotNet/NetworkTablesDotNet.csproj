@@ -45,6 +45,8 @@
     <Compile Include="NetworkTables2\Thread\PeriodicRunnable.cs" />
     <Compile Include="NetworkTables\NetworkTable.cs" />
     <Compile Include="NetworkTables\NetworkTableConnectionListenerAdapter.cs" />
+    <Compile Include="NetworkTables\NetworkTableNode.cs" />
+    <Compile Include="NetworkTables\NetworkTableProvider.cs" />
     <Compile Include="NetworkTables\NetworkTableSubListenerAdapter.cs" />
     <Compile Include="Tables\IRemote.cs" />
     <Compile Include="Tables\IRemoteConnectionListener.cs" />
