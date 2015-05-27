@@ -39,13 +39,26 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NetworkTables2\AbstractNetworkTableEntryStore.cs" />
+    <Compile Include="NetworkTables2\Connection\NetworkTableConnection.cs" />
+    <Compile Include="NetworkTables2\IncomingEntryReceiver.cs" />
+    <Compile Include="NetworkTables2\NetworkTableEntry.cs" />
+    <Compile Include="NetworkTables2\OutgoingEntryReceiver.cs" />
+    <Compile Include="NetworkTables2\TableKeyExistsWithDifferentTypeException.cs" />
     <Compile Include="NetworkTables2\Thread\DefaultThreadManager.cs" />
     <Compile Include="NetworkTables2\Thread\NTThread.cs" />
     <Compile Include="NetworkTables2\Thread\NTThreadManager.cs" />
     <Compile Include="NetworkTables2\Thread\PeriodicRunnable.cs" />
+    <Compile Include="NetworkTables2\Type\ArrayData.cs" />
+    <Compile Include="NetworkTables2\Type\ComplexEntryType.cs" />
+    <Compile Include="NetworkTables2\Type\DefaultEntryTypes.cs" />
+    <Compile Include="NetworkTables2\Type\NetworkTableEntryType.cs" />
+    <Compile Include="NetworkTables2\Type\NetworkTableEntryTypeManager.cs" />
+    <Compile Include="NetworkTables2\Util\CharacterArrayMap.cs" />
+    <Compile Include="NetworkTables2\Util\ResizeableArrayObject.cs" />
     <Compile Include="NetworkTables\NetworkTable.cs" />
     <Compile Include="NetworkTables\NetworkTableConnectionListenerAdapter.cs" />
-    <Compile Include="NetworkTables\NetworkTableNode.cs" />
+    <Compile Include="NetworkTables2\NetworkTableNode.cs" />
     <Compile Include="NetworkTables\NetworkTableProvider.cs" />
     <Compile Include="NetworkTables\NetworkTableSubListenerAdapter.cs" />
     <Compile Include="Tables\IRemote.cs" />
