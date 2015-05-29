@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NetworkTablesDotNet.NetworkTables2.Connection;
 using NetworkTablesDotNet.NetworkTables2.Type;
 using System.IO;
 
@@ -91,7 +92,7 @@ namespace NetworkTablesDotNet.NetworkTables2
             return isDirty;
         }
 
-        public void SendValue(StreamWriter os)
+        public void SendValue(BinaryWriter os)
         {
             type.SendValue(value, os);
         }

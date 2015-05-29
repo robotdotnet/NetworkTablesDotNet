@@ -2,21 +2,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NetworkTablesDotNet.NetworkTables2.Util;
 
 namespace NetworkTablesDotNet.NetworkTables2.Type
 {
     public class NetworkTableEntryTypeManager
     {
-        private Dictionary<byte, NetworkTableEntryType> typeMap = new Dictionary<byte, NetworkTableEntryType>();
+        private readonly ByteArrayMap typeMap = new ByteArrayMap();
 
         public NetworkTableEntryType GetType(byte id)
         {
-            return typeMap[id];
+            return (NetworkTableEntryType) typeMap.Get(id);
         }
 
         internal void RegisterType(NetworkTableEntryType type)
         {
-            typeMap.Add(type.id, type);
+            typeMap.Put(type.id, type);
         }
 
         public NetworkTableEntryTypeManager()

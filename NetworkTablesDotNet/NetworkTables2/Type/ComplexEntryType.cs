@@ -12,7 +12,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
             
         }
 
-        public abstract object InternalizeValue(string key, object externalRepresentation, object currentInteralValue);
+        public abstract object InternalizeValue(string key, object externalRepresentation, object currentInternalValue);
         public abstract void ExportValue(string key, object internalData, object externalRepresentation);
     }
 }

@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NetworkTablesDotNet</RootNamespace>
     <AssemblyName>NetworkTablesDotNet</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -28,6 +30,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -44,18 +47,34 @@
     <Compile Include="NetworkTables2\IncomingEntryReceiver.cs" />
     <Compile Include="NetworkTables2\NetworkTableEntry.cs" />
     <Compile Include="NetworkTables2\OutgoingEntryReceiver.cs" />
+    <Compile Include="NetworkTables2\Stream\IOStream.cs" />
+    <Compile Include="NetworkTables2\Stream\IOStreamFactory.cs" />
+    <Compile Include="NetworkTables2\Stream\IOStreamProvider.cs" />
+    <Compile Include="NetworkTables2\Stream\SimpleIOStream.cs" />
+    <Compile Include="NetworkTables2\Stream\SocketStream.cs" />
     <Compile Include="NetworkTables2\TableKeyExistsWithDifferentTypeException.cs" />
     <Compile Include="NetworkTables2\Thread\DefaultThreadManager.cs" />
     <Compile Include="NetworkTables2\Thread\NTThread.cs" />
     <Compile Include="NetworkTables2\Thread\NTThreadManager.cs" />
     <Compile Include="NetworkTables2\Thread\PeriodicRunnable.cs" />
     <Compile Include="NetworkTables2\Type\ArrayData.cs" />
+    <Compile Include="NetworkTables2\Type\ArrayEntryType.cs" />
+    <Compile Include="NetworkTables2\Type\BooleanArray.cs" />
+    <Compile Include="NetworkTables2\Type\ComplexData.cs" />
     <Compile Include="NetworkTables2\Type\ComplexEntryType.cs" />
     <Compile Include="NetworkTables2\Type\DefaultEntryTypes.cs" />
     <Compile Include="NetworkTables2\Type\NetworkTableEntryType.cs" />
     <Compile Include="NetworkTables2\Type\NetworkTableEntryTypeManager.cs" />
+    <Compile Include="NetworkTables2\Type\NumberArray.cs" />
+    <Compile Include="NetworkTables2\Type\StringArray.cs" />
+    <Compile Include="NetworkTables2\Util\ByteArrayMap.cs" />
     <Compile Include="NetworkTables2\Util\CharacterArrayMap.cs" />
+    <Compile Include="NetworkTables2\Util\HalfQueue.cs" />
+    <Compile Include="NetworkTables2\Util\List.cs" />
     <Compile Include="NetworkTables2\Util\ResizeableArrayObject.cs" />
+    <Compile Include="NetworkTables2\Util\Set.cs" />
+    <Compile Include="NetworkTables2\Util\Stack.cs" />
+    <Compile Include="NetworkTables2\Util\StringCache.cs" />
     <Compile Include="NetworkTables\NetworkTable.cs" />
     <Compile Include="NetworkTables\NetworkTableConnectionListenerAdapter.cs" />
     <Compile Include="NetworkTables2\NetworkTableNode.cs" />
@@ -69,6 +88,7 @@
     <Compile Include="Tables\TableKeyNotDefinedException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
