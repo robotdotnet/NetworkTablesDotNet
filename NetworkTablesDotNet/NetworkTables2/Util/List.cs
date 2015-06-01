@@ -23,6 +23,11 @@ namespace NetworkTablesDotNet.NetworkTables2.Util
             return size == 0;
         }
 
+        public int Size()
+        {
+            return size;
+        }
+
         public void Add(object o)
         {
             EnsureSize(size + 1);
