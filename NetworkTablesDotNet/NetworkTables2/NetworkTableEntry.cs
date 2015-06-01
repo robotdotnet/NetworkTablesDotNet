@@ -118,7 +118,7 @@ namespace NetworkTablesDotNet.NetworkTables2
 
         public void Send(NetworkTableConnection connection)
         {
-            connection.SendEntryAssignment(this);
+            //connection.SendEntryAssignment(this);
         }
 
         public void FireListener(AbstractNetworkTableEntryStore.TableListenerManager listenerManager)

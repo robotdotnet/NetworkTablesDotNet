@@ -50,8 +50,9 @@
     <Compile Include="NetworkTables2\Stream\IOStream.cs" />
     <Compile Include="NetworkTables2\Stream\IOStreamFactory.cs" />
     <Compile Include="NetworkTables2\Stream\IOStreamProvider.cs" />
-    <Compile Include="NetworkTables2\Stream\SimpleIOStream.cs" />
-    <Compile Include="NetworkTables2\Stream\SocketStream.cs" />
+    <Compile Include="NetworkTables2\Stream\SocketServerStreamProvider.cs" />
+    <Compile Include="NetworkTables2\Stream\SocketStreamFactory.cs" />
+    <Compile Include="NetworkTables2\Stream\SocketStreams.cs" />
     <Compile Include="NetworkTables2\TableKeyExistsWithDifferentTypeException.cs" />
     <Compile Include="NetworkTables2\Thread\DefaultThreadManager.cs" />
     <Compile Include="NetworkTables2\Thread\NTThread.cs" />

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NetworkTablesDotNet.NetworkTables2.Type
 {
-    class NumberArray : ArrayData
+    public class NumberArray : ArrayData
     {
         private static readonly byte NUMBER_ARRAY_RAW_ID = 0x11;
         public static readonly ArrayEntryType TYPE = new ArrayEntryType(NUMBER_ARRAY_RAW_ID, DefaultEntryTypes.DOUBLE);
