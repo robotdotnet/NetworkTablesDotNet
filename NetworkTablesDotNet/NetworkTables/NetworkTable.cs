@@ -15,7 +15,7 @@ namespace NetworkTablesDotNet.NetworkTables
         public static readonly char PATH_SEPARATOR = '/';
         public static readonly int DEFAULT_PORT = 1735;
 
-        private static NetworkTableProvider staticProvider = null;//This needs to be NetworkTableProvider
+        private static NetworkTableProvider staticProvider = null;
 
         private object m_lockObject = new object();
         private static object s_lockObject = new object();
