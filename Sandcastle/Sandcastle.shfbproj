@@ -47,8 +47,8 @@
     <RootNamespaceContainer>False</RootNamespaceContainer>
     <PresentationStyle>VS2013</PresentationStyle>
     <Preliminary>False</Preliminary>
-    <NamingMethod>Guid</NamingMethod>
-    <HelpTitle>A Sandcastle Documented Class Library</HelpTitle>
+    <NamingMethod>MemberName</NamingMethod>
+    <HelpTitle>NetworkTablesDotNet</HelpTitle>
     <ContentPlacement>AboveNamespaces</ContentPlacement>
     <NamespaceSummaries>
       <NamespaceSummaryItem name="(global)" isDocumented="True" xmlns="" />
@@ -63,6 +63,11 @@
       <NamespaceSummaryItem name="NetworkTablesDotNet.Tables" isDocumented="True" xmlns="">asdfasdfa</NamespaceSummaryItem>
     </NamespaceSummaries>
     <ProjectSummary>Docs</ProjectSummary>
+    <PlugInConfigurations>
+      <PlugInConfig id="IntelliSense Only" enabled="True" xmlns="">
+        <configuration />
+      </PlugInConfig>
+    </PlugInConfigurations>
   </PropertyGroup>
   <!-- There are no properties for these groups.  AnyCPU needs to appear in order for Visual Studio to perform
 			 the build.  The others are optional common platform types that may appear. -->
