@@ -13,7 +13,7 @@
     <RootNamespace>Documentation</RootNamespace>
     <Name>Documentation</Name>
     <!-- SHFB properties -->
-    <FrameworkVersion>.NET Framework 4.0</FrameworkVersion>
+    <FrameworkVersion>.NET Framework 4.5</FrameworkVersion>
     <OutputPath>.\Help\</OutputPath>
     <HtmlHelpName>Documentation</HtmlHelpName>
     <Language>en-US</Language>
@@ -52,15 +52,16 @@
     <ContentPlacement>AboveNamespaces</ContentPlacement>
     <NamespaceSummaries>
       <NamespaceSummaryItem name="(global)" isDocumented="True" xmlns="" />
-<NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables" isDocumented="True" xmlns="">sdafasdf</NamespaceSummaryItem>
-<NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables2 (Group)" isGroup="True" isDocumented="True" xmlns="">dfasdf</NamespaceSummaryItem>
-<NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables2" isDocumented="True" xmlns="">asdfasdf</NamespaceSummaryItem>
-<NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables2.Connection" isDocumented="True" xmlns="">asdfasdf</NamespaceSummaryItem>
-<NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables2.Stream" isDocumented="True" xmlns="">dfasdf</NamespaceSummaryItem>
-<NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables2.Thread" isDocumented="True" xmlns="">asdfasdf</NamespaceSummaryItem>
-<NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables2.Type" isDocumented="True" xmlns="">asdfasdf</NamespaceSummaryItem>
-<NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables2.Util" isDocumented="True" xmlns="">asdfasdf</NamespaceSummaryItem>
-<NamespaceSummaryItem name="NetworkTablesDotNet.Tables" isDocumented="True" xmlns="">asdfasdfa</NamespaceSummaryItem></NamespaceSummaries>
+      <NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables" isDocumented="True" xmlns="">sdafasdf</NamespaceSummaryItem>
+      <NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables2 (Group)" isGroup="True" isDocumented="True" xmlns="">dfasdf</NamespaceSummaryItem>
+      <NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables2" isDocumented="True" xmlns="">asdfasdf</NamespaceSummaryItem>
+      <NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables2.Connection" isDocumented="True" xmlns="">asdfasdf</NamespaceSummaryItem>
+      <NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables2.Stream" isDocumented="True" xmlns="">dfasdf</NamespaceSummaryItem>
+      <NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables2.Thread" isDocumented="True" xmlns="">asdfasdf</NamespaceSummaryItem>
+      <NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables2.Type" isDocumented="True" xmlns="">asdfasdf</NamespaceSummaryItem>
+      <NamespaceSummaryItem name="NetworkTablesDotNet.NetworkTables2.Util" isDocumented="True" xmlns="">asdfasdf</NamespaceSummaryItem>
+      <NamespaceSummaryItem name="NetworkTablesDotNet.Tables" isDocumented="True" xmlns="">asdfasdfa</NamespaceSummaryItem>
+    </NamespaceSummaries>
     <ProjectSummary>Docs</ProjectSummary>
   </PropertyGroup>
   <!-- There are no properties for these groups.  AnyCPU needs to appear in order for Visual Studio to perform
