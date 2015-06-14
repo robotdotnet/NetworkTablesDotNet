@@ -2,10 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NetworkTablesDotNet.NetworkTables;
 
 namespace NetworkTablesDotNet.Tables
 {
-    interface TableKeyNotDefinedException
+    public class TableKeyNotDefinedException : NetworkTableKeyNotDefined
     {
+        public TableKeyNotDefinedException(string key) : base(key)
+        {
+            
+        }
     }
 }

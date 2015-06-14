@@ -10,7 +10,7 @@ namespace NetworkTablesDotNet.Tables
          void AddConnectionListener(IRemoteConnectionListener listener, bool immediateNotify);
          void RemoveConnectionListener(IRemoteConnectionListener listener);
          bool IsConnected();
-         bool ISServer();
+         bool IsServer();
 
     }
 }

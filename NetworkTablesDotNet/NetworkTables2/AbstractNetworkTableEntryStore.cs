@@ -4,13 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NetworkTablesDotNet.NetworkTables2.Type;
+using NetworkTablesDotNet.NetworkTables2.Util;
 using NetworkTablesDotNet.Tables;
 
 namespace NetworkTablesDotNet.NetworkTables2
 {
     public abstract class AbstractNetworkTableEntryStore : IncomingEntryReceiver
     {
-        protected List<NetworkTableEntry> idEntries = new List<NetworkTableEntry>();
+        protected CharacterArrayMap idEntries = new CharacterArrayMap();
         protected Dictionary<string, NetworkTableEntry> namedEntries = new Dictionary<string, NetworkTableEntry>();
 
         protected TableListenerManager listenerManager;
@@ -26,7 +27,7 @@ namespace NetworkTablesDotNet.NetworkTables2
         {
             lock (m_lockObject)
             {
-                return (NetworkTableEntry)idEntries[entryID];
+                return (NetworkTableEntry)idEntries.Get(entryID);
             }
         }
 
@@ -34,7 +35,9 @@ namespace NetworkTablesDotNet.NetworkTables2
         {
             lock (m_lockObject)
             {
-                return (NetworkTableEntry)namedEntries[name];
+                NetworkTableEntry entry;
+                namedEntries.TryGetValue(name, out entry);
+                return entry;
             }
         }
 
@@ -164,6 +167,7 @@ namespace NetworkTablesDotNet.NetworkTables2
                     tableEntry.FireListener(listenerManager);
                     incomingReceiver.OfferOutgoingAssignment(tableEntry);
                 }
+                
             }
         }
 

@@ -18,6 +18,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Thread
         {
             this.r = r;
             thread = new System.Threading.Thread(Run);
+            thread.Start();
         }
 
         public void Run()

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NetworkTablesDotNet.NetworkTables2;
 using NetworkTablesDotNet.Tables;
 
 namespace NetworkTablesDotNet.NetworkTables
@@ -10,10 +11,12 @@ namespace NetworkTablesDotNet.NetworkTables
     public class NetworkTableProvider
     {
         private Dictionary<string, ITable> tables = new Dictionary<string, ITable>();
+        private readonly NetworkTableNode node;
 
 
-        public NetworkTableProvider()
+        public NetworkTableProvider(NetworkTableNode node)
         {
+            this.node = node;
         }
 
         public ITable GetRootTable()
@@ -34,16 +37,14 @@ namespace NetworkTablesDotNet.NetworkTables
                 return table;
             }
         }
-        /*
         public NetworkTableNode GetNode()
         {
             return node;
         }
-         * */
 
         public void Close()
         {
-            //node.Close();
+            node.Close();
         }
     }
 }

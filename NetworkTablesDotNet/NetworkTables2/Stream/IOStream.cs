@@ -9,12 +9,11 @@ namespace NetworkTablesDotNet.NetworkTables2.Stream
 {
     public interface IOStream
     {
-        int Read(object o);
-
-        int Write(object o);
-
-        void Flush();
+        BinaryReader GetInputStream();
+        BinaryWriter GetOutputStream();
 
         void Close();
     }
+
+    
 }

@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace NetworkTablesDotNet.NetworkTables2.Stream
 {
+    
     public interface IOStreamFactory
     {
         IOStream CreateStream();
     }
+    
 }

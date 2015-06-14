@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace NetworkTablesDotNet.NetworkTables2.Stream
 {
+
     public class SocketStreamFactory : IOStreamFactory
     {
 
@@ -14,13 +15,15 @@ namespace NetworkTablesDotNet.NetworkTables2.Stream
 
         public SocketStreamFactory(string host, int port)
         {
-            
+            this.host = host;
+            this.port = port;
         }
 
         public IOStream CreateStream()
         {
-            return null;   
+            return new SocketStream(host, port);
         }
 
     }
+    
 }

@@ -5,6 +5,17 @@ using System.Text;
 
 namespace NetworkTablesDotNet.NetworkTables2
 {
+    public class OutgoingEntryReceiverNull : OutgoingEntryReceiver
+    {
+        public void OfferOutgoingAssignment(NetworkTableEntry entry)
+        {
+        }
+
+        public void OfferOutgoingUpdate(NetworkTableEntry entry)
+        {
+        }
+    }
+
     public interface OutgoingEntryReceiver
     {
         void OfferOutgoingAssignment(NetworkTableEntry entry);

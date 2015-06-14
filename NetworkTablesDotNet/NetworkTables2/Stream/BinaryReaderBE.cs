@@ -6,13 +6,7 @@ using System.Threading.Tasks;
 
 namespace NetworkTablesDotNet.NetworkTables2.Stream
 {
-
-    
-    public interface IOStreamProvider
+    class BinaryReaderBE
     {
-        IOStream Accept();
-
-        void Close();
     }
-    
 }
