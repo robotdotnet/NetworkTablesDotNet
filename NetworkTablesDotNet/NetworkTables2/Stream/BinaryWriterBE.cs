@@ -14,35 +14,18 @@ namespace NetworkTablesDotNet.NetworkTables2.Stream
         {
         }
 
-        public new void Write(bool value)
-        {
-            
-        }
-
-        public new void Write(byte value)
-        {
-            
-        }
-
-        public new void Write(byte[] values)
-        {
-            
-        }
-
         public new void Write(char value)
         {
-            
+            byte[] bytes = BitConverter.GetBytes(base.ReadChar())
+			if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
+			base.Write(BitConverter.ToChar(bytes));
         }
 
         public new void Write(double value)
         {
-            
+            byte[] bytes = BitConverter.GetBytes(base.ReadDouble())
+			if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
+			base.Write(BitConverter.ToDouble(bytes));
         }
-
-        public new void Write(int value)
-        {
-            
-        }
-
     }
 }
