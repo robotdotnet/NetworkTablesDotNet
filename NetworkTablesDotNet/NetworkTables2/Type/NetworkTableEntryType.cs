@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using NetworkTablesDotNet.NetworkTables2.Stream;
+using NetworkTablesDotNet.NetworkTables2.Connection;
 
 namespace NetworkTablesDotNet.NetworkTables2.Type
 {
@@ -23,7 +24,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
             return "NetworkTable type: " + name;
         }
 
-        public abstract void SendValue(object value, BinaryWriterBE os);
-        public abstract object ReadValue(BinaryReaderBE inStream);
+        public abstract void SendValue(object value, DataIOStream os);
+        public abstract object ReadValue(DataIOStream inStream);
     }
 }

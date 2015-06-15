@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using NetworkTablesDotNet.NetworkTables2.Stream;
+using NetworkTablesDotNet.NetworkTables2.Connection;
 
 namespace NetworkTablesDotNet.NetworkTables2.Type
 {
@@ -18,7 +19,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
             this.m_elementType = elementType;
         }
 
-        public override void SendValue(object value, BinaryWriterBE os)
+        public override void SendValue(object value, DataIOStream os)
         {
             if (value is object[])
             {
@@ -39,7 +40,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
             }
         }
 
-        public override object ReadValue(BinaryReaderBE inStream)
+        public override object ReadValue(DataIOStream inStream)
         {
             int length = inStream.ReadByte();
             object[] dataArray = new object[length];

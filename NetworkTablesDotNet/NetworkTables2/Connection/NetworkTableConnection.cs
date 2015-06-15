@@ -16,8 +16,8 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
 
         private object WRITE_LOCK = new object();
 
-        private BinaryReaderBE inStream;
-        private BinaryWriterBE outStream;
+        private DataIOStream inStream;
+        private DataIOStream outStream;
 
         private readonly IOStream stream;
 
@@ -73,7 +73,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
             lock (WRITE_LOCK)
             {
                 SendMessageHeader(NetworkTableMessageType.CLIENT_HELLO);
-                outStream.WriteChar(PROTOCOL_REVISION);
+                outStream.WriteCharBE(PROTOCOL_REVISION);
                 Flush();
             }
         }
@@ -92,7 +92,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
             lock (WRITE_LOCK)
             {
                 SendMessageHeader(NetworkTableMessageType.PROTOCOL_VERSION_UNSUPPORTED);
-                outStream.WriteChar(PROTOCOL_REVISION);
+                outStream.WriteCharBE(PROTOCOL_REVISION);
                 Flush();
             }
         }
@@ -104,8 +104,8 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
                 SendMessageHeader(NetworkTableMessageType.ENTRY_ASSIGNMENT);
                 outStream.WriteString(entry.name);
                 outStream.WriteByte((byte)entry.GetType().id);
-                outStream.WriteChar((char)entry.GetId());
-                outStream.WriteChar((char)entry.GetSequenceNumber());
+                outStream.WriteCharBE((char)entry.GetId());
+                outStream.WriteCharBE((char)entry.GetSequenceNumber());
                 entry.SendValue(outStream);
 
             }
@@ -116,8 +116,8 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
             lock (WRITE_LOCK)
             {
                 SendMessageHeader(NetworkTableMessageType.FIELD_UPDATE);
-                outStream.WriteChar((char)entry.GetId());
-                outStream.WriteChar((char)entry.GetSequenceNumber());
+                outStream.WriteCharBE((char)entry.GetId());
+                outStream.WriteCharBE((char)entry.GetSequenceNumber());
                 entry.SendValue(outStream);
             }
         }
@@ -134,7 +134,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
                         return;
                     case NetworkTableMessageType.CLIENT_HELLO:
                     {
-                        char protocolRevision = inStream.ReadChar();
+                        char protocolRevision = inStream.ReadCharBE();
                         adapter.ClientHello(protocolRevision);
                         return;
                     }
@@ -145,7 +145,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
                     }
                     case NetworkTableMessageType.PROTOCOL_VERSION_UNSUPPORTED:
                     {
-                        char protocolRevision = inStream.ReadChar();
+                        char protocolRevision = inStream.ReadCharBE();
                         adapter.ProtocolVersionUnsupported(protocolRevision);
                         return;
                     }
@@ -156,8 +156,8 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
                         NetworkTableEntryType entryType = typeManager.GetType(typeId);
                         if (entryType == null)
                             throw new BadMessageException("Unknown data type: 0x" + typeId.ToString("X"));
-                        char entryId = inStream.ReadChar();
-                        char entrySequenceNumber = inStream.ReadChar();
+                        char entryId = inStream.ReadCharBE();
+                        char entrySequenceNumber = inStream.ReadCharBE();
                         object value = entryType.ReadValue(inStream);
                         adapter.OfferIncomingAssignment(new NetworkTableEntry(entryId, entryName, entrySequenceNumber,
                             entryType, value));
@@ -165,8 +165,8 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
                     }
                     case NetworkTableMessageType.FIELD_UPDATE:
                     {
-                        char entryId = inStream.ReadChar();
-                        char entrySequenceNumber = inStream.ReadChar();
+                        char entryId = inStream.ReadCharBE();
+                        char entrySequenceNumber = inStream.ReadCharBE();
                         NetworkTableEntry entry = adapter.GetEntry(entryId);
                         if (entry == null)
                             throw new BadMessageException("Received update for unknown entry id: " + (int) entryId);

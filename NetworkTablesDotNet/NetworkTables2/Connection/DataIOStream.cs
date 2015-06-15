@@ -4,25 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Net.Sockets;
 
 namespace NetworkTablesDotNet.NetworkTables2.Connection
 {
 
 
-    class DataIOStream
-    {
-        
-        private System.IO.Stream stream;
+    public class DataIOStream
+    { 
+        private NetworkStream stream;
 
-        public DataIOStream(ref System.IO.Stream stream)
+        public DataIOStream(NetworkStream stream)
         {
             this.stream = stream;
-        }
-
-        public void SetIOStream(ref System.IO.Stream stream)
-        {
-            var tmp = this.stream;
-            //this.stream = stream ? stream : 
         }
 
         public void WriteByte(byte b)

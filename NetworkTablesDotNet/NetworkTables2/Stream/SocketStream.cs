@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NetworkTablesDotNet.NetworkTables2.Connection;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Stream
             
         }
 
-        public SocketStream(NetworkStream stream) : base(new BinaryReaderBE(stream), new BinaryWriterBE(stream))
+        public SocketStream(NetworkStream stream) : base(new DataIOStream(stream), new DataIOStream(stream))
         {
             this.stream = stream;
         }

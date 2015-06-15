@@ -93,7 +93,7 @@ namespace NetworkTablesDotNet.NetworkTables2
             return isDirty;
         }
 
-        public void SendValue(BinaryWriterBE os)
+        public void SendValue(DataIOStream os)
         {
             type.SendValue(value, os);
         }

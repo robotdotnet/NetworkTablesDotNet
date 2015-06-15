@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using NetworkTablesDotNet.NetworkTables2.Stream;
+using NetworkTablesDotNet.NetworkTables2.Connection;
 
 namespace NetworkTablesDotNet.NetworkTables2.Type
 {
@@ -34,7 +35,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
                 
             }
 
-            public override void SendValue(object value, BinaryWriterBE os)
+            public override void SendValue(object value, DataIOStream os)
             {
                 if (value is bool)
                     os.WriteByte((bool)value ? (byte)1 : (byte)0);
@@ -44,7 +45,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
                 }
             }
 
-            public override object ReadValue(BinaryReaderBE reader)
+            public override object ReadValue(DataIOStream reader)
             {
                 return reader.ReadByte() != 0;
             }
@@ -57,7 +58,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
                 
             }
 
-            public override void SendValue(object value, BinaryWriterBE os)
+            public override void SendValue(object value, DataIOStream os)
             {
                 if (value is double)
                 {
@@ -75,7 +76,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
                 }
             }
 
-            public override object ReadValue(BinaryReaderBE reader)
+            public override object ReadValue(DataIOStream reader)
             {
                 long value = 0;
                 for (int i = 0; i < 8; ++i)
@@ -96,7 +97,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
 
             }
 
-            public override void SendValue(object value, BinaryWriterBE os)
+            public override void SendValue(object value, DataIOStream os)
             {
                 if (value is string)
                     os.WriteString((string)value);
@@ -106,7 +107,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
                 }
             }
 
-            public override object ReadValue(BinaryReaderBE reader)
+            public override object ReadValue(DataIOStream reader)
             {
                 return reader.ReadString();
             }

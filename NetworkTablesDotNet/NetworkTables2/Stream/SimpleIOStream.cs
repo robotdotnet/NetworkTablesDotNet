@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NetworkTablesDotNet.NetworkTables2.Connection;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,21 +10,21 @@ namespace NetworkTablesDotNet.NetworkTables2.Stream
 {
     public class SimpleIOStream : IOStream
     {
-        private readonly BinaryReaderBE inS;
-        private readonly BinaryWriterBE outS;
+        private readonly DataIOStream inS;
+        private readonly DataIOStream outS;
 
-        public SimpleIOStream(BinaryReaderBE inS, BinaryWriterBE outS)
+        public SimpleIOStream(DataIOStream inS, DataIOStream outS)
         {
             this.inS = inS;
             this.outS = outS;
         }
 
-        public BinaryReaderBE GetInputStream()
+        public DataIOStream GetInputStream()
         {
             return inS;
         }
 
-        public BinaryWriterBE GetOutputStream()
+        public DataIOStream GetOutputStream()
         {
             return outS;
         }

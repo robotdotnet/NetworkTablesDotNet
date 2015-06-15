@@ -68,8 +68,6 @@
     <Compile Include="NetworkTables2\Server\ServerIncomingConnectionListener.cs" />
     <Compile Include="NetworkTables2\Server\ServerIncomingStreamMonitor.cs" />
     <Compile Include="NetworkTables2\Server\ServerNetworkTableEntryStore.cs" />
-    <Compile Include="NetworkTables2\Stream\BinaryReaderBE.cs" />
-    <Compile Include="NetworkTables2\Stream\BinaryWriterBE.cs" />
     <Compile Include="NetworkTables2\Stream\IOStream.cs" />
     <Compile Include="NetworkTables2\Stream\IOStreamFactory.cs" />
     <Compile Include="NetworkTables2\Stream\IOStreamProvider.cs" />
