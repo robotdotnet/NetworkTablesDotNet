@@ -27,7 +27,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
                 {
                     throw new IOException("Cannot write " + value + " as " + name + ". Arrays have a max length of 255 values");
                 }
-                os.Write((byte) dataArray.Length);
+                os.WriteByte((byte) dataArray.Length);
                 foreach (var s in dataArray)
                 {
                     m_elementType.SendValue(s, os);

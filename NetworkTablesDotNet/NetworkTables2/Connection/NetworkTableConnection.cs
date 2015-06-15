@@ -47,7 +47,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
         {
             lock (WRITE_LOCK)
             {
-                outStream.Write(((byte)messageType));
+                outStream.WriteByte(((byte)messageType));
             }
         }
 
@@ -73,7 +73,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
             lock (WRITE_LOCK)
             {
                 SendMessageHeader(NetworkTableMessageType.CLIENT_HELLO);
-                outStream.Write(PROTOCOL_REVISION);
+                outStream.WriteChar(PROTOCOL_REVISION);
                 Flush();
             }
         }
@@ -92,7 +92,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
             lock (WRITE_LOCK)
             {
                 SendMessageHeader(NetworkTableMessageType.PROTOCOL_VERSION_UNSUPPORTED);
-                outStream.Write(PROTOCOL_REVISION);
+                outStream.WriteChar(PROTOCOL_REVISION);
                 Flush();
             }
         }
@@ -102,10 +102,10 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
             lock (WRITE_LOCK)
             {
                 SendMessageHeader(NetworkTableMessageType.ENTRY_ASSIGNMENT);
-                outStream.Write(entry.name);
-                outStream.Write((byte)entry.GetType().id);
-                outStream.Write((char)entry.GetId());
-                outStream.Write((char)entry.GetSequenceNumber());
+                outStream.WriteString(entry.name);
+                outStream.WriteByte((byte)entry.GetType().id);
+                outStream.WriteChar((char)entry.GetId());
+                outStream.WriteChar((char)entry.GetSequenceNumber());
                 entry.SendValue(outStream);
 
             }
@@ -116,8 +116,8 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
             lock (WRITE_LOCK)
             {
                 SendMessageHeader(NetworkTableMessageType.FIELD_UPDATE);
-                outStream.Write((char)entry.GetId());
-                outStream.Write((char)entry.GetSequenceNumber());
+                outStream.WriteChar((char)entry.GetId());
+                outStream.WriteChar((char)entry.GetSequenceNumber());
                 entry.SendValue(outStream);
             }
         }

@@ -53,6 +53,7 @@
     <Compile Include="NetworkTables2\Connection\BadMessageException.cs" />
     <Compile Include="NetworkTables2\Connection\ConnectionAdapter.cs" />
     <Compile Include="NetworkTables2\Connection\ConnectionMonitorThread.cs" />
+    <Compile Include="NetworkTables2\Connection\DataIOStream.cs" />
     <Compile Include="NetworkTables2\Connection\NetworkTableConnection.cs" />
     <Compile Include="NetworkTables2\FlushableOutgoingEntryReceiver.cs" />
     <Compile Include="NetworkTables2\IncomingEntryReceiver.cs" />

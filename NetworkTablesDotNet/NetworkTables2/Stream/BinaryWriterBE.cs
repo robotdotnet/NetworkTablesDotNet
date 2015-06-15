@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NetworkTablesDotNet.NetworkTables2.Connection;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,25 +8,38 @@ using System.Threading.Tasks;
 
 namespace NetworkTablesDotNet.NetworkTables2.Stream
 {
-    public class BinaryWriterBE : BinaryWriter
+    public class BinaryWriterBE
     {
+        DataIOStream stream;
 
-        public BinaryWriterBE(System.IO.Stream stream) : base(stream)
+        public BinaryWriterBE(System.IO.Stream stream)
         {
+            this.stream = new DataIOStream(ref stream);
         }
 
-        public override void Write(char value)
+        public void WriteChar(char value)
         {
-            byte[] bytes = BitConverter.GetBytes(value);
-			if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
-            base.Write(BitConverter.ToChar(bytes, 0));
+            stream.WriteCharBE(value);
         }
 
-        public override void Write(double value)
+        public void WriteByte(byte value)
         {
-            byte[] bytes = BitConverter.GetBytes(value);
-			//if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
-			base.Write(BitConverter.ToDouble(bytes, 0));
+            stream.WriteByte(value);
+        }
+
+        public void WriteString(string str)
+        {
+            stream.WriteString(str);
+        }
+
+        public void Flush()
+        {
+            stream.Flush();
+        }
+
+        public void Close()
+        {
+            stream.Close();
         }
     }
 }

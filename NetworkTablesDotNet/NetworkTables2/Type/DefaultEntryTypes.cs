@@ -37,7 +37,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
             public override void SendValue(object value, BinaryWriterBE os)
             {
                 if (value is bool)
-                    os.Write((bool) value);
+                    os.WriteByte((bool)value ? (byte)1 : (byte)0);
                 else
                 {
                     throw new IOException("Cannot write " + value + " as " + name);
@@ -46,7 +46,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
 
             public override object ReadValue(BinaryReaderBE reader)
             {
-                return reader.ReadBoolean();
+                return reader.ReadByte() != 0;
             }
         }
 
@@ -60,7 +60,15 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
             public override void SendValue(object value, BinaryWriterBE os)
             {
                 if (value is double)
-                    os.Write((double) value);
+                {
+                    var tmp = BitConverter.DoubleToInt64Bits((double)value);
+                    for (int i = 0; i < 8; i++)
+                    {
+                        os.WriteByte((byte)((tmp >> 56) & 0xFF));
+                        tmp = tmp << 8;
+                    }
+                }
+
                 else
                 {
                     throw new IOException("Cannot write " + value + " as " + name);
@@ -69,7 +77,14 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
 
             public override object ReadValue(BinaryReaderBE reader)
             {
-                return reader.ReadDouble();
+                long value = 0;
+                for (int i = 0; i < 8; ++i)
+                {
+                    value = value << 8;
+                    value |= (reader.ReadByte() & 0xFF);
+                }
+
+                return BitConverter.Int64BitsToDouble(value);
             }
         }
 
@@ -84,7 +99,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
             public override void SendValue(object value, BinaryWriterBE os)
             {
                 if (value is string)
-                    os.Write((string)value);
+                    os.WriteString((string)value);
                 else
                 {
                     throw new IOException("Cannot write " + value + " as " + name);

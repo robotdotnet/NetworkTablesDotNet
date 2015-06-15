@@ -4,28 +4,42 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using NetworkTablesDotNet.NetworkTables2.Connection;
 
 namespace NetworkTablesDotNet.NetworkTables2.Stream
 {
-    public class BinaryReaderBE : BinaryReader
+    public class BinaryReaderBE
     {
-		public BinaryReaderBE(System.IO.Stream stream) : base(stream)
+
+        DataIOStream stream;
+		public BinaryReaderBE(System.IO.Stream stream)
 		{
-			
+            this.stream = new DataIOStream(ref stream);
 		}
 		
-		public override char ReadChar()
+		public char ReadChar()
 		{
-		    byte[] bytes = BitConverter.GetBytes(base.ReadChar());
-			if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
-			return BitConverter.ToChar(bytes, 0);
+            return stream.ReadCharBE();
 		}
-		
-		public override double ReadDouble()
-		{
-		    byte[] bytes = BitConverter.GetBytes(base.ReadDouble());
-			if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
-			return BitConverter.ToDouble(bytes, 0);
-		}		
+
+        public byte ReadByte()
+        {
+            return stream.ReadByte();
+        }
+
+        public string ReadString()
+        {
+            return stream.ReadString();
+        }
+
+        public void Flush()
+        {
+            stream.Flush();
+        }
+
+        public void Close()
+        {
+            stream.Close();
+        }
     }
 }
