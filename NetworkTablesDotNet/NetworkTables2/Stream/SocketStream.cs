@@ -17,7 +17,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Stream
             
         }
 
-        public SocketStream(NetworkStream stream) : base(new BinaryReader(stream), new BinaryWriter(stream))
+        public SocketStream(NetworkStream stream) : base(new BinaryReaderBE(stream), new BinaryWriterBE(stream))
         {
             this.stream = stream;
         }

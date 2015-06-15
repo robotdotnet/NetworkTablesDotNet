@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using NetworkTablesDotNet.NetworkTables2.Stream;
 
 namespace NetworkTablesDotNet.NetworkTables2.Type
 {
@@ -33,7 +34,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
                 
             }
 
-            public override void SendValue(object value, BinaryWriter os)
+            public override void SendValue(object value, BinaryWriterBE os)
             {
                 if (value is bool)
                     os.Write((bool) value);
@@ -43,7 +44,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
                 }
             }
 
-            public override object ReadValue(BinaryReader reader)
+            public override object ReadValue(BinaryReaderBE reader)
             {
                 return reader.ReadBoolean();
             }
@@ -56,7 +57,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
                 
             }
 
-            public override void SendValue(object value, BinaryWriter os)
+            public override void SendValue(object value, BinaryWriterBE os)
             {
                 if (value is double)
                     os.Write((double) value);
@@ -66,7 +67,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
                 }
             }
 
-            public override object ReadValue(BinaryReader reader)
+            public override object ReadValue(BinaryReaderBE reader)
             {
                 return reader.ReadDouble();
             }
@@ -80,7 +81,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
 
             }
 
-            public override void SendValue(object value, BinaryWriter os)
+            public override void SendValue(object value, BinaryWriterBE os)
             {
                 if (value is string)
                     os.Write((string)value);
@@ -90,7 +91,7 @@ namespace NetworkTablesDotNet.NetworkTables2.Type
                 }
             }
 
-            public override object ReadValue(BinaryReader reader)
+            public override object ReadValue(BinaryReaderBE reader)
             {
                 return reader.ReadString();
             }

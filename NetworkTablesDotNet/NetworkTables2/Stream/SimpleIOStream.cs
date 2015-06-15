@@ -9,21 +9,21 @@ namespace NetworkTablesDotNet.NetworkTables2.Stream
 {
     public class SimpleIOStream : IOStream
     {
-        private readonly BinaryReader inS;
-        private readonly BinaryWriter outS;
+        private readonly BinaryReaderBE inS;
+        private readonly BinaryWriterBE outS;
 
-        public SimpleIOStream(BinaryReader inS, BinaryWriter outS)
+        public SimpleIOStream(BinaryReaderBE inS, BinaryWriterBE outS)
         {
             this.inS = inS;
             this.outS = outS;
         }
 
-        public BinaryReader GetInputStream()
+        public BinaryReaderBE GetInputStream()
         {
             return inS;
         }
 
-        public BinaryWriter GetOutputStream()
+        public BinaryWriterBE GetOutputStream()
         {
             return outS;
         }

@@ -14,18 +14,18 @@ namespace NetworkTablesDotNet.NetworkTables2.Stream
 			
 		}
 		
-		public new char ReadChar()
+		public override char ReadChar()
 		{
-			byte[] bytes = BitConverter.GetBytes(base.ReadChar())
+		    byte[] bytes = BitConverter.GetBytes(base.ReadChar());
 			if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
-			return BitConverter.ToChar(bytes);
+			return BitConverter.ToChar(bytes, 0);
 		}
 		
-		public new double ReadDouble()
+		public override double ReadDouble()
 		{
-			byte[] bytes = BitConverter.GetBytes(base.ReadDouble())
+		    byte[] bytes = BitConverter.GetBytes(base.ReadDouble());
 			if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
-			return BitConverter.ToDouble(bytes);
+			return BitConverter.ToDouble(bytes, 0);
 		}		
     }
 }

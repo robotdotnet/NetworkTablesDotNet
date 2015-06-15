@@ -15,7 +15,7 @@ namespace NetworkTablesTest
         {
             
             //var s = new TcpClient("172.22.11.2", 1735);
-           
+           /*
             NetworkTable.SetIPAddress("172.22.11.2");
             NetworkTable.SetClientMode();
             NetworkTable.Initialize();
@@ -31,13 +31,12 @@ namespace NetworkTablesTest
                 }
                 catch
                 {
-                    
                 }
                 Thread.Sleep(500);
             }
             
-            
-            
+            /*
+            */
             
             NetworkTable.SetServerMode();
             NetworkTable.Initialize();

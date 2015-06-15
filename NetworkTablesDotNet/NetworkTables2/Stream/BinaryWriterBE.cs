@@ -7,25 +7,25 @@ using System.Threading.Tasks;
 
 namespace NetworkTablesDotNet.NetworkTables2.Stream
 {
-    class BinaryWriterBE : BinaryWriter
+    public class BinaryWriterBE : BinaryWriter
     {
 
         public BinaryWriterBE(System.IO.Stream stream) : base(stream)
         {
         }
 
-        public new void Write(char value)
+        public override void Write(char value)
         {
-            byte[] bytes = BitConverter.GetBytes(base.ReadChar())
+            byte[] bytes = BitConverter.GetBytes(value);
 			if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
-			base.Write(BitConverter.ToChar(bytes));
+            base.Write(BitConverter.ToChar(bytes, 0));
         }
 
-        public new void Write(double value)
+        public override void Write(double value)
         {
-            byte[] bytes = BitConverter.GetBytes(base.ReadDouble())
-			if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
-			base.Write(BitConverter.ToDouble(bytes));
+            byte[] bytes = BitConverter.GetBytes(value);
+			//if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
+			base.Write(BitConverter.ToDouble(bytes, 0));
         }
     }
 }
