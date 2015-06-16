@@ -55,9 +55,8 @@ namespace NetworkTablesDotNet.NetworkTables2.Connection
         public string ReadString()
         {
             char byteLength = ReadCharBE();
-            byte[] bytes = new byte[byteLength + 1];
+            byte[] bytes = new byte[byteLength];
             stream.Read(bytes, 0, byteLength);
-            bytes[byteLength] = 0;
             return Encoding.UTF8.GetString(bytes);
         }
 

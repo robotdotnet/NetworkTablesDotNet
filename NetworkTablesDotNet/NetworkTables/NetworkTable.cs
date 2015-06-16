@@ -19,7 +19,7 @@ namespace NetworkTablesDotNet.NetworkTables
         public static readonly int DEFAULT_PORT = 1735;
 
         private static NetworkTableProvider staticProvider = null;
-        private static NetworkTableMode.CreateNodeDelegate  mode = NetworkTableMode.CreateServerNode;
+        private static NetworkTableMode.CreateNodeDelegate mode = NetworkTableMode.CreateServerNode;
 
         private object m_lockObject = new object();
         private static object s_lockObject = new object();
@@ -104,7 +104,7 @@ namespace NetworkTablesDotNet.NetworkTables
                         throw new SystemException("NetworkTable could not be initialized: " + e);
                     }
                 }
-                return (NetworkTable) staticProvider.GetTable(PATH_SEPARATOR + key);
+                return (NetworkTable)staticProvider.GetTable(PATH_SEPARATOR + key);
             }
         }
 
@@ -163,7 +163,7 @@ namespace NetworkTablesDotNet.NetworkTables
             private readonly string path;
             private readonly NetworkTableNode node;
             private readonly NetworkTableKeyCache abs;
-            
+
 
             public EntryCache(string path, ref NetworkTableNode node, ref NetworkTableKeyCache abs)
             {
@@ -185,7 +185,7 @@ namespace NetworkTablesDotNet.NetworkTables
             }
         }
 
-        private readonly Dictionary<IRemoteConnectionListener, NetworkTableConnectionListenerAdapter> connectionListenerMap = 
+        private readonly Dictionary<IRemoteConnectionListener, NetworkTableConnectionListenerAdapter> connectionListenerMap =
             new Dictionary<IRemoteConnectionListener, NetworkTableConnectionListenerAdapter>();
 
         public void AddConnectionListener(IRemoteConnectionListener listener, bool immediateNotify)
@@ -205,7 +205,7 @@ namespace NetworkTablesDotNet.NetworkTables
                 node.RemoveConnectionListener(adapter);
         }
 
-        private readonly Dictionary<ITableListener, List> listenerMap = new Dictionary<ITableListener, List>(); 
+        private readonly Dictionary<ITableListener, List> listenerMap = new Dictionary<ITableListener, List>();
 
         public void AddTableListener(ITableListener listener)
         {
@@ -332,51 +332,72 @@ namespace NetworkTablesDotNet.NetworkTables
 
         public void PutNumber(string key, double value)
         {
-            throw new NotImplementedException();
+            PutValue(key, value);
         }
 
         public double GetNumber(string key)
         {
-            throw new NotImplementedException();
+            return node.GetDouble(absoluteKeyCache.Get(key));
         }
 
         public double GetNumber(string key, double defaultValue)
         {
-            throw new NotImplementedException();
+            try
+            {
+                return node.GetDouble(absoluteKeyCache.Get(key));
+            }
+            catch (TableKeyNotDefinedException e)
+            {
+                return defaultValue;
+            }
         }
 
         public void PutString(string key, string value)
         {
-            throw new NotImplementedException();
+            PutValue(key, value);
         }
 
         public string GetString(string key)
         {
-            throw new NotImplementedException();
+            return node.GetString(absoluteKeyCache.Get(key));
         }
 
         public string GetString(string key, string defaultValue)
         {
-            throw new NotImplementedException();
+            try
+            {
+                return node.GetString(absoluteKeyCache.Get(key));
+            }
+            catch (TableKeyNotDefinedException e)
+            {
+                return defaultValue;
+            }
         }
 
         public void PutBoolean(string key, bool value)
         {
-            throw new NotImplementedException();
+            PutValue(key, value);
         }
 
         public bool GetBoolean(string key)
         {
-            throw new NotImplementedException();
+            return node.GetBoolean(absoluteKeyCache.Get(key));
         }
 
         public bool GetBoolean(string key, bool defaultValue)
         {
-            throw new NotImplementedException();
+            try
+            {
+                return node.GetBoolean(absoluteKeyCache.Get(key));
+            }
+            catch (TableKeyNotDefinedException e)
+            {
+                return defaultValue;
+            }
         }
 
-        
 
-        
+
+
     }
 }

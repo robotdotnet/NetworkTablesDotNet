@@ -19,7 +19,7 @@ namespace NetworkTablesTest
             NetworkTable.SetIPAddress("172.22.11.2");
             NetworkTable.SetClientMode();
             NetworkTable.Initialize();
-
+            
             var table = NetworkTable.GetTable("SmartDashboard");
 
             while (true)
@@ -35,19 +35,25 @@ namespace NetworkTablesTest
                 Thread.Sleep(500);
             }
             
-            /*
             */
+            
             
             NetworkTable.SetServerMode();
             NetworkTable.Initialize();
 
             var sd = NetworkTable.GetTable("SmartDashboard");
             sd.PutValue("test", "HELLO FROM NT LAND");
+            sd.PutBoolean("MyBool", true);
+            sd.PutNumber("MyNumber", 2.5);
+            sd.PutString("MyString", "Default");
             Thread.Sleep(1000);
 
             while (true)
             {
                 Console.WriteLine(sd.GetValue("test"));
+                Console.WriteLine(sd.GetBoolean("MyBool") + ": Bool");
+                Console.WriteLine(sd.GetNumber("MyNumber") + ": Number");
+                Console.WriteLine(sd.GetString("MyString") + ": String");
                 Thread.Sleep(500);
             }
             

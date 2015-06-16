@@ -28,6 +28,52 @@ namespace NetworkTablesDotNet.NetworkTables2
             PutValue(name, DefaultEntryTypes.BOOLEAN, value);
         }
 
+        public bool GetBoolean(string name)
+        {
+            var entry = entryStore.GetEntry(name);
+            if (entry == null)
+            {
+                throw new TableKeyNotDefinedException(name);
+            }
+            return (bool) entry.GetValue();
+        }
+
+        public void PutDouble(string name, double value)
+        {
+            PutValue(name, DefaultEntryTypes.DOUBLE, value);
+        }
+
+        public double GetDouble(string name)
+        {
+            var entry = entryStore.GetEntry(name);
+            if (entry == null)
+            {
+                throw new TableKeyNotDefinedException(name);
+            }
+            return (double)entry.GetValue();
+        }
+
+        public void PutString(string name, double value)
+        {
+            PutValue(name, DefaultEntryTypes.STRING, value);
+        }
+
+        public string GetString(string name)
+        {
+            var entry = entryStore.GetEntry(name);
+            if (entry == null)
+            {
+                throw new TableKeyNotDefinedException(name);
+            }
+            return (string)entry.GetValue();
+        }
+
+        public void PutComplex(string name, ComplexData value)
+        {
+            PutValue(name, value.GetType(), value);
+        }
+
+
         public void PutValue(string name, object value)
         {
             if (value is double)
