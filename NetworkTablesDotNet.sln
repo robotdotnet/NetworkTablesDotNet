@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.22823.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkTablesDotNet", "NetworkTablesDotNet\NetworkTablesDotNet.csproj", "{094916BF-BCE8-45DB-BDB0-B77745AEC632}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkTables", "NetworkTables\NetworkTables.csproj", "{094916BF-BCE8-45DB-BDB0-B77745AEC632}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkTablesTest", "NetworkTablesTest\NetworkTablesTest.csproj", "{DB4B5342-0C3F-4782-AB42-43B2A28664C5}"
 EndProject

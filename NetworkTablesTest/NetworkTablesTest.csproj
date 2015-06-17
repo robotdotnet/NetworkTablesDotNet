@@ -50,9 +50,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NetworkTablesDotNet\NetworkTablesDotNet.csproj">
+    <ProjectReference Include="..\NetworkTables\NetworkTables.csproj">
       <Project>{094916bf-bce8-45db-bdb0-b77745aec632}</Project>
-      <Name>NetworkTablesDotNet</Name>
+      <Name>NetworkTables</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
