@@ -54,6 +54,8 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="NetworkTables2\Connection\BadMessageExceptionTest.cs" />
+    <Compile Include="NetworkTables2\Connection\ConnectionMonitorThreadTest.cs" />
     <Compile Include="NetworkTables2\NetworkTableEntryTest.cs" />
     <Compile Include="NetworkTables2\TransactionDirtierTest.cs" />
     <Compile Include="NetworkTables\NetworkTableListenerTest.cs" />
