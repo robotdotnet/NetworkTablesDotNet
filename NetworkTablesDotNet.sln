@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkTables", "NetworkTab
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkTablesTest", "NetworkTablesTest\NetworkTablesTest.csproj", "{DB4B5342-0C3F-4782-AB42-43B2A28664C5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkTables.Test", "NetworkTables.Test\NetworkTables.Test.csproj", "{C4C18191-01C0-43D3-B1C4-F98FD339DEBC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{DB4B5342-0C3F-4782-AB42-43B2A28664C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB4B5342-0C3F-4782-AB42-43B2A28664C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB4B5342-0C3F-4782-AB42-43B2A28664C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4C18191-01C0-43D3-B1C4-F98FD339DEBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4C18191-01C0-43D3-B1C4-F98FD339DEBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4C18191-01C0-43D3-B1C4-F98FD339DEBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4C18191-01C0-43D3-B1C4-F98FD339DEBC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

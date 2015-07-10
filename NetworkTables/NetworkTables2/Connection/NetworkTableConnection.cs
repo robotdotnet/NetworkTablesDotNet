@@ -14,7 +14,7 @@ namespace NetworkTables.NetworkTables2.Connection
     {
         public static char PROTOCOL_REVISION = (char)0x0200;
 
-        private object WRITE_LOCK = new object();
+        private object WRITE_LOCK;
 
         private DataIOStream inStream;
         private DataIOStream outStream;
@@ -26,6 +26,7 @@ namespace NetworkTables.NetworkTables2.Connection
 
         public NetworkTableConnection(IOStream stream, NetworkTableEntryTypeManager typeManager)
         {
+            WRITE_LOCK = new object();
             this.stream = stream;
 
             this.typeManager = typeManager;

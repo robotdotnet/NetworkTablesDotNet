@@ -130,7 +130,7 @@ namespace NetworkTables.NetworkTables2
 
         public new string ToString()
         {
-            return "Network Table " + type.name + " entry: " + name + ": " + GetId() + " - " + (int)GetSequenceNumber() + " - " + GetValue();
+            return "Network Table " + type.name + " entry: " + name + ": " + (int)GetId() + " - " + (int)GetSequenceNumber() + " - " + GetValue().ToString().ToLower();
         }
     }
 }

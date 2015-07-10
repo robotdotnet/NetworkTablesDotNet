@@ -16,8 +16,8 @@ namespace NetworkTablesTest
         {
             
             //var s = new TcpClient("172.22.11.2", 1735);
-           /*
-            NetworkTable.SetIPAddress("172.22.11.2");
+           
+            NetworkTable.SetIPAddress("roborio-4488.local");
             NetworkTable.SetClientMode();
             NetworkTable.Initialize();
             
@@ -36,7 +36,7 @@ namespace NetworkTablesTest
                 Thread.Sleep(500);
             }
             
-            */
+            
             
             
             NetworkTable.SetServerMode();

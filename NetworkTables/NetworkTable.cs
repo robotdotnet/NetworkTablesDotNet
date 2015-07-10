@@ -12,27 +12,95 @@ using NetworkTables.NetworkTables2.Util;
 
 namespace NetworkTables
 {
+    /// <summary>
+    /// This class is the Main Class for interfacing with NetworkTables.
+    /// </summary>
+    /// <remarks>For most users, this will be the only class that will be needed.
+    /// Any interfaces needed to work with this can be found in the NetworkTables.Tables 
+    /// namespace. </remarks>
+    /// <example>
+    /// The following example demonstrates creating a server:
+    /// 
+    /// <code language="cs">
+    /// //Set Server Mode
+    /// NetworkTable.SetServerMode();
+    /// 
+    /// //Initialize the Server
+    /// NetworkTable.Initialize();
+    /// 
+    /// //Get a reference to the smartdashboard.
+    /// var smartDashboard = NetworkTable.GetTable("SmartDashboard");
+    /// </code>
+    /// <c>smartDashboard</c> can now be used to get and set values in the smart dashboard.
+    /// Examples on this can be found below the client section.
+    /// <para />
+    /// The following example demonstrates creating a client and connecting it to a server:
+    /// 
+    /// <code language="cs">
+    /// //Set IP Address. Replace xxxx with your team number if connecting to a RoboRIO,
+    /// //or the server's IP if the server is not a RoboRIO.
+    /// NetworkTable.SetIPAddress("roborio-xxxx.local");
+    /// 
+    /// //Set Client Mode
+    /// NetworkTable.SetClientMode();
+    /// 
+    /// //Initialize the client
+    /// NetworkTable.Initialize();
+    /// 
+    /// //Get a reference to the smartdashboard.
+    /// var smartDashboard = NetworkTable.GetTable("SmartDashboard");
+    /// </code>
+    /// <c>smartDashboard</c> can now be used to get and set values in the smart dashboard.
+    /// <para />
+    /// The following example shows how to get and put values into the smart dashboard:
+    /// 
+    /// <code language="cs">
+    /// //Strings
+    /// smartDashboard.PutString("MyString", "MyValue");
+    /// string s = smartDashboard.GetString("MyString");
+    /// //Note that if the key has not been put in the smart dashboard,
+    /// //the GetString function will throw a TableKeyNotDefinedException.
+    /// //To get around this, set a default value to be returned if there is no key, like this:
+    /// string s = smartDashboard.GetString("MyString", "Default");
+    /// 
+    /// //Numbers
+    /// smartDashboard.PutNumber("MyNumber", 3.562);
+    /// double s = smartDashboard.GetNumber("MyNumber");
+    /// //Note that if the key has not been put in the smart dashboard,
+    /// //the GetString function will throw a TableKeyNotDefinedException.
+    /// //To get around this, set a default value to be returned if there is no key, like this:
+    /// double s = smartDashboard.GetDouble("MyNumber", 0.0);
+    /// 
+    /// //Bools
+    /// smartDashboard.PutBoolean("MyBool", true);
+    /// bool s = smartDashboard.GetBoolean("MyBool");
+    /// //Note that if the key has not been put in the smart dashboard,
+    /// //the GetString function will throw a TableKeyNotDefinedException.
+    /// //To get around this, set a default value to be returned if there is no key, like this:
+    /// bool s = smartDashboard.GetBoolean("MyBool", false);
+    /// </code>
+    /// </example>
     public class NetworkTable : ITable, IRemote
     {
-        private static NTThreadManager threadManager = new DefaultThreadManager();
+        private static NTThreadManager s_threadManager = new DefaultThreadManager();
 
         public static readonly char PATH_SEPARATOR = '/';
         public static readonly int DEFAULT_PORT = 1735;
 
-        private static NetworkTableProvider staticProvider = null;
-        private static NetworkTableMode.CreateNodeDelegate mode = NetworkTableMode.CreateServerNode;
+        private static NetworkTableProvider s_staticProvider = null;
+        private static NetworkTableMode.CreateNodeDelegate s_mode = NetworkTableMode.CreateServerNode;
 
         private object m_lockObject = new object();
         private static object s_lockObject = new object();
 
-        private static int port = DEFAULT_PORT;
-        private static string ipAddress = null;
+        private static int s_port = DEFAULT_PORT;
+        private static string s_ipAddress = null;
 
         private static void CheckInit()
         {
             lock (s_lockObject)
             {
-                if (staticProvider != null)
+                if (s_staticProvider != null)
                     throw new InvalidOperationException("Network tables has already been initialized");
             }
         }
@@ -42,7 +110,7 @@ namespace NetworkTables
             lock (s_lockObject)
             {
                 CheckInit();
-                staticProvider = new NetworkTableProvider(mode(ipAddress, port, threadManager));
+                s_staticProvider = new NetworkTableProvider(s_mode(s_ipAddress, s_port, s_threadManager));
             }
         }
 
@@ -51,7 +119,7 @@ namespace NetworkTables
             lock (s_lockObject)
             {
                 CheckInit();
-                staticProvider = provider;
+                s_staticProvider = provider;
             }
         }
 
@@ -60,7 +128,7 @@ namespace NetworkTables
             lock (s_lockObject)
             {
                 CheckInit();
-                mode = NetworkTableMode.CreateServerNode;
+                s_mode = NetworkTableMode.CreateServerNode;
             }
         }
 
@@ -69,7 +137,7 @@ namespace NetworkTables
             lock (s_lockObject)
             {
                 CheckInit();
-                mode = NetworkTableMode.CreateClientNode;
+                s_mode = NetworkTableMode.CreateClientNode;
             }
         }
 
@@ -86,7 +154,7 @@ namespace NetworkTables
             lock (s_lockObject)
             {
                 CheckInit();
-                ipAddress = address;
+                s_ipAddress = address;
             }
         }
 
@@ -94,7 +162,7 @@ namespace NetworkTables
         {
             lock (s_lockObject)
             {
-                if (staticProvider == null)
+                if (s_staticProvider == null)
                 {
                     try
                     {
@@ -105,7 +173,7 @@ namespace NetworkTables
                         throw new SystemException("NetworkTable could not be initialized: " + e);
                     }
                 }
-                return (NetworkTable)staticProvider.GetTable(PATH_SEPARATOR + key);
+                return (NetworkTable)s_staticProvider.GetTable(PATH_SEPARATOR + key);
             }
         }
 
