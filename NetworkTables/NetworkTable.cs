@@ -84,7 +84,9 @@ namespace NetworkTables
     {
         private static NTThreadManager s_threadManager = new DefaultThreadManager();
 
+        ///The path separator for sub-tables and keys.
         public static readonly char PATH_SEPARATOR = '/';
+        ///The default port that NetworkTables listens on
         public static readonly int DEFAULT_PORT = 1735;
 
         private static NetworkTableProvider s_staticProvider = null;
@@ -105,6 +107,11 @@ namespace NetworkTables
             }
         }
 
+        /// <summary>
+        /// Initialized a NetworkTable.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">This is thrown if Network Tables
+        /// has already been initialized.</exception>
         public static void Initialize()
         {
             lock (s_lockObject)
@@ -113,7 +120,13 @@ namespace NetworkTables
                 s_staticProvider = new NetworkTableProvider(s_mode(s_ipAddress, s_port, s_threadManager));
             }
         }
-
+        /// <summary>
+        /// Sets the table provider for static network tables methods.
+        /// </summary>
+        /// <param name="provider">The <see cref="NetworkTableProvider"/> to use.</param>
+        /// <remarks>Call <see cref="SetServerMode"/> or <see cref="SetClientMode"/>, and then
+        /// call <see cref="Initialize"/></remarks>
+        [Obsolete("Call SetServerMode() or SetClientMode(), and then call Initialize instead.")]
         public static void SetTableProvider(NetworkTableProvider provider)
         {
             lock (s_lockObject)
@@ -123,6 +136,11 @@ namespace NetworkTables
             }
         }
 
+        /// <summary>
+        /// Sets that network tables should be in server mode.
+        /// </summary>
+        /// <remarks>This or <see cref="SetClientMode"/> must be called
+        /// before <see cref="Initialize"/></remarks>
         public static void SetServerMode()
         {
             lock (s_lockObject)
@@ -132,6 +150,11 @@ namespace NetworkTables
             }
         }
 
+        /// <summary>
+        /// Sets that network tables should be in client mode.
+        /// </summary>
+        /// <remarks>This or <see cref="SetServerMode"/> must be called
+        /// before <see cref="Initialize"/></remarks>
         public static void SetClientMode()
         {
             lock (s_lockObject)
@@ -141,6 +164,10 @@ namespace NetworkTables
             }
         }
 
+        /// <summary>
+        /// Sets the team that the robot is configured for.
+        /// </summary>
+        /// <param name="team">Your team number.</param>
         public static void SetTeam(int team)
         {
             lock (s_lockObject)
@@ -149,6 +176,10 @@ namespace NetworkTables
             }
         }
 
+        /// <summary>
+        /// Sets the ip address that will be connected to in client mode.
+        /// </summary>
+        /// <param name="address">The IP address to connect to.</param>
         public static void SetIPAddress(string address)
         {
             lock (s_lockObject)
@@ -158,6 +189,13 @@ namespace NetworkTables
             }
         }
 
+        /// <summary>
+        /// Gets the table with the specified key.
+        /// </summary>
+        /// <remarks>If the table does not exist, a new table will be created.
+        /// This will automatically initialize network tables if it has not been already.</remarks>
+        /// <param name="key">The network table key to request.</param>
+        /// <returns>The <see cref="NetworkTable"/> requested.</returns>
         public static NetworkTable GetTable(string key)
         {
             lock (s_lockObject)
@@ -173,9 +211,10 @@ namespace NetworkTables
                         throw new SystemException("NetworkTable could not be initialized: " + e);
                     }
                 }
-                return (NetworkTable)s_staticProvider.GetTable(PATH_SEPARATOR + key);
+                return (NetworkTable)s_staticProvider?.GetTable(PATH_SEPARATOR + key);
             }
         }
+
 
         private readonly string path;
         private readonly EntryCache entryCache;
@@ -195,16 +234,25 @@ namespace NetworkTables
             entryCache = new EntryCache(path, ref node, ref absoluteKeyCache);
         }
 
+        ///<inheritdoc/>
         public override string ToString()
         {
             return $"NetworkTable: {path}";
         }
 
+        /// <summary>
+        /// Returns if the network table is connected.
+        /// </summary>
+        /// <returns>The node connection state</returns>
         public bool IsConnected()
         {
             return node.IsConnected();
         }
 
+        /// <summary>
+        /// Returns if the network table is a server
+        /// </summary>
+        /// <returns>If the network table is a server.</returns>
         public bool IsServer()
         {
             return node.IsServer();
@@ -257,6 +305,11 @@ namespace NetworkTables
         private readonly Dictionary<IRemoteConnectionListener, NetworkTableConnectionListenerAdapter> connectionListenerMap =
             new Dictionary<IRemoteConnectionListener, NetworkTableConnectionListenerAdapter>();
 
+        /// <summary>
+        /// Adds a Connection Listener to the network table.
+        /// </summary>
+        /// <param name="listener">The <see cref="IRemoteConnectionListener"/> to attach.</param>
+        /// <param name="immediateNotify">Notify the connection listener immediately</param>
         public void AddConnectionListener(IRemoteConnectionListener listener, bool immediateNotify)
         {
             NetworkTableConnectionListenerAdapter adapter;
@@ -267,6 +320,10 @@ namespace NetworkTables
             node.AddConnectionListener(adapter, immediateNotify);
         }
 
+        /// <summary>
+        /// Removes a Connection Listener from the network table.
+        /// </summary>
+        /// <param name="listener">The <see cref="IRemoteConnectionListener"/> to remove.</param>
         public void RemoveConnectionListener(IRemoteConnectionListener listener)
         {
             NetworkTableConnectionListenerAdapter adapter;
@@ -276,11 +333,20 @@ namespace NetworkTables
 
         private readonly Dictionary<ITableListener, List> listenerMap = new Dictionary<ITableListener, List>();
 
+        /// <summary>
+        /// Adds a table listener without notifying immediately.
+        /// </summary>
+        /// <param name="listener">The <see cref="ITableListener"/> to add.</param>
         public void AddTableListener(ITableListener listener)
         {
             AddTableListener(listener, false);
         }
 
+        /// <summary>
+        /// Adds a table listener for the entire table.
+        /// </summary>
+        /// <param name="listener">The <see cref="ITableListener"/> to add.</param>
+        /// <param name="immediateNotify">Whether to notify the listener immediately.</param>
         public void AddTableListener(ITableListener listener, bool immediateNotify)
         {
             List adapters;
@@ -294,6 +360,12 @@ namespace NetworkTables
             node.AddTableListener(adapter, immediateNotify);
         }
 
+        /// <summary>
+        /// Adds a table listener to a specified key.
+        /// </summary>
+        /// <param name="key">The key to listen to.</param>
+        /// <param name="listener">The <see cref="ITableListener"/> to add.</param>
+        /// <param name="immediateNotify">Whether to notify the listener immediately.</param>
         public void AddTableListener(string key, ITableListener listener, bool immediateNotify)
         {
             List adapters;
@@ -464,9 +536,5 @@ namespace NetworkTables
                 return defaultValue;
             }
         }
-
-
-
-
     }
 }
