@@ -58,6 +58,8 @@
     <Compile Include="NetworkTables2\Connection\ConnectionMonitorThreadTest.cs" />
     <Compile Include="NetworkTables2\NetworkTableEntryTest.cs" />
     <Compile Include="NetworkTables2\TransactionDirtierTest.cs" />
+    <Compile Include="NetworkTables2\Util\ListTest.cs" />
+    <Compile Include="NetworkTables2\Util\StackTest.cs" />
     <Compile Include="NetworkTables\NetworkTableListenerTest.cs" />
     <Compile Include="NetworkTables\NetworkTableTest.cs" />
     <Compile Include="Tables\TableKeyNotDefinedExceptionTest.cs" />
