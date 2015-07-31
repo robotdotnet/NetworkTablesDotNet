@@ -5,6 +5,7 @@ This is a native DotNet implementation of NetworkTables. Much of the externally 
 
 The implementation is currently compiled for .Net 4.5, but as long as you are using VS 2015, you should be able to compile it to .Net 3.5 without much modification. 
 
+
 .. note:: NetworkTables is a protocol used for robot communication in the
           FIRST Robotics Competition, and can be used to talk to
           SmartDashboard/SFX. It does not have any security, and should never
