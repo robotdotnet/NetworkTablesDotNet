@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NetworkTables.NetworkTables2.Util;
+using NUnit.Framework;
+using List = NetworkTables.NetworkTables2.Util.List;
 
 namespace NetworkTables.Test.NetworkTables2.Util
 {
-    [TestClass]
+    [TestFixture]
     public class ListTest
     {
-        [TestMethod]
+        [Test]
         public void TestIsEmpty()
         {
             List list = new List();
@@ -20,7 +18,7 @@ namespace NetworkTables.Test.NetworkTables2.Util
             Assert.IsTrue(!list.IsEmpty());
         }
 
-        [TestMethod]
+        [Test]
         public void TestSize()
         {
             List list = new List();
@@ -32,7 +30,7 @@ namespace NetworkTables.Test.NetworkTables2.Util
             }
         }
 
-        [TestMethod]
+        [Test]
         public void TestSizeGrowth()
         {
             List list = new List();
@@ -47,7 +45,7 @@ namespace NetworkTables.Test.NetworkTables2.Util
             }
         }
 
-        [TestMethod]
+        [Test]
         public void TestContains()
         {
             List list = new List();
@@ -66,7 +64,7 @@ namespace NetworkTables.Test.NetworkTables2.Util
             Assert.IsTrue(list.Contains(testInt2));
         }
 
-        [TestMethod]
+        [Test]
         public void TestAddRemoveObject()
         {
             List list = new List();
@@ -94,7 +92,7 @@ namespace NetworkTables.Test.NetworkTables2.Util
             Assert.IsTrue(list.HasSize(0));
         }
 
-        [TestMethod]
+        [Test]
         public void TestAddRemoveIndex()
         {
             List list = new List();
@@ -135,7 +133,7 @@ namespace NetworkTables.Test.NetworkTables2.Util
             Assert.IsTrue(list.IsEmpty());
         }
 
-        [TestMethod]
+        [Test]
         public void TestOrdering()
         {
             int obj1 = 42;
@@ -158,7 +156,7 @@ namespace NetworkTables.Test.NetworkTables2.Util
             Assert.IsTrue(list.HasItem(1, obj3));
         }
 
-        [TestMethod]
+        [Test]
         public void TestSet()
         {
             int obj1 = 42;

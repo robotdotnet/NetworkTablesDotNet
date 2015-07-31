@@ -3,28 +3,26 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NetworkTables.NetworkTables2;
 using NetworkTables.NetworkTables2.Connection;
 using NetworkTables.NetworkTables2.Stream;
 using NetworkTables.NetworkTables2.Type;
 using NetworkTables.Test.Util;
+using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NetworkTables.Test.NetworkTables2
 {
-    [TestClass]
+    [TestFixture]
     public class NetworkTableEntryTest
     {
-        [ClassInitialize]
-        public static void Init(TestContext ctx)
+        [TestFixtureSetUp]
+        public static void Init()
         {
             
         }
 
-        [TestMethod]
+        [Test]
         public void TestSendValue()
         {
             NetworkTableEntryType type = Mock.Create<NetworkTableEntryType>();
@@ -38,7 +36,7 @@ namespace NetworkTables.Test.NetworkTables2
             Mock.Assert(() => type.SendValue(value, os), Occurs.Once());
         }
 
-        [TestMethod]
+        [Test]
         public void TestToString()
         {
             NetworkTableEntry entry = NetworkTableEntryUtil.NewBooleanEntry("MyKey", false);
@@ -82,7 +80,7 @@ namespace NetworkTables.Test.NetworkTables2
         }
         */
 
-        [TestMethod]
+        [Test]
         public void TestConstructor()
         {
             NetworkTableEntry entry = new NetworkTableEntry((char)10, "MyNotBoolean", (char) 2, DefaultEntryTypes.STRING, "Test1");
@@ -93,7 +91,7 @@ namespace NetworkTables.Test.NetworkTables2
             Assert.AreEqual("Test1", entry.GetValue());
         }
 
-        [TestMethod]
+        [Test]
         public void TestPut()
         {
             NetworkTableEntry entry = NetworkTableEntryUtil.NewStringEntry((char)10, "MyString", (char)2, "Test1");
@@ -130,14 +128,14 @@ namespace NetworkTables.Test.NetworkTables2
             Assert.AreEqual((char)0, entry.GetSequenceNumber());
         }
 
-        [TestMethod]
+        [Test]
         public void TestSetWhenValid()
         {
             NetworkTableEntry entry = NetworkTableEntryUtil.NewStringEntry("MyString", "Test1");
             entry.SetId((char)100);
         }
 
-        [TestMethod]
+        [Test]
         public void TestSetWhenNotValid()
         {
             NetworkTableEntry entry = NetworkTableEntryUtil.NewStringEntry((char)10, "MyString", (char)2, "Test1");
@@ -152,7 +150,7 @@ namespace NetworkTables.Test.NetworkTables2
             }
         }
 
-        [TestMethod]
+        [Test]
         public void TestClearId()
         {
             NetworkTableEntry entry = NetworkTableEntryUtil.NewDoubleEntry("MyString", 203.2);
@@ -164,7 +162,7 @@ namespace NetworkTables.Test.NetworkTables2
             Assert.AreEqual((char)22, entry.GetId());
         }
 
-        [TestMethod]
+        [Test]
         public void TestDirtyness()
         {
             NetworkTableEntry entry = NetworkTableEntryUtil.NewDoubleEntry("MyString", 203.2);
@@ -177,7 +175,7 @@ namespace NetworkTables.Test.NetworkTables2
             Assert.AreEqual(false, entry.IsDirty());
         }
 
-        [TestMethod]
+        [Test]
         public void TestForcePut()
         {
             NetworkTableEntry entry = NetworkTableEntryUtil.NewStringEntry((char)10, "MyString", (char)2, "Test1");
@@ -202,7 +200,7 @@ namespace NetworkTables.Test.NetworkTables2
             Assert.AreEqual((char)30000, entry.GetSequenceNumber());
         }
 
-        [TestMethod]
+        [Test]
         public void TestForcePutWithType()
         {
             NetworkTableEntry entry = NetworkTableEntryUtil.NewStringEntry((char)10, "MyString", (char)2, "Test1");
@@ -227,7 +225,7 @@ namespace NetworkTables.Test.NetworkTables2
             Assert.AreEqual((char)3, entry.GetSequenceNumber());
         }
 
-        [TestMethod]
+        [Test]
         public void TestFireListener()
         {
             NetworkTableEntry entry = NetworkTableEntryUtil.NewStringEntry((char)10, "MyString", (char)2, "Test1");

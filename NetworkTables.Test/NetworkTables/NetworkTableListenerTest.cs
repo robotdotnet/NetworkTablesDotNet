@@ -1,11 +1,11 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NetworkTables.NetworkTables;
 using NetworkTables.NetworkTables2.Client;
 using NetworkTables.NetworkTables2.Stream;
 using NetworkTables.NetworkTables2.Thread;
 using NetworkTables.NetworkTables2.Type;
 using NetworkTables.Tables;
+using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NetworkTables.Test.NetworkTables
@@ -18,7 +18,7 @@ namespace NetworkTables.Test.NetworkTables
         }
     }
 
-    [TestClass]
+    [TestFixture]
     public class NetworkTableListenerTest
     {
         private static NetworkTableClient client;
@@ -32,8 +32,8 @@ namespace NetworkTables.Test.NetworkTables
         static private NetworkTable testSubTable3;
         static private NetworkTable testSubTable4;
 
-        [ClassInitialize]
-        public static void Init(TestContext ctx)
+        [TestFixtureSetUp]
+        public static void Init()
         {
             client = new NetworkTableClient(new IOClass());
             provider = new NetworkTableProvider(client);
@@ -48,7 +48,7 @@ namespace NetworkTables.Test.NetworkTables
             testSubTable4 = (NetworkTable)provider.GetTable("/test3/suba/subb");
         }
 
-        [ClassCleanup]
+        [TestFixtureTearDown]
         public static void Cleanup()
         {
             provider.Close();
@@ -56,7 +56,7 @@ namespace NetworkTables.Test.NetworkTables
 
         
 
-        [TestMethod]
+        [Test]
         public void KeyListenerImediateNotifyTest()
         {
             var listener1 = Mock.Create<ITableListener>();
@@ -89,7 +89,7 @@ namespace NetworkTables.Test.NetworkTables
             Mock.Assert(() => listener1.ValueChanged(testTable1, "MyKey4", true, false), Occurs.Once());
         }
 
-        [TestMethod]
+        [Test]
         public void KeyListenerNotImediateNotifyTest()
         {
             var listener1 = Mock.Create<ITableListener>();
@@ -119,7 +119,7 @@ namespace NetworkTables.Test.NetworkTables
             Mock.Assert(() => listener1.ValueChanged(testTable1, "MyKey4", true, false), Occurs.Once());
         }
 
-        [TestMethod]
+        [Test]
         public void SubTableListenerTest()
         {
             var listener1 = Mock.Create<ITableListener>();
@@ -140,7 +140,7 @@ namespace NetworkTables.Test.NetworkTables
             Mock.Assert(() => listener1.ValueChanged(testTable2, "sub2", testSubTable2, true), Occurs.Once());
         }
 
-        [TestMethod]
+        [Test]
         public void SubSubTableListenerTest()
         {
             var listener1 = Mock.Create<ITableListener>();

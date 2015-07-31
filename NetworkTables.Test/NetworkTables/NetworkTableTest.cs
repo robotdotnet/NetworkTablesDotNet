@@ -1,12 +1,12 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NetworkTables.NetworkTables;
 using NetworkTables.NetworkTables2.Client;
 using NetworkTables.Tables;
+using NUnit.Framework;
 
 namespace NetworkTables.Test.NetworkTables
 {
-    [TestClass]
+    [TestFixture]
     public class NetworkTableTest
     {
         private static NetworkTableClient client;
@@ -14,8 +14,8 @@ namespace NetworkTables.Test.NetworkTables
         private static NetworkTable testTable1;
         private static NetworkTable testTable2;
 
-        [ClassInitialize]
-        public static void Init(TestContext ctx)
+        [TestFixtureSetUp]
+        public static void Init()
         {
             client = new NetworkTableClient(new IOClass());
             provider = new NetworkTableProvider(client);
@@ -23,13 +23,13 @@ namespace NetworkTables.Test.NetworkTables
             testTable2 = (NetworkTable)provider.GetTable("/test2");
         }
 
-        [ClassCleanup]
+        [TestFixtureTearDown]
         public static void Cleanup()
         {
             provider.Close();
         }
 
-        [TestMethod]
+        [Test]
         public void PutDoubleTest()
         {
             double testDouble = 43.43;
@@ -57,7 +57,7 @@ namespace NetworkTables.Test.NetworkTables
             Assert.AreEqual(44.44, testDouble, 0.0);
         }
 
-        [TestMethod]
+        [Test]
         public void PutBooleanTest()
         {
             bool testBool = false;
@@ -83,7 +83,7 @@ namespace NetworkTables.Test.NetworkTables
             Assert.IsFalse(testBool);
         }
 
-        [TestMethod]
+        [Test]
         public void PutStringTest()
         {
             string testString = "Initialized Test";
@@ -109,7 +109,7 @@ namespace NetworkTables.Test.NetworkTables
             Assert.AreEqual("Test 3", testString);
         }
 
-        [TestMethod]
+        [Test]
         public void PutMultiDataTypeTest()
         {
             double double1 = 1;
@@ -167,7 +167,7 @@ namespace NetworkTables.Test.NetworkTables
             Assert.AreEqual(string3, testTable1.GetString("string3"));
         }
 
-        [TestMethod]
+        [Test]
         public void MultiTableTest()
         {
             double table1double = 1;
@@ -224,7 +224,7 @@ namespace NetworkTables.Test.NetworkTables
             catch (TableKeyNotDefinedException e) { }
         }
 
-        [TestMethod]
+        [Test]
         public void GetTableTest()
         {
             Assert.AreSame(testTable1, provider.GetTable("/test1"));

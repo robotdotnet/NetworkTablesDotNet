@@ -1,21 +1,19 @@
-﻿using System;
-using System.Runtime.Remoting.Messaging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NetworkTables.NetworkTables2;
+﻿using NetworkTables.NetworkTables2;
+using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NetworkTables.Test.NetworkTables2
 {
     //TODO: Figure This Out
-    [TestClass]
+    [TestFixture]
     public class TransactionDirtierTest
     {
         private static TransactionDirtier dirtier;
 
         private static OutgoingEntryReceiver receiver = Mock.Create<OutgoingEntryReceiver>();
 
-        [ClassInitialize]
-        public static void Init(TestContext ctx)
+        [TestFixtureSetUp]
+        public static void Init()
         {
             dirtier = new TransactionDirtier(receiver);
         }
@@ -25,7 +23,7 @@ namespace NetworkTables.Test.NetworkTables2
             
         }
 
-        [TestMethod]
+        [Test]
         public void TestOutgoingCleanUpdate()
         {
             NetworkTableEntry entry = Mock.Create<NetworkTableEntry>();

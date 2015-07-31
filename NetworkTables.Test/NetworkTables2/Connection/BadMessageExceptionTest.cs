@@ -1,13 +1,12 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NetworkTables.NetworkTables2.Connection;
+﻿using NetworkTables.NetworkTables2.Connection;
+using NUnit.Framework;
 
 namespace NetworkTables.Test.NetworkTables2.Connection
 {
-    [TestClass]
+    [TestFixture]
     public class BadMessageExceptionTest
     {
-        [TestMethod]
+        [Test]
         public void ThrowExceptionTest()
         {
             try

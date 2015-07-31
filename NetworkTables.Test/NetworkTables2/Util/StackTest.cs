@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using NetworkTables.NetworkTables2.Util;
+using NUnit.Framework;
 using Telerik.JustMock.AutoMock.Ninject;
 
 namespace NetworkTables.Test.NetworkTables2.Util
 {
-    [TestClass]
+    [TestFixture]
     public class StackTest
     {
-        [TestMethod]
+        [Test]
         public void PushTest()
         {
             int obj1 = 0;
@@ -22,7 +23,7 @@ namespace NetworkTables.Test.NetworkTables2.Util
             Assert.IsFalse(stack.IsEmpty());
         }
 
-        [TestMethod]
+        [Test]
         public void PopTest()
         {
             int obj1 = 0;
@@ -38,7 +39,7 @@ namespace NetworkTables.Test.NetworkTables2.Util
             Assert.IsTrue(stack.IsEmpty());
         }
 
-        [TestMethod]
+        [Test]
         public void OrderingTest()
         {
             int obj1 = 42;

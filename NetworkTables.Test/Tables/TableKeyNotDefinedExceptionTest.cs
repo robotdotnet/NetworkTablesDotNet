@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿
 using NetworkTables.Tables;
+using NUnit.Framework;
 
 namespace NetworkTables.Test.Tables
 {
-    [TestClass]
+    [TestFixture]
     public class TableKeyNotDefinedExceptionTest
     {
-        [TestMethod, ]
+        [Test]
         public void ThrowExceptionTest()
         {
             try

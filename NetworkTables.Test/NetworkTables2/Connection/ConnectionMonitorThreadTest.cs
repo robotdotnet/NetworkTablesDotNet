@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NetworkTables.NetworkTables2.Connection;
+﻿using NetworkTables.NetworkTables2.Connection;
+using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace NetworkTables.Test.NetworkTables2.Connection
 {
-    [TestClass]
+    [TestFixture]
     public class ConnectionMonitorThreadTest
     {
         private static ConnectionMonitorThread thread;
@@ -17,8 +12,8 @@ namespace NetworkTables.Test.NetworkTables2.Connection
         private static ConnectionAdapter adapter;
         private static NetworkTableConnection connection;
 
-        [ClassInitialize]
-        public static void Init(TestContext ctx)
+        [TestFixtureSetUp]
+        public static void Init()
         {
             adapter = Mock.Create<ConnectionAdapter>();
             connection = Mock.Create<NetworkTableConnection>();
