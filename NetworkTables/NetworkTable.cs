@@ -258,6 +258,11 @@ namespace NetworkTables
             return node.IsServer();
         }
 
+        public void Close()
+        {
+            node?.Close();
+        }
+
 
         internal class NetworkTableKeyCache : StringCache
         {
