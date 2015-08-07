@@ -105,7 +105,6 @@
     <Compile Include="NetworkTables\NetworkTableConnectionListenerAdapter.cs" />
     <Compile Include="NetworkTables2\NetworkTableNode.cs" />
     <Compile Include="NetworkTables\NetworkTableKeyListenerAdapter.cs" />
-    <Compile Include="NetworkTables\NetworkTableKeyNotDefined.cs" />
     <Compile Include="NetworkTables\NetworkTableListenerAdapter.cs" />
     <Compile Include="NetworkTables\NetworkTableMode.cs" />
     <Compile Include="NetworkTables\NetworkTableProvider.cs" />

@@ -6,9 +6,9 @@ using NetworkTables.NetworkTables;
 
 namespace NetworkTables.Tables
 {
-    public class TableKeyNotDefinedException : NetworkTableKeyNotDefined
+    public class TableKeyNotDefinedException : KeyNotFoundException
     {
-        public TableKeyNotDefinedException(string key) : base(key)
+        public TableKeyNotDefinedException(string key) : base("Unknown Table Key: " + key)
         {
             
         }

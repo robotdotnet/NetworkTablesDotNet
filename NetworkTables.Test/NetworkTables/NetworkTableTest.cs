@@ -38,7 +38,7 @@ namespace NetworkTables.Test.NetworkTables
             {
                 testDouble = testTable1.GetNumber("double");
             }
-            catch (NetworkTableKeyNotDefined e)
+            catch (TableKeyNotDefinedException e)
             {
                 Console.WriteLine(e);
             }
@@ -50,7 +50,7 @@ namespace NetworkTables.Test.NetworkTables
                 testDouble = testTable1.GetNumber("Non-Existant");
                 Assert.Fail();
             }
-            catch (NetworkTableKeyNotDefined e)
+            catch (TableKeyNotDefinedException e)
             {
             }
             testDouble = testTable1.GetNumber("Non-Existant", 44.44);
@@ -66,7 +66,7 @@ namespace NetworkTables.Test.NetworkTables
             {
                 testBool = testTable1.GetBoolean("boolean");
             }
-            catch (NetworkTableKeyNotDefined e)
+            catch (TableKeyNotDefinedException e)
             {
                 Console.WriteLine(e);
             }
@@ -76,7 +76,7 @@ namespace NetworkTables.Test.NetworkTables
                 testBool = testTable1.GetBoolean("Non-Existant");
                 Assert.Fail();
             }
-            catch (NetworkTableKeyNotDefined e)
+            catch (TableKeyNotDefinedException e)
             {
             }
             testBool = testTable1.GetBoolean("Non-Existant", false);
@@ -92,7 +92,7 @@ namespace NetworkTables.Test.NetworkTables
             {
                 testString = testTable1.GetString("String");
             }
-            catch (NetworkTableKeyNotDefined e)
+            catch (TableKeyNotDefinedException e)
             {
                 Console.WriteLine(e);
             }
@@ -102,7 +102,7 @@ namespace NetworkTables.Test.NetworkTables
                 testString = testTable1.GetString("Non-Existant");
                 Assert.Fail();
             }
-            catch (NetworkTableKeyNotDefined)
+            catch (TableKeyNotDefinedException)
             {
             }
             testString = testTable1.GetString("Non-Existant", "Test 3");

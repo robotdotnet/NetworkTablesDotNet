@@ -1,5 +1,5 @@
 # NetworkTablesDotNet
-<a href="https://www.myget.org/"><img src="https://www.myget.org/BuildSource/Badge/robotdotnet-build?identifier=5d4868a2-d79f-453e-9640-cc5ee0759d20" alt="robotdotnet-build MyGet Build Status" /></a>
+[![Build status](https://ci.appveyor.com/api/projects/status/wti22t106a5yipby/branch/master?svg=true)](https://ci.appveyor.com/project/robotdotnet-admin/networktablesdotnet/branch/master)
 
 This is a native DotNet implementation of NetworkTables. Much of the externally facing code, and the method casing were derived from the C++ implementation, with other internal parts derived from the Java implementation. NetworkTables are used to pass non-Driver Station data to and from the robot across the network.
 
