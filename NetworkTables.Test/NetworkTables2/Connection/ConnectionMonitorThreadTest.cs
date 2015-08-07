@@ -1,6 +1,5 @@
 ﻿using NetworkTables.NetworkTables2.Connection;
 using NUnit.Framework;
-using Telerik.JustMock;
 
 namespace NetworkTables.Test.NetworkTables2.Connection
 {
@@ -15,9 +14,9 @@ namespace NetworkTables.Test.NetworkTables2.Connection
         [TestFixtureSetUp]
         public static void Init()
         {
-            adapter = Mock.Create<ConnectionAdapter>();
-            connection = Mock.Create<NetworkTableConnection>();
-            thread = new ConnectionMonitorThread(adapter, connection);
+            //adapter = Mock.Create<ConnectionAdapter>();
+            //connection = Mock.Create<NetworkTableConnection>();
+            //thread = new ConnectionMonitorThread(adapter, connection);
         }
         //These run a thread, and since it blocks, its not running correctly.
         /*

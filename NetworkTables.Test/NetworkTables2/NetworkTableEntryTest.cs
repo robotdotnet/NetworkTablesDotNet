@@ -9,7 +9,6 @@ using NetworkTables.NetworkTables2.Stream;
 using NetworkTables.NetworkTables2.Type;
 using NetworkTables.Test.Util;
 using NUnit.Framework;
-using Telerik.JustMock;
 
 namespace NetworkTables.Test.NetworkTables2
 {
@@ -22,18 +21,42 @@ namespace NetworkTables.Test.NetworkTables2
             
         }
 
+        public class MockNetworkTableEntryType : NetworkTableEntryType
+        {
+            public int SendCount { get; private set; } = 0;
+
+            public int ReadCount { get; private set; } = 0;
+
+            public MockNetworkTableEntryType(byte id, string name) : base(id, name)
+            {
+            }
+
+            public override void SendValue(object value, DataIOStream os)
+            {
+                SendCount++;
+            }
+
+            public override object ReadValue(DataIOStream inStream)
+            {
+                ReadCount++;
+                return null;
+            }
+        }
+
         [Test]
         public void TestSendValue()
         {
-            NetworkTableEntryType type = Mock.Create<NetworkTableEntryType>();
+            MockNetworkTableEntryType type = new MockNetworkTableEntryType(0, "test");
             object value = "MyValue";
             NetworkTableEntry entry = new NetworkTableEntry((char) 0, "MyKey", (char) 0 , type, value);
-            DataIOStream os = Mock.Create<DataIOStream>();
+            DataIOStream os = new DataIOStream(null);
 
 
             entry.SendValue(os);
 
-            Mock.Assert(() => type.SendValue(value, os), Occurs.Once());
+            Assert.AreEqual(1, type.SendCount);
+
+            //Mock.Assert(() => type.SendValue(value, os), Occurs.Once());
         }
 
         [Test]
@@ -229,19 +252,51 @@ namespace NetworkTables.Test.NetworkTables2
         public void TestFireListener()
         {
             NetworkTableEntry entry = NetworkTableEntryUtil.NewStringEntry((char)10, "MyString", (char)2, "Test1");
-            AbstractNetworkTableEntryStore.TableListenerManager listenerManager =
-                Mock.Create<AbstractNetworkTableEntryStore.TableListenerManager>();
+            MockTableListenerManager listenerManager =
+                new MockTableListenerManager();
 
             entry.FireListener(listenerManager);
-            Mock.Assert(() => listenerManager.FireTableListeners("MyString", "Test1", true), Occurs.Once());
+            listenerManager.AssertListener(1, "MyString", "Test1", true);
+
+            listenerManager.ResetCount();
 
             entry.FireListener(listenerManager);
-            Mock.Assert(() => listenerManager.FireTableListeners("MyString", "Test1", false), Occurs.Once());
+            listenerManager.AssertListener(1, "MyString", "Test1", false);
+
+            listenerManager.ResetCount();
 
             entry.ForcePut((char)0, "TEST3");
             entry.FireListener(listenerManager);
+            listenerManager.AssertListener(1, "MyString", "TEST3", false);
+        }
 
-            Mock.Assert(() => listenerManager.FireTableListeners("MyString", "TEST3", false), Occurs.Once());
+        public class MockTableListenerManager : AbstractNetworkTableEntryStore.TableListenerManager
+        {
+            public int FireCount { get; private set; } = 0;
+            public string Key { get; private set; } = "";
+            public object Value { get; private set; } = null;
+            public bool New { get; private set; } = false;
+
+            public void ResetCount()
+            {
+                FireCount = 0;
+            }
+
+            public void FireTableListeners(string key, object value, bool isNew)
+            {
+                FireCount++;
+                Key = key;
+                Value = value;
+                New = isNew;
+            }
+
+            public void AssertListener(int count, string key, object value, bool isNew)
+            {
+                Assert.AreEqual(key, Key);
+                Assert.AreEqual(value, Value);
+                Assert.AreEqual(isNew, New);
+                Assert.AreEqual(count, FireCount);
+            }
         }
     }
 }
