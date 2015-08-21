@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NetworkTable.cs" />
     <Compile Include="NetworkTables2\AbstractNetworkTableEntryStore.cs" />
     <Compile Include="NetworkTables2\Client\ClientConnectionAdapter.cs" />
     <Compile Include="NetworkTables2\Client\ClientConnectionListenerManager.cs" />
@@ -101,7 +102,7 @@
     <Compile Include="NetworkTables2\Util\Stack.cs" />
     <Compile Include="NetworkTables2\Util\StringCache.cs" />
     <Compile Include="NetworkTables2\WriteManager.cs" />
-    <Compile Include="NetworkTable.cs" />
+    <Compile Include="NetworkTableOld.cs" />
     <Compile Include="NetworkTables\NetworkTableConnectionListenerAdapter.cs" />
     <Compile Include="NetworkTables2\NetworkTableNode.cs" />
     <Compile Include="NetworkTables\NetworkTableKeyListenerAdapter.cs" />
@@ -109,6 +110,10 @@
     <Compile Include="NetworkTables\NetworkTableMode.cs" />
     <Compile Include="NetworkTables\NetworkTableProvider.cs" />
     <Compile Include="NetworkTables\NetworkTableSubListenerAdapter.cs" />
+    <Compile Include="NTCore\InteropHelpers.cs" />
+    <Compile Include="NTCore\Enums.cs" />
+    <Compile Include="NTCore\Interop.cs" />
+    <Compile Include="NTCore\Structs.cs" />
     <Compile Include="Tables\IRemote.cs" />
     <Compile Include="Tables\IRemoteConnectionListener.cs" />
     <Compile Include="Tables\ITable.cs" />

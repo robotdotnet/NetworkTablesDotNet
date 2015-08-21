@@ -24,13 +24,13 @@ namespace NetworkTables.Test.NetworkTables
         private static NetworkTableClient client;
         private static  NetworkTableProvider provider;
 
-        private static NetworkTable testTable1;
-        static private NetworkTable testTable2;
-        static private NetworkTable testTable3;
-        static private NetworkTable testSubTable1;
-        static private NetworkTable testSubTable2;
-        static private NetworkTable testSubTable3;
-        static private NetworkTable testSubTable4;
+        private static NetworkTableOld testTable1;
+        static private NetworkTableOld testTable2;
+        static private NetworkTableOld testTable3;
+        static private NetworkTableOld testSubTable1;
+        static private NetworkTableOld testSubTable2;
+        static private NetworkTableOld testSubTable3;
+        static private NetworkTableOld testSubTable4;
 
         [TestFixtureSetUp]
         public static void Init()
@@ -38,14 +38,14 @@ namespace NetworkTables.Test.NetworkTables
             client = new NetworkTableClient(new IOClass());
             provider = new NetworkTableProvider(client);
 
-            testTable1 = (NetworkTable)provider.GetTable("/test1");
-            testTable1 = (NetworkTable)provider.GetTable("/test1");
-            testTable2 = (NetworkTable)provider.GetTable("/test2");
-            testSubTable1 = (NetworkTable)provider.GetTable("/test2/sub1");
-            testSubTable2 = (NetworkTable)provider.GetTable("/test2/sub2");
-            testTable3 = (NetworkTable)provider.GetTable("/test3");
-            testSubTable3 = (NetworkTable)provider.GetTable("/test3/suba");
-            testSubTable4 = (NetworkTable)provider.GetTable("/test3/suba/subb");
+            testTable1 = (NetworkTableOld)provider.GetTable("/test1");
+            testTable1 = (NetworkTableOld)provider.GetTable("/test1");
+            testTable2 = (NetworkTableOld)provider.GetTable("/test2");
+            testSubTable1 = (NetworkTableOld)provider.GetTable("/test2/sub1");
+            testSubTable2 = (NetworkTableOld)provider.GetTable("/test2/sub2");
+            testTable3 = (NetworkTableOld)provider.GetTable("/test3");
+            testSubTable3 = (NetworkTableOld)provider.GetTable("/test3/suba");
+            testSubTable4 = (NetworkTableOld)provider.GetTable("/test3/suba/subb");
         }
 
         [TestFixtureTearDown]

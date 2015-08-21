@@ -17,11 +17,11 @@ namespace NetworkTablesTest
             
             //var s = new TcpClient("172.22.11.2", 1735);
            
-            NetworkTable.SetIPAddress("roborio-4488.local");
-            NetworkTable.SetClientMode();
-            NetworkTable.Initialize();
+            NetworkTableOld.SetIPAddress("roborio-4488.local");
+            NetworkTableOld.SetClientMode();
+            NetworkTableOld.Initialize();
             
-            var table = NetworkTable.GetTable("SmartDashboard");
+            var table = NetworkTableOld.GetTable("SmartDashboard");
 
             while (true)
             {
@@ -39,10 +39,10 @@ namespace NetworkTablesTest
             
             
             
-            NetworkTable.SetServerMode();
-            NetworkTable.Initialize();
+            NetworkTableOld.SetServerMode();
+            NetworkTableOld.Initialize();
 
-            var sd = NetworkTable.GetTable("SmartDashboard");
+            var sd = NetworkTableOld.GetTable("SmartDashboard");
             sd.PutValue("test", "HELLO FROM NT LAND");
             sd.PutBoolean("MyBool", true);
             sd.PutNumber("MyNumber", 2.5);

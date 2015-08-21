@@ -10,12 +10,12 @@ namespace NetworkTables.NetworkTables
     public class NetworkTableSubListenerAdapter : ITableListener
     {
         private ITableListener targetListener;
-        private NetworkTable targetSource;
+        private NetworkTableOld targetSource;
         private string prefix;
 
         private HashSet<string> notifiedTables = new HashSet<string>();
 
-        public NetworkTableSubListenerAdapter(string prefix, NetworkTable targetSource, ITableListener targetListener)
+        public NetworkTableSubListenerAdapter(string prefix, NetworkTableOld targetSource, ITableListener targetListener)
         {
             this.prefix = prefix;
             this.targetSource = targetSource;
@@ -32,7 +32,7 @@ namespace NetworkTables.NetworkTables
                 int endSubTable = -1;
                 for (int i = 0; i < relativeKey.Length; ++i)
                 {
-                    if(relativeKey[i] == NetworkTable.PATH_SEPARATOR)
+                    if(relativeKey[i] == NetworkTableOld.PATH_SEPARATOR)
                     {
                         endSubTable = i;
                         break;

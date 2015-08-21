@@ -11,11 +11,11 @@ namespace NetworkTables.NetworkTables
     public class NetworkTableKeyListenerAdapter : ITableListener
     {
         private readonly ITableListener targetListener;
-        private readonly NetworkTable targetSource;
+        private readonly NetworkTableOld targetSource;
         private readonly string relativeKey;
         private readonly string fullKey;
 
-        public NetworkTableKeyListenerAdapter(string relativeKey, string fullKey, NetworkTable targetSource,
+        public NetworkTableKeyListenerAdapter(string relativeKey, string fullKey, NetworkTableOld targetSource,
             ITableListener targetListener)
         {
             this.relativeKey = relativeKey;

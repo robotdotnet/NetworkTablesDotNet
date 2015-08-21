@@ -1,544 +1,201 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.IO;
-using NetworkTables.NetworkTables;
-using NetworkTables.NetworkTables2;
+using System.Threading.Tasks;
+using NetworkTables.NTCore;
 using NetworkTables.Tables;
-using NetworkTables.NetworkTables2.Thread;
-using NetworkTables.NetworkTables2.Util;
+using static NetworkTables.NTCore.InteropHelpers;
 
 namespace NetworkTables
 {
-    /// <summary>
-    /// This class is the Main Class for interfacing with NetworkTables.
-    /// </summary>
-    /// <remarks>For most users, this will be the only class that will be needed.
-    /// Any interfaces needed to work with this can be found in the NetworkTables.Tables 
-    /// namespace. </remarks>
-    /// <example>
-    /// The following example demonstrates creating a server:
-    /// 
-    /// <code language="cs">
-    /// //Set Server Mode
-    /// NetworkTable.SetServerMode();
-    /// 
-    /// //Initialize the Server
-    /// NetworkTable.Initialize();
-    /// 
-    /// //Get a reference to the smartdashboard.
-    /// var smartDashboard = NetworkTable.GetTable("SmartDashboard");
-    /// </code>
-    /// <c>smartDashboard</c> can now be used to get and set values in the smart dashboard.
-    /// Examples on this can be found below the client section.
-    /// <para />
-    /// The following example demonstrates creating a client and connecting it to a server:
-    /// 
-    /// <code language="cs">
-    /// //Set IP Address. Replace xxxx with your team number if connecting to a RoboRIO,
-    /// //or the server's IP if the server is not a RoboRIO.
-    /// NetworkTable.SetIPAddress("roborio-xxxx.local");
-    /// 
-    /// //Set Client Mode
-    /// NetworkTable.SetClientMode();
-    /// 
-    /// //Initialize the client
-    /// NetworkTable.Initialize();
-    /// 
-    /// //Get a reference to the smartdashboard.
-    /// var smartDashboard = NetworkTable.GetTable("SmartDashboard");
-    /// </code>
-    /// <c>smartDashboard</c> can now be used to get and set values in the smart dashboard.
-    /// <para />
-    /// The following example shows how to get and put values into the smart dashboard:
-    /// 
-    /// <code language="cs">
-    /// //Strings
-    /// smartDashboard.PutString("MyString", "MyValue");
-    /// string s = smartDashboard.GetString("MyString");
-    /// //Note that if the key has not been put in the smart dashboard,
-    /// //the GetString function will throw a TableKeyNotDefinedException.
-    /// //To get around this, set a default value to be returned if there is no key, like this:
-    /// string s = smartDashboard.GetString("MyString", "Default");
-    /// 
-    /// //Numbers
-    /// smartDashboard.PutNumber("MyNumber", 3.562);
-    /// double s = smartDashboard.GetNumber("MyNumber");
-    /// //Note that if the key has not been put in the smart dashboard,
-    /// //the GetString function will throw a TableKeyNotDefinedException.
-    /// //To get around this, set a default value to be returned if there is no key, like this:
-    /// double s = smartDashboard.GetDouble("MyNumber", 0.0);
-    /// 
-    /// //Bools
-    /// smartDashboard.PutBoolean("MyBool", true);
-    /// bool s = smartDashboard.GetBoolean("MyBool");
-    /// //Note that if the key has not been put in the smart dashboard,
-    /// //the GetString function will throw a TableKeyNotDefinedException.
-    /// //To get around this, set a default value to be returned if there is no key, like this:
-    /// bool s = smartDashboard.GetBoolean("MyBool", false);
-    /// </code>
-    /// </example>
-    public class NetworkTable : ITable, IRemote
+    public class NetworkTable : ITable, IDisposable
     {
-        private static NTThreadManager s_threadManager = new DefaultThreadManager();
+        private readonly string m_path;
 
-        ///The path separator for sub-tables and keys.
-        public static readonly char PATH_SEPARATOR = '/';
-        ///The default port that NetworkTables listens on
-        public static readonly int DEFAULT_PORT = 1735;
-
-        private static NetworkTableProvider s_staticProvider = null;
-        private static NetworkTableMode.CreateNodeDelegate s_mode = NetworkTableMode.CreateServerNode;
-
-        private object m_lockObject = new object();
-        private static object s_lockObject = new object();
-
-        private static int s_port = DEFAULT_PORT;
+        private const char PATH_SEPERATOR_CHAR = '/';
+        private const uint DEFAULT_PORT = 1735;
         private static string s_ipAddress = null;
+        private static bool client = false;
+        private static bool running = false;
 
-        private static void CheckInit()
-        {
-            lock (s_lockObject)
-            {
-                if (s_staticProvider != null)
-                    throw new InvalidOperationException("Network tables has already been initialized");
-            }
-        }
+        private readonly Dictionary<uint, ITableListener> m_listeners = new Dictionary<uint, ITableListener>(); 
 
-        /// <summary>
-        /// Initialized a NetworkTable.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">This is thrown if Network Tables
-        /// has already been initialized.</exception>
         public static void Initialize()
         {
-            lock (s_lockObject)
+            if (client)
             {
-                CheckInit();
-                s_staticProvider = new NetworkTableProvider(s_mode(s_ipAddress, s_port, s_threadManager));
+                StartClient(s_ipAddress, DEFAULT_PORT);
             }
-        }
-        /// <summary>
-        /// Sets the table provider for static network tables methods.
-        /// </summary>
-        /// <param name="provider">The <see cref="NetworkTableProvider"/> to use.</param>
-        /// <remarks>Call <see cref="SetServerMode"/> or <see cref="SetClientMode"/>, and then
-        /// call <see cref="Initialize"/></remarks>
-        [Obsolete("Call SetServerMode() or SetClientMode(), and then call Initialize instead.")]
-        public static void SetTableProvider(NetworkTableProvider provider)
-        {
-            lock (s_lockObject)
+            else
             {
-                CheckInit();
-                s_staticProvider = provider;
+                StartServer("networktables.ini", "", DEFAULT_PORT);
             }
+            running = true;
         }
 
-        /// <summary>
-        /// Sets that network tables should be in server mode.
-        /// </summary>
-        /// <remarks>This or <see cref="SetClientMode"/> must be called
-        /// before <see cref="Initialize"/></remarks>
-        public static void SetServerMode()
+        public static void Shutdown()
         {
-            lock (s_lockObject)
+            if (client)
             {
-                CheckInit();
-                s_mode = NetworkTableMode.CreateServerNode;
+                Interop.NT_StopClient();
             }
+            else
+            {
+                Interop.NT_StopServer();
+            }
+            running = false;
         }
 
-        /// <summary>
-        /// Sets that network tables should be in client mode.
-        /// </summary>
-        /// <remarks>This or <see cref="SetServerMode"/> must be called
-        /// before <see cref="Initialize"/></remarks>
         public static void SetClientMode()
         {
-            lock (s_lockObject)
-            {
-                CheckInit();
-                s_mode = NetworkTableMode.CreateClientNode;
-            }
+            client = true;
         }
 
-        /// <summary>
-        /// Sets the team that the robot is configured for.
-        /// </summary>
-        /// <param name="team">Your team number.</param>
+        public static void SetServerMode()
+        {
+            client = false;
+        }
+
         public static void SetTeam(int team)
         {
-            lock (s_lockObject)
-            {
-                SetIPAddress("10." + (team / 100) + "." + (team % 100) + ".2");
-            }
+            SetIPAddress("10." + (team / 100) + "." + (team % 100) + ".2\n");
         }
 
-        /// <summary>
-        /// Sets the ip address that will be connected to in client mode.
-        /// </summary>
-        /// <param name="address">The IP address to connect to.</param>
         public static void SetIPAddress(string address)
         {
-            lock (s_lockObject)
-            {
-                CheckInit();
-                s_ipAddress = address;
-            }
+            s_ipAddress = address;
         }
 
-        /// <summary>
-        /// Gets the table with the specified key.
-        /// </summary>
-        /// <remarks>If the table does not exist, a new table will be created.
-        /// This will automatically initialize network tables if it has not been already.</remarks>
-        /// <param name="key">The network table key to request.</param>
-        /// <returns>The <see cref="NetworkTable"/> requested.</returns>
         public static NetworkTable GetTable(string key)
         {
-            lock (s_lockObject)
+            if (!running) Initialize();
+            return new NetworkTable(PATH_SEPERATOR_CHAR + key);
+        }
+
+        private NetworkTable(string path)
+        {
+            this.m_path = path;
+        }
+
+        public void Dispose()
+        {
+            foreach (var key in m_listeners.Keys)
             {
-                if (s_staticProvider == null)
-                {
-                    try
-                    {
-                        Initialize();
-                    }
-                    catch (IOException e)
-                    {
-                        throw new SystemException("NetworkTable could not be initialized: " + e);
-                    }
-                }
-                return (NetworkTable)s_staticProvider?.GetTable(PATH_SEPARATOR + key);
+                Interop.NT_RemoveEntryListener(key);
             }
+            m_listeners.Clear();
         }
 
-
-        private readonly string path;
-        private readonly EntryCache entryCache;
-        private readonly NetworkTableProvider provider;
-        private readonly NetworkTableNode node;
-        private readonly NetworkTableKeyCache absoluteKeyCache;
-
-
-        internal NetworkTable(string path, NetworkTableProvider provider)
+        public bool ContainsKey(string key)
         {
-            this.path = path;
-            absoluteKeyCache = new NetworkTableKeyCache(path);
-
-            this.provider = provider;
-            this.node = provider.GetNode();
-            absoluteKeyCache = new NetworkTableKeyCache(path);
-            entryCache = new EntryCache(path, ref node, ref absoluteKeyCache);
+            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            return InteropHelpers.GetType(path) != NT_Type.NT_UNASSIGNED;
         }
 
-        ///<inheritdoc/>
-        public override string ToString()
+        public bool ContainsSubTable(string key)
         {
-            return $"NetworkTable: {path}";
+            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            return GetEntryInfo(path, 0).Length != 0;
         }
 
-        /// <summary>
-        /// Returns if the network table is connected.
-        /// </summary>
-        /// <returns>The node connection state</returns>
-        public bool IsConnected()
+        public void Persist(string key)
         {
-            return node.IsConnected();
+            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            SetEntryFlags(path, (uint)NT_EntryFlags.NT_PERSISTENT);
         }
 
-        /// <summary>
-        /// Returns if the network table is a server
-        /// </summary>
-        /// <returns>If the network table is a server.</returns>
-        public bool IsServer()
+        public ITable GetSubTable(string key)
         {
-            return node.IsServer();
+            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            return new NetworkTable(key);
         }
 
-        public void Close()
+        public void PutNumber(string key, double value)
         {
-            node?.Close();
+            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            SetEntryDouble(path, value);
         }
 
-
-        internal class NetworkTableKeyCache : StringCache
+        public double GetNumber(string key, double defaultValue)
         {
-            private readonly string path;
-
-            public NetworkTableKeyCache(string path)
+            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            int status = 0;
+            ulong lc = 0;
+            double retVal = GetEntryDouble(path, ref lc, ref status);
+            if (status == 0)
             {
-                this.path = path;
+                return defaultValue;
             }
-
-            public override string Calc(string key)
-            {
-                return path + PATH_SEPARATOR + key;
-            }
+            return retVal;
         }
 
-        internal class EntryCache
+        public void PutString(string key, string value)
         {
-            private readonly Dictionary<string, NetworkTableEntry> cache = new Dictionary<string, NetworkTableEntry>();
-            private readonly string path;
-            private readonly NetworkTableNode node;
-            private readonly NetworkTableKeyCache abs;
-
-
-            public EntryCache(string path, ref NetworkTableNode node, ref NetworkTableKeyCache abs)
-            {
-                this.path = path;
-                this.node = node;
-                this.abs = abs;
-            }
-
-            public NetworkTableEntry Get(string key)
-            {
-                NetworkTableEntry cachedValue;
-                if (!cache.TryGetValue(key, out cachedValue))
-                {
-                    cachedValue = node.GetEntryStore().GetEntry(abs.Get(key));
-                    if (cachedValue != null)
-                        cache.Add(key, cachedValue);
-                }
-                return cachedValue;
-            }
+            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            SetEntryString(path, value);
         }
 
-        private readonly Dictionary<IRemoteConnectionListener, NetworkTableConnectionListenerAdapter> connectionListenerMap =
-            new Dictionary<IRemoteConnectionListener, NetworkTableConnectionListenerAdapter>();
-
-        /// <summary>
-        /// Adds a Connection Listener to the network table.
-        /// </summary>
-        /// <param name="listener">The <see cref="IRemoteConnectionListener"/> to attach.</param>
-        /// <param name="immediateNotify">Notify the connection listener immediately</param>
-        public void AddConnectionListener(IRemoteConnectionListener listener, bool immediateNotify)
+        public string GetString(string key, string defaultValue)
         {
-            NetworkTableConnectionListenerAdapter adapter;
-            if (connectionListenerMap.TryGetValue(listener, out adapter))
-                throw new ArgumentException("Cannot add the same listener twice");
-            adapter = new NetworkTableConnectionListenerAdapter(this, listener);
-            connectionListenerMap.Add(listener, adapter);
-            node.AddConnectionListener(adapter, immediateNotify);
+            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            ulong lc = 0;
+            string retVal = GetEntryString(path, ref lc);
+            return retVal ?? defaultValue;
         }
 
-        /// <summary>
-        /// Removes a Connection Listener from the network table.
-        /// </summary>
-        /// <param name="listener">The <see cref="IRemoteConnectionListener"/> to remove.</param>
-        public void RemoveConnectionListener(IRemoteConnectionListener listener)
+        public void PutBoolean(string key, bool value)
         {
-            NetworkTableConnectionListenerAdapter adapter;
-            if (connectionListenerMap.TryGetValue(listener, out adapter))
-                node.RemoveConnectionListener(adapter);
+            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            SetEntryBoolean(path, value);
         }
 
-        private readonly Dictionary<ITableListener, List> listenerMap = new Dictionary<ITableListener, List>();
+        public bool GetBoolean(string key, bool defaultValue)
+        {
+            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            int status = 0;
+            ulong lc = 0;
+            bool retVal = GetEntryBoolean(path, ref lc, ref status);
+            if (status == 0)
+            {
+                return defaultValue;
+            }
+            return retVal;
+        }
 
-        /// <summary>
-        /// Adds a table listener without notifying immediately.
-        /// </summary>
-        /// <param name="listener">The <see cref="ITableListener"/> to add.</param>
         public void AddTableListener(ITableListener listener)
         {
             AddTableListener(listener, false);
         }
 
-        /// <summary>
-        /// Adds a table listener for the entire table.
-        /// </summary>
-        /// <param name="listener">The <see cref="ITableListener"/> to add.</param>
-        /// <param name="immediateNotify">Whether to notify the listener immediately.</param>
         public void AddTableListener(ITableListener listener, bool immediateNotify)
         {
-            List adapters;
-            if (!listenerMap.TryGetValue(listener, out adapters))
-            {
-                adapters = new List();
-                listenerMap.Add(listener, adapters);
-            }
-            NetworkTableListenerAdapter adapter = new NetworkTableListenerAdapter(path + PATH_SEPARATOR, this, listener);
-            adapters.Add(adapter);
-            node.AddTableListener(adapter, immediateNotify);
+            string path = m_path + PATH_SEPERATOR_CHAR;
+            uint id = AddEntryListener(path, this, listener.ValueChanged, immediateNotify);
+            m_listeners.Add(id, listener);
         }
 
-        /// <summary>
-        /// Adds a table listener to a specified key.
-        /// </summary>
-        /// <param name="key">The key to listen to.</param>
-        /// <param name="listener">The <see cref="ITableListener"/> to add.</param>
-        /// <param name="immediateNotify">Whether to notify the listener immediately.</param>
         public void AddTableListener(string key, ITableListener listener, bool immediateNotify)
         {
-            List adapters;
-            if (!listenerMap.TryGetValue(listener, out adapters))
-            {
-                adapters = new List();
-                listenerMap.Add(listener, adapters);
-            }
-
-            NetworkTableKeyListenerAdapter adapter = new NetworkTableKeyListenerAdapter(key, absoluteKeyCache.Get(key), this, listener);
-            adapters.Add(adapter);
-            node.AddTableListener(adapter, immediateNotify);
-        }
-
-        public void AddSubTableListener(ITableListener listener)
-        {
-            List adapters;
-            if (!listenerMap.TryGetValue(listener, out adapters))
-            {
-                adapters = new List();
-                listenerMap.Add(listener, adapters);
-            }
-            NetworkTableSubListenerAdapter adapter = new NetworkTableSubListenerAdapter(path, this, listener);
-            adapters.Add(adapter);
-            node.AddTableListener(adapter, true);
-
+            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            uint id = AddEntryListener(path, this, listener.ValueChanged, immediateNotify);
+            m_listeners.Add(id, listener);
         }
 
         public void RemoveTableListener(ITableListener listener)
         {
-            List adapters;
-            if (listenerMap.TryGetValue(listener, out adapters))
+            List<uint> keyMatches = new List<uint>();
+            foreach (KeyValuePair<uint, ITableListener> valuePair in m_listeners)
             {
-                for (int i = 0; i < adapters.Size(); i++)
+                if (valuePair.Value == listener)
                 {
-                    node.RemoveTableListener((ITableListener)adapters.Get(i));
+                    Interop.NT_RemoveEntryListener(valuePair.Key);
+                    keyMatches.Add(valuePair.Key);
                 }
-                adapters.Clear();
             }
-        }
-
-        private NetworkTableEntry GetEntry(string key)
-        {
-            lock (s_lockObject)
+            foreach (var keyMatch in keyMatches)
             {
-                return entryCache.Get(key);
-            }
-        }
-
-
-        public bool ContainsKey(string key)
-        {
-            return node.ContainsKey(absoluteKeyCache.Get(key));
-        }
-
-        public bool ContainsSubTable(string key)
-        {
-            string subtablePrefix = absoluteKeyCache.Get(key) + PATH_SEPARATOR;
-            var keys = node.GetEntryStore().Keys();
-            return keys.Any(k => k.StartsWith(subtablePrefix));
-        }
-
-        public ITable GetSubTable(string key)
-        {
-            lock (m_lockObject)
-            {
-                return provider.GetTable(absoluteKeyCache.Get(key));
-            }
-        }
-
-
-
-        public object GetValue(string key)
-        {
-            return node.GetValue(absoluteKeyCache.Get(key));
-        }
-
-        public object GetValue(string key, object defaultValue)
-        {
-            try
-            {
-                return node.GetValue(absoluteKeyCache.Get(key));
-            }
-            catch (TableKeyNotDefinedException)
-            {
-                return defaultValue;
-            }
-        }
-
-        public void PutValue(string key, object value)
-        {
-            NetworkTableEntry entry = entryCache.Get(key);
-            if (entry != null)
-                node.PutValue(entry, value);
-            else
-            {
-                node.PutValue(absoluteKeyCache.Get(key), value);
-            }
-        }
-
-        public void RetrieveValue(string key, object externalValue)
-        {
-            node.RetrieveValue(absoluteKeyCache.Get(key), externalValue);
-        }
-
-        public void PutNumber(string key, double value)
-        {
-            PutValue(key, value);
-        }
-
-        public double GetNumber(string key)
-        {
-            return node.GetDouble(absoluteKeyCache.Get(key));
-        }
-
-        public double GetNumber(string key, double defaultValue)
-        {
-            try
-            {
-                return node.GetDouble(absoluteKeyCache.Get(key));
-            }
-            catch (TableKeyNotDefinedException e)
-            {
-                return defaultValue;
-            }
-        }
-
-        public void PutString(string key, string value)
-        {
-            PutValue(key, value);
-        }
-
-        public string GetString(string key)
-        {
-            return node.GetString(absoluteKeyCache.Get(key));
-        }
-
-        public string GetString(string key, string defaultValue)
-        {
-            try
-            {
-                return node.GetString(absoluteKeyCache.Get(key));
-            }
-            catch (TableKeyNotDefinedException e)
-            {
-                return defaultValue;
-            }
-        }
-
-        public void PutBoolean(string key, bool value)
-        {
-            PutValue(key, value);
-        }
-
-        public bool GetBoolean(string key)
-        {
-            return node.GetBoolean(absoluteKeyCache.Get(key));
-        }
-
-        public bool GetBoolean(string key, bool defaultValue)
-        {
-            try
-            {
-                return node.GetBoolean(absoluteKeyCache.Get(key));
-            }
-            catch (TableKeyNotDefinedException e)
-            {
-                return defaultValue;
+                m_listeners.Remove(keyMatch);
             }
         }
     }
