@@ -52,6 +52,7 @@ namespace NetworkTables.NTCore
         public ulong last_change;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     public struct NT_ConnectionInfo
     {
         public NT_String remote_id;
@@ -60,5 +61,12 @@ namespace NetworkTables.NTCore
         public ulong last_update;
         public uint protocol_version;
 
+        private string RemoteName()
+        {
+            return InteropHelpers.ReadUTF8String(remote_name);
+        }
+
     }
+
+   
 }

@@ -421,6 +421,8 @@ namespace NetworkTables
         }
 
 
+        public string Path { get; }
+
         public bool ContainsKey(string key)
         {
             return node.ContainsKey(absoluteKeyCache.Get(key));

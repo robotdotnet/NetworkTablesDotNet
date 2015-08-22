@@ -89,6 +89,7 @@ namespace NetworkTables.NTCore
             NT_EntryListenerCallback modCallback = (uid, ptr, name, len, value, is_new) =>
             {
                 string key = ReadUTF8String(name, len);
+                key = key.Replace(table.Path + NetworkTable.PATH_SEPERATOR_CHAR, "");
                 NT_Type type = NT_GetTypeFromValue(value);
                 object obj;
                 ulong lastChange = 0;
@@ -101,7 +102,7 @@ namespace NetworkTables.NTCore
                     case NT_Type.NT_BOOLEAN:
                         int boolean = 0;
                         NT_GetEntryBooleanFromValue(value, ref lastChange, ref boolean);
-                        obj = boolean;
+                        obj = boolean != 0;
                         break;
                     case NT_Type.NT_DOUBLE:
                         double val = 0;
@@ -137,12 +138,11 @@ namespace NetworkTables.NTCore
                         obj = null;
                         break;
                 }
-                NT_DisposeValue(value);
                 callback(table, key, obj, is_new != 0);
             };
 
             UIntPtr prefixSize;
-            byte[] prefixStr = CreateUTF8String(prefix, out prefixSize);
+            IntPtr prefixStr = CreateUTF8StringPtr(prefix, out prefixSize);
             uint retVal = NT_AddEntryListener(prefixStr, prefixSize, IntPtr.Zero, modCallback, immediate_notify ? 1 : 0);
             return retVal;
         }
@@ -382,13 +382,42 @@ namespace NetworkTables.NTCore
             return buffer;
         }
 
+        public static IntPtr CreateUTF8StringPtr(string str, out UIntPtr size)
+        {
+            var bytes = Encoding.UTF8.GetByteCount(str);
+
+            var buffer = new byte[bytes + 1];
+
+            Encoding.UTF8.GetBytes(str, 0, str.Length, buffer, 0);
+            var ptr = Marshal.AllocHGlobal(bytes + 1);
+            Marshal.Copy(buffer, 0, ptr, bytes);
+            size = (UIntPtr)bytes;
+            return ptr;
+        }
+
         //Must be null terminated
-        public static string ReadUTF8String(IntPtr str, UIntPtr size)
+        internal static string ReadUTF8String(IntPtr str, UIntPtr size)
         {
             int iSize = (int)size.ToUInt64();
-            byte[] data = new byte[iSize - 1];
-            Marshal.Copy(str, data, 0, iSize - 1);
+            byte[] data = new byte[iSize];
+            Marshal.Copy(str, data, 0, iSize);
             return Encoding.UTF8.GetString(data);
+        }
+
+        internal static string ReadUTF8String(IntPtr ptr)
+        {
+            var data = new List<byte>();
+            var off = 0;
+            while (true)
+            {
+                var ch = Marshal.ReadByte(ptr, off++);
+                if (ch == 0)
+                {
+                    break;
+                }
+                data.Add(ch);
+            }
+            return Encoding.UTF8.GetString(data.ToArray());
         }
     }
 }

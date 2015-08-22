@@ -11,15 +11,15 @@ namespace NetworkTables
 {
     public class NetworkTable : ITable, IDisposable
     {
-        private readonly string m_path;
+        public string Path { get; }
 
-        private const char PATH_SEPERATOR_CHAR = '/';
+        internal const char PATH_SEPERATOR_CHAR = '/';
         private const uint DEFAULT_PORT = 1735;
         private static string s_ipAddress = null;
         private static bool client = false;
         private static bool running = false;
 
-        private readonly Dictionary<uint, ITableListener> m_listeners = new Dictionary<uint, ITableListener>(); 
+        private readonly Dictionary<uint, ITableListener> m_listeners = new Dictionary<uint, ITableListener>();
 
         public static void Initialize()
         {
@@ -75,7 +75,7 @@ namespace NetworkTables
 
         private NetworkTable(string path)
         {
-            this.m_path = path;
+            this.Path = path;
         }
 
         public void Dispose()
@@ -89,37 +89,37 @@ namespace NetworkTables
 
         public bool ContainsKey(string key)
         {
-            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            string path = Path + PATH_SEPERATOR_CHAR + key;
             return InteropHelpers.GetType(path) != NT_Type.NT_UNASSIGNED;
         }
 
         public bool ContainsSubTable(string key)
         {
-            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            string path = Path + PATH_SEPERATOR_CHAR + key;
             return GetEntryInfo(path, 0).Length != 0;
         }
 
         public void Persist(string key)
         {
-            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            string path = Path + PATH_SEPERATOR_CHAR + key;
             SetEntryFlags(path, (uint)NT_EntryFlags.NT_PERSISTENT);
         }
 
         public ITable GetSubTable(string key)
         {
-            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            string path = Path + PATH_SEPERATOR_CHAR + key;
             return new NetworkTable(key);
         }
 
         public void PutNumber(string key, double value)
         {
-            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            string path = Path + PATH_SEPERATOR_CHAR + key;
             SetEntryDouble(path, value);
         }
 
         public double GetNumber(string key, double defaultValue)
         {
-            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            string path = Path + PATH_SEPERATOR_CHAR + key;
             int status = 0;
             ulong lc = 0;
             double retVal = GetEntryDouble(path, ref lc, ref status);
@@ -132,13 +132,13 @@ namespace NetworkTables
 
         public void PutString(string key, string value)
         {
-            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            string path = Path + PATH_SEPERATOR_CHAR + key;
             SetEntryString(path, value);
         }
 
         public string GetString(string key, string defaultValue)
         {
-            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            string path = Path + PATH_SEPERATOR_CHAR + key;
             ulong lc = 0;
             string retVal = GetEntryString(path, ref lc);
             return retVal ?? defaultValue;
@@ -146,13 +146,13 @@ namespace NetworkTables
 
         public void PutBoolean(string key, bool value)
         {
-            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            string path = Path + PATH_SEPERATOR_CHAR + key;
             SetEntryBoolean(path, value);
         }
 
         public bool GetBoolean(string key, bool defaultValue)
         {
-            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            string path = Path + PATH_SEPERATOR_CHAR + key;
             int status = 0;
             ulong lc = 0;
             bool retVal = GetEntryBoolean(path, ref lc, ref status);
@@ -170,14 +170,14 @@ namespace NetworkTables
 
         public void AddTableListener(ITableListener listener, bool immediateNotify)
         {
-            string path = m_path + PATH_SEPERATOR_CHAR;
+            string path = Path + PATH_SEPERATOR_CHAR;
             uint id = AddEntryListener(path, this, listener.ValueChanged, immediateNotify);
             m_listeners.Add(id, listener);
         }
 
         public void AddTableListener(string key, ITableListener listener, bool immediateNotify)
         {
-            string path = m_path + PATH_SEPERATOR_CHAR + key;
+            string path = Path + PATH_SEPERATOR_CHAR + key;
             uint id = AddEntryListener(path, this, listener.ValueChanged, immediateNotify);
             m_listeners.Add(id, listener);
         }

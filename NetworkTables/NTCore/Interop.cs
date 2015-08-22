@@ -9,12 +9,14 @@ namespace NetworkTables.NTCore
 {
     internal class Interop
     {
-        internal const string NTSharedFile = "NTTest.dll";
+        internal const string NTSharedFile = "ntcore.dll";
 
         //Callback Typedefs
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void NT_EntryListenerCallback(
             uint uid, IntPtr data, IntPtr name, UIntPtr name_len, IntPtr value, int is_new);
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void NT_ConnectionListenerCallback(
             uint uid, IntPtr data, int connected, ref NT_ConnectionInfo conn);
 
@@ -42,7 +44,7 @@ namespace NetworkTables.NTCore
         //Callback Functions
 
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
-        public static extern uint NT_AddEntryListener(byte[] prefix, UIntPtr prefix_len, IntPtr data,
+        public static extern uint NT_AddEntryListener(IntPtr prefix, UIntPtr prefix_len, IntPtr data,
             NT_EntryListenerCallback callback, int immediate_notify);
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_RemoveEntryListener(uint entry_listener_uid);

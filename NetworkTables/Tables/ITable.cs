@@ -7,6 +7,8 @@ namespace NetworkTables.Tables
 {
     public interface ITable
     {
+        string Path { get; }
+
          bool ContainsKey(string key);
          bool ContainsSubTable(string key);
          ITable GetSubTable(string key);
