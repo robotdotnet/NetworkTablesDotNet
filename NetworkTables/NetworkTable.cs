@@ -59,7 +59,7 @@ namespace NetworkTables
 
         public static void SetTeam(int team)
         {
-            SetIPAddress("10." + (team / 100) + "." + (team % 100) + ".2\n");
+            SetIPAddress($"10.{(team / 100)}.{(team % 100)}.2\n");
         }
 
         public static void SetIPAddress(string address)

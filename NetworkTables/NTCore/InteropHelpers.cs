@@ -18,34 +18,30 @@ namespace NetworkTables.NTCore
         public static void SetEntryFlags(string name, uint flags)
         {
             UIntPtr size;
-            IntPtr str = CreateUTF8String(name, out size);
+            byte[] str = CreateUTF8String(name, out size);
             NT_SetEntryFlags(str, size, flags);
-            FreeUTF8String(str);
         }
 
         public static uint GetEntryFlags(string name)
         {
             UIntPtr size;
-            IntPtr str = CreateUTF8String(name, out size);
+            byte[] str = CreateUTF8String(name, out size);
             uint flags = NT_GetEntryFlags(str, size);
-            FreeUTF8String(str);
             return flags;
         }
 
         public static void DeleteEntry(string name)
         {
             UIntPtr size;
-            IntPtr str = CreateUTF8String(name, out size);
+            byte[] str = CreateUTF8String(name, out size);
             NT_DeleteEntry(str, size);
-            FreeUTF8String(str);
         }
 
         public static NT_Type GetType(string name)
         {
             UIntPtr size;
-            IntPtr str = CreateUTF8String(name, out size);
+            byte[] str = CreateUTF8String(name, out size);
             NT_Type retVal = NT_GetType(str, size);
-            FreeUTF8String(str);
             return retVal;
         }
 
@@ -56,25 +52,22 @@ namespace NetworkTables.NTCore
                 throw new ArgumentNullException(nameof(serverName), "Server cannot be null");
             }
             UIntPtr size;
-            IntPtr serverNamePtr = CreateUTF8String(serverName, out size);
+            byte[] serverNamePtr = CreateUTF8String(serverName, out size);
             NT_StartClient(serverNamePtr, port);
-            FreeUTF8String(serverNamePtr);
         }
 
         public static void StartServer(string fileName, string listenAddress, uint port)
         {
             UIntPtr size = UIntPtr.Zero;
-            IntPtr fileNamePtr = CreateUTF8String("networktables.ini", out size);
-            IntPtr listenAddressPtr = CreateUTF8String("", out size);
+            byte[] fileNamePtr = CreateUTF8String("networktables.ini", out size);
+            byte[] listenAddressPtr = CreateUTF8String("", out size);
             NT_StartServer(fileNamePtr, listenAddressPtr, port);
-            FreeUTF8String(fileNamePtr);
-            FreeUTF8String(listenAddressPtr);
         }
 
         public static NT_EntryInfo[] GetEntryInfo(string prefix, uint types)
         {
             UIntPtr size;
-            IntPtr str = CreateUTF8String(prefix, out size);
+            byte[] str = CreateUTF8String(prefix, out size);
             UIntPtr arrSize = UIntPtr.Zero;
             IntPtr arr = NT_GetEntryInfo(str, size, types, ref arrSize);
 
@@ -98,7 +91,6 @@ namespace NetworkTables.NTCore
                 string key = ReadUTF8String(name, len);
                 NT_Type type = NT_GetTypeFromValue(value);
                 object obj;
-                int status = 0;
                 ulong lastChange = 0;
                 UIntPtr size = UIntPtr.Zero;
                 switch (type)
@@ -107,16 +99,24 @@ namespace NetworkTables.NTCore
                         obj = null;
                         break;
                     case NT_Type.NT_BOOLEAN:
-                        obj = NT_GetEntryBooleanFromValue(value, ref lastChange, ref status);
+                        int boolean = 0;
+                        NT_GetEntryBooleanFromValue(value, ref lastChange, ref boolean);
+                        obj = boolean;
                         break;
                     case NT_Type.NT_DOUBLE:
-                        obj = NT_GetEntryDoubleFromValue(value, ref lastChange, ref status);
+                        double val = 0;
+                        NT_GetEntryDoubleFromValue(value, ref lastChange, ref val);
+                        obj = val;
                         break;
                     case NT_Type.NT_STRING:
-                        obj = NT_GetEntryStringFromValue(value, ref lastChange);
+                        NT_String str = new NT_String();
+                        NT_GetEntryStringFromValue(value, ref lastChange, ref str);
+                        obj = str;
                         break;
                     case NT_Type.NT_RAW:
-                        obj = NT_GetEntryRawFromValue(value, ref lastChange);
+                        NT_String strr = new NT_String();
+                        NT_GetEntryRawFromValue(value, ref lastChange, ref strr);
+                        obj = strr;
                         break;
                     case NT_Type.NT_BOOLEAN_ARRAY:
                         IntPtr boolArr = NT_GetEntryBooleanArrayFromValue(value, ref lastChange, ref size);
@@ -142,37 +142,36 @@ namespace NetworkTables.NTCore
             };
 
             UIntPtr prefixSize;
-            IntPtr prefixStr = CreateUTF8String(prefix, out prefixSize);
+            byte[] prefixStr = CreateUTF8String(prefix, out prefixSize);
             uint retVal = NT_AddEntryListener(prefixStr, prefixSize, IntPtr.Zero, modCallback, immediate_notify ? 1 : 0);
-            FreeUTF8String(prefixStr);
             return retVal;
         }
 
         public static bool GetEntryBoolean(string name, ref ulong last_change, ref int status)
         {
             UIntPtr size;
-            IntPtr namePtr = CreateUTF8String(name, out size);
-            int boolean = NT_GetEntryBoolean(namePtr, size, ref last_change, ref status);
-            FreeUTF8String(namePtr);
+            byte[] namePtr = CreateUTF8String(name, out size);
+            int boolean = 0;
+            status = NT_GetEntryBoolean(namePtr, size, ref last_change, ref boolean);
             return boolean != 0;
         }
 
         public static double GetEntryDouble(string name, ref ulong last_change, ref int status)
         {
             UIntPtr size;
-            IntPtr namePtr = CreateUTF8String(name, out size);
-            double retVal = NT_GetEntryDouble(namePtr, size, ref last_change, ref status);
-            FreeUTF8String(namePtr);
+            byte[] namePtr = CreateUTF8String(name, out size);
+            double retVal = 0;
+            status = NT_GetEntryDouble(namePtr, size, ref last_change, ref retVal);
             return retVal;
         }
 
         public static string GetEntryString(string name, ref ulong last_change)
         {
             UIntPtr size;
-            IntPtr namePtr = CreateUTF8String(name, out size);
-            NT_String ntstr = NT_GetEntryString(namePtr, size, ref last_change);
-            FreeUTF8String(namePtr);
-            if (ntstr.IsNull())
+            byte[] namePtr = CreateUTF8String(name, out size);
+            NT_String ntstr = new NT_String();
+            int ret = NT_GetEntryString(namePtr, size, ref last_change, ref ntstr);
+            if (ret == 0)
             {
                 return null;
             }
@@ -187,10 +186,10 @@ namespace NetworkTables.NTCore
         public static string GetEntryRaw(string name, ref ulong last_change)
         {
             UIntPtr size;
-            IntPtr namePtr = CreateUTF8String(name, out size);
-            NT_String ntstr = NT_GetEntryRaw(namePtr, size, ref last_change);
-            FreeUTF8String(namePtr);
-            if (ntstr.IsNull())
+            byte[] namePtr = CreateUTF8String(name, out size);
+            NT_String ntstr = new NT_String();
+            int ret = NT_GetEntryRaw(namePtr, size, ref last_change, ref ntstr);
+            if (ret == 0)
             {
                 return null;
             }
@@ -205,64 +204,58 @@ namespace NetworkTables.NTCore
         public static double[] GetEntryDoubleArray(string name, ref ulong last_change)
         {
             UIntPtr size;
-            IntPtr namePtr = CreateUTF8String(name, out size);
+            byte[] namePtr = CreateUTF8String(name, out size);
             UIntPtr arrSize = UIntPtr.Zero;
             IntPtr arrPtr = NT_GetEntryDoubleArray(namePtr, size, ref last_change, ref arrSize);
             double[] arr = GetDoubleArrayFromPtr(arrPtr, arrSize);
             NT_FreeDoubleArray(arrPtr);
-            FreeUTF8String(namePtr);
             return arr;
         }
 
         public static bool[] GetEntryBooleanArray(string name, ref ulong last_change)
         {
             UIntPtr size;
-            IntPtr namePtr = CreateUTF8String(name, out size);
+            byte[] namePtr = CreateUTF8String(name, out size);
             UIntPtr arrSize = UIntPtr.Zero;
             IntPtr arrPtr = NT_GetEntryBooleanArray(namePtr, size, ref last_change, ref arrSize);
             bool[] arr = GetBooleanArrayFromPtr(arrPtr, arrSize);
             NT_FreeBooleanArray(arrPtr);
-            FreeUTF8String(namePtr);
             return arr;
         }
 
         public static string[] GetEntryStringArray(string name, ref ulong last_change)
         {
             UIntPtr size;
-            IntPtr namePtr = CreateUTF8String(name, out size);
+            byte[] namePtr = CreateUTF8String(name, out size);
             UIntPtr arrSize = UIntPtr.Zero;
             IntPtr arrPtr = NT_GetEntryBooleanArray(namePtr, size, ref last_change, ref arrSize);
             string[] arr = GetStringArrayFromPtr(arrPtr, arrSize);
             NT_FreeStringArray(arrPtr, arrSize);
-            FreeUTF8String(namePtr);
             return arr;
         }
 
         public static bool SetEntryBoolean(string name, bool value, bool force = false)
         {
             UIntPtr size;
-            IntPtr namePtr = CreateUTF8String(name, out size);
+            byte[] namePtr = CreateUTF8String(name, out size);
             int retVal = NT_SetEntryBoolean(namePtr, size, value ? 1 : 0, force ? 1 : 0);
-            FreeUTF8String(namePtr);
             return retVal != 0;
         }
 
         public static bool SetEntryDouble(string name, double value, bool force = false)
         {
             UIntPtr size;
-            IntPtr namePtr = CreateUTF8String(name, out size);
+            byte[] namePtr = CreateUTF8String(name, out size);
             int retVal = NT_SetEntryDouble(namePtr, size, value, force ? 1 : 0);
-            FreeUTF8String(namePtr);
             return retVal != 0;
         }
 
         public static bool SetEntryString(string name, string value, bool force = false)
         {
             UIntPtr size;
-            IntPtr namePtr = CreateUTF8String(name, out size);
+            byte[] namePtr = CreateUTF8String(name, out size);
             NT_String str = new NT_String(value);
             int retVal = NT_SetEntryString(namePtr, size, str, force ? 1 : 0);
-            FreeUTF8String(namePtr);
             str.Dispose();
             return retVal != 0;
         }
@@ -270,10 +263,9 @@ namespace NetworkTables.NTCore
         public static bool SetEntryRaw(string name, string value, bool force = false)
         {
             UIntPtr size;
-            IntPtr namePtr = CreateUTF8String(name, out size);
+            byte[] namePtr = CreateUTF8String(name, out size);
             NT_String str = new NT_String(value);
             int retVal = NT_SetEntryRaw(namePtr, size, str, force ? 1 : 0);
-            FreeUTF8String(namePtr);
             str.Dispose();
             return retVal != 0;
         }
@@ -281,7 +273,7 @@ namespace NetworkTables.NTCore
         public static bool SetEntryBooleanArray(string name, bool[] value, bool force = false)
         {
             UIntPtr size;
-            IntPtr namePtr = CreateUTF8String(name, out size);
+            byte[] namePtr = CreateUTF8String(name, out size);
 
             UIntPtr arrSize = (UIntPtr)value.Length;
             IntPtr boolArr = NT_AllocateBooleanArray(arrSize);
@@ -296,7 +288,6 @@ namespace NetworkTables.NTCore
 
             int retVal = NT_SetEntryBooleanArray(namePtr, size, boolArr, arrSize, force ? 1 : 0);
 
-            FreeUTF8String(namePtr);
             NT_FreeBooleanArray(boolArr);
             return retVal != 0;
         }
@@ -304,7 +295,7 @@ namespace NetworkTables.NTCore
         public static bool SetEntryDoubleArray(string name, double[] value, bool force = false)
         {
             UIntPtr size;
-            IntPtr namePtr = CreateUTF8String(name, out size);
+            byte[] namePtr = CreateUTF8String(name, out size);
 
             UIntPtr arrSize = (UIntPtr)value.Length;
             IntPtr nativeArray = NT_AllocateDoubleArray(arrSize);
@@ -313,7 +304,6 @@ namespace NetworkTables.NTCore
 
             int retVal = NT_SetEntryDoubleArray(namePtr, size, nativeArray, arrSize, force ? 1 : 0);
 
-            FreeUTF8String(namePtr);
             NT_FreeDoubleArray(nativeArray);
             return retVal != 0;
         }
@@ -321,14 +311,13 @@ namespace NetworkTables.NTCore
         public static bool SetEntryStringArray(string name, string[] value, bool force = false)
         {
             UIntPtr size;
-            IntPtr namePtr = CreateUTF8String(name, out size);
+            byte[] namePtr = CreateUTF8String(name, out size);
 
             UIntPtr arrSize;
             IntPtr nativeArray = StringArrayToPtr(value, out arrSize);
 
             int retVal = NT_SetEntryStringArray(namePtr, size, nativeArray, arrSize, force ? 1 : 0);
 
-            FreeUTF8String(namePtr);
             NT_FreeStringArray(nativeArray, arrSize);
             return retVal != 0;
         }
@@ -382,17 +371,15 @@ namespace NetworkTables.NTCore
             return nativeArray;
         }
 
-        private static IntPtr CreateUTF8String(string str, out UIntPtr size)
+        private static byte[] CreateUTF8String(string str, out UIntPtr size)
         {
             var bytes = Encoding.UTF8.GetByteCount(str);
 
             var buffer = new byte[bytes + 1];
-
-            Encoding.UTF8.GetBytes(str, 0, str.Length, buffer, 0);
-            var ptr = Marshal.AllocHGlobal(bytes + 1);
-            Marshal.Copy(buffer, 0, ptr, bytes);
             size = (UIntPtr)bytes;
-            return ptr;
+            Encoding.UTF8.GetBytes(str, 0, str.Length, buffer, 0);
+            buffer[bytes] = 0;
+            return buffer;
         }
 
         //Must be null terminated
@@ -402,25 +389,6 @@ namespace NetworkTables.NTCore
             byte[] data = new byte[iSize - 1];
             Marshal.Copy(str, data, 0, iSize - 1);
             return Encoding.UTF8.GetString(data);
-        }
-
-        public static string ReadUTF8String(IntPtr str)
-        {
-            List<byte> data = new List<byte>();
-            int offset = 0;
-            while (true)
-            {
-                byte ch = Marshal.ReadByte(str, offset++);
-                if (ch == 0)
-                    break;
-                data.Add(ch);
-            }
-            return Encoding.UTF8.GetString(data.ToArray());
-        }
-
-        private static void FreeUTF8String(IntPtr str)
-        {
-            Marshal.FreeHGlobal(str);
         }
     }
 }
