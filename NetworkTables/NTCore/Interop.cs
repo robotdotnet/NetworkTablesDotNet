@@ -9,7 +9,7 @@ namespace NetworkTables.NTCore
 {
     internal class Interop
     {
-        internal const string NTSharedFile = "ntcore.dll";
+        internal const string NTSharedFile = "ntcore";
 
         //Callback Typedefs
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -21,13 +21,6 @@ namespace NetworkTables.NTCore
             uint uid, IntPtr data, int connected, ref NT_ConnectionInfo conn);
 
         //Table Functions
-        //The 3 below will never get used, So no wrapper functions for them.
-        [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void NT_GetEntryValue(byte[] name, UIntPtr name_len, IntPtr value);
-        [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int NT_SetEntryValue(byte[] name, UIntPtr name_len, IntPtr value);
-        [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void NT_SetEntryTypeValue(byte[] name, UIntPtr name_len, IntPtr value);
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_SetEntryFlags(byte[] name, UIntPtr name_len, uint flags);
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
@@ -44,7 +37,7 @@ namespace NetworkTables.NTCore
         //Callback Functions
 
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
-        public static extern uint NT_AddEntryListener(IntPtr prefix, UIntPtr prefix_len, IntPtr data,
+        public static extern uint NT_AddEntryListener(byte[] prefix, UIntPtr prefix_len, IntPtr data,
             NT_EntryListenerCallback callback, int immediate_notify);
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_RemoveEntryListener(uint entry_listener_uid);
@@ -81,16 +74,25 @@ namespace NetworkTables.NTCore
         //Utility Functions
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_DisposeValue(IntPtr value);
+
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_InitValue(IntPtr value);
+
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_DisposeString(ref NT_String str);
+
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_InitString(ref NT_String str);
+
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern NT_Type NT_GetType(byte[] name, UIntPtr name_len);
+
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_DisposeConnectionInfoArray(IntPtr arr, UIntPtr count);
+
+        [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void NT_DisposeEntryInfoArray(IntPtr arr, UIntPtr count);
+
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern ulong NT_Now();
 

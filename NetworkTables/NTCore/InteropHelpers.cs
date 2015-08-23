@@ -12,9 +12,6 @@ namespace NetworkTables.NTCore
 {
     internal class InteropHelpers
     {
-        public delegate void EntryListenerCallbackSafe(
-            ITable source, string key, object value, bool isNew);
-
         public static void SetEntryFlags(string name, uint flags)
         {
             UIntPtr size;
@@ -64,7 +61,7 @@ namespace NetworkTables.NTCore
             NT_StartServer(fileNamePtr, listenAddressPtr, port);
         }
 
-        public static NT_EntryInfo[] GetEntryInfo(string prefix, uint types)
+        public static EntryInfoArray GetEntryInfo(string prefix, uint types)
         {
             UIntPtr size;
             byte[] str = CreateUTF8String(prefix, out size);
@@ -80,10 +77,28 @@ namespace NetworkTables.NTCore
                 IntPtr data = new IntPtr(arr.ToInt64() + entryInfoSize * i);
                 entryArray[i] = (NT_EntryInfo)Marshal.PtrToStructure(data, typeof(NT_EntryInfo));
             }
-            return entryArray;
+            return new EntryInfoArray(entryArray, arr, arrSize);
         }
 
-        public static uint AddEntryListener(string prefix, ITable table, EntryListenerCallbackSafe callback,
+        public static ConnectionInfoArray GetConnectionInfo()
+        {
+            UIntPtr count = UIntPtr.Zero;
+            IntPtr connections = NT_GetConnections(ref count);
+
+            int connectionInfoSize = Marshal.SizeOf(typeof(NT_ConnectionInfo));
+            int arraySize = (int)count.ToUInt64();
+
+            NT_ConnectionInfo[] connectionArray = new NT_ConnectionInfo[arraySize];
+
+            for (int i = 0; i < arraySize; i++)
+            {
+                IntPtr data = new IntPtr(connections.ToInt64() + connectionInfoSize * i);
+                connectionArray[i] = (NT_ConnectionInfo)Marshal.PtrToStructure(data, typeof(NT_ConnectionInfo));
+            }
+            return new ConnectionInfoArray(connectionArray, connections, count);
+        }
+
+        public static uint AddEntryListener(string prefix, ITable table, Action<ITable, string, object, bool> callback,
             bool immediate_notify)
         {
             NT_EntryListenerCallback modCallback = (uid, ptr, name, len, value, is_new) =>
@@ -142,7 +157,7 @@ namespace NetworkTables.NTCore
             };
 
             UIntPtr prefixSize;
-            IntPtr prefixStr = CreateUTF8StringPtr(prefix, out prefixSize);
+            byte[] prefixStr = CreateUTF8String(prefix, out prefixSize);
             uint retVal = NT_AddEntryListener(prefixStr, prefixSize, IntPtr.Zero, modCallback, immediate_notify ? 1 : 0);
             return retVal;
         }
@@ -381,7 +396,7 @@ namespace NetworkTables.NTCore
             buffer[bytes] = 0;
             return buffer;
         }
-
+        /*
         public static IntPtr CreateUTF8StringPtr(string str, out UIntPtr size)
         {
             var bytes = Encoding.UTF8.GetByteCount(str);
@@ -394,6 +409,7 @@ namespace NetworkTables.NTCore
             size = (UIntPtr)bytes;
             return ptr;
         }
+        */
 
         //Must be null terminated
         internal static string ReadUTF8String(IntPtr str, UIntPtr size)

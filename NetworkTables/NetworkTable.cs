@@ -59,7 +59,7 @@ namespace NetworkTables
 
         public static void SetTeam(int team)
         {
-            SetIPAddress($"10.{(team / 100)}.{(team % 100)}.2\n");
+            SetIPAddress($"10.{(team / 100)}.{(team % 100)}.2");
         }
 
         public static void SetIPAddress(string address)
@@ -96,7 +96,10 @@ namespace NetworkTables
         public bool ContainsSubTable(string key)
         {
             string path = Path + PATH_SEPERATOR_CHAR + key;
-            return GetEntryInfo(path, 0).Length != 0;
+            using (EntryInfoArray array = GetEntryInfo(path, 0))
+            {
+                return array.Length != 0;
+            }
         }
 
         public void Persist(string key)

@@ -62,10 +62,10 @@ namespace NetworkTablesTest
     {
         static void Main(string[] args)
         {
-            /*
+            
             NetworkTable.SetServerMode();
             NetworkTable.Initialize();
-
+            /*
             var sd = NetworkTable.GetTable("SmartDashboard");
             sd.PutString("test", "HELLO FROM NT LAND");
             sd.PutBoolean("MyBool", true);
@@ -80,9 +80,9 @@ namespace NetworkTablesTest
                 Console.WriteLine(sd.GetNumber("MyNumber", 3.2) + ": Number");
                 Console.WriteLine(sd.GetString("MyString", "DefaultMyString") + ": String");
                 Thread.Sleep(500);
-            }
+            }*/
 
-            /*var table = NetworkTableOld.GetTable("SD");
+            var table = NetworkTable.GetTable("SD");
             table.PutBoolean("boolean", false);
             TableTest t = new TableTest();
             t.InitTable(table);
@@ -101,9 +101,10 @@ namespace NetworkTablesTest
 
 
             Thread.Sleep(Timeout.Infinite);
+            /*
             //var s = new TcpClient("172.22.11.2", 1735);
-           */
-            NetworkTable.SetIPAddress("172.22.11.2");
+           *
+            NetworkTable.SetIPAddress("172.22.11.2\n");
             NetworkTable.SetClientMode();
             NetworkTable.Initialize();
             
@@ -115,6 +116,7 @@ namespace NetworkTablesTest
                 {
                     Console.WriteLine(table.GetString("test", "DEFAULt"));
                     table.PutString("test", "YOLO");
+                    NetworkTable.Flush();
                 }
                 catch
                 {

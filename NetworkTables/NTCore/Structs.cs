@@ -43,29 +43,79 @@ namespace NetworkTables.NTCore
         }
     }
 
+    //This is not marked as IDisposable because we need to free it entirely as an array.
     [StructLayout(LayoutKind.Sequential)]
     public struct NT_EntryInfo
     {
-        public NT_String name;
-        public NT_Type type;
-        public uint flags;
-        public ulong last_change;
+        private readonly NT_String name;
+        public readonly NT_Type Type;
+        public readonly uint Flags;
+        public readonly ulong LastChange;
+
+        public string Name => name.ToString();
     }
 
+    public struct EntryInfoArray : IDisposable
+    {
+        private NT_EntryInfo[] info;
+        private readonly IntPtr arrayPtr;
+        private readonly UIntPtr arraySize;
+
+        public EntryInfoArray(NT_EntryInfo[] info, IntPtr arrayPtr, UIntPtr arraySize)
+        {
+            this.info = info;
+            this.arraySize = arraySize;
+            this.arrayPtr = arrayPtr;
+        }
+
+        public NT_EntryInfo this[int i] => info[i];
+
+        public int Length => info.Length;
+
+        public void Dispose()
+        {
+            NT_DisposeEntryInfoArray(arrayPtr, arraySize);
+            info = null;
+        }
+    }
+
+    //This is not marked as IDisposable because we need to free it entirely as an array.
     [StructLayout(LayoutKind.Sequential)]
     public struct NT_ConnectionInfo
     {
-        public NT_String remote_id;
-        private IntPtr remote_name;
-        public uint remote_port;
-        public ulong last_update;
-        public uint protocol_version;
+        private readonly NT_String remote_id;
+        private readonly IntPtr remote_name;
+        public readonly uint RemotePort;
+        public readonly ulong LastUpdate;
+        public readonly uint ProtocolVersion;
 
-        private string RemoteName()
+        public string RemoteName => InteropHelpers.ReadUTF8String(remote_name);
+
+        public string RemoteID => remote_id.ToString();
+    }
+
+    public struct ConnectionInfoArray : IDisposable
+    {
+        private NT_ConnectionInfo[] info;
+        private readonly IntPtr arrayPtr;
+        private readonly UIntPtr arraySize;
+
+        public ConnectionInfoArray(NT_ConnectionInfo[] info, IntPtr arrayPtr, UIntPtr arraySize)
         {
-            return InteropHelpers.ReadUTF8String(remote_name);
+            this.info = info;
+            this.arraySize = arraySize;
+            this.arrayPtr = arrayPtr;
         }
 
+        public NT_ConnectionInfo this[int i] => info[i];
+
+        public int Length => info.Length;
+
+        public void Dispose()
+        {
+            NT_DisposeConnectionInfoArray(arrayPtr, arraySize);
+            info = null;
+        }
     }
 
    
