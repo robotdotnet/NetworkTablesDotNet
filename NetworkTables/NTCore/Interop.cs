@@ -157,15 +157,15 @@ namespace NetworkTables.NTCore
         public static extern int NT_SetEntryRaw(byte[] name, UIntPtr name_len, NT_String v_raw, int force);
 
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int NT_SetEntryBooleanArray(byte[] name, UIntPtr name_len, IntPtr arr, UIntPtr size,
+        public static extern int NT_SetEntryBooleanArray(byte[] name, UIntPtr name_len, int[] arr, UIntPtr size,
             int force);
 
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int NT_SetEntryDoubleArray(byte[] name, UIntPtr name_len, IntPtr arr, UIntPtr size,
+        public static extern int NT_SetEntryDoubleArray(byte[] name, UIntPtr name_len, double[] arr, UIntPtr size,
             int force);
 
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int NT_SetEntryStringArray(byte[] name, UIntPtr name_len, IntPtr arr, UIntPtr size,
+        public static extern int NT_SetEntryStringArray(byte[] name, UIntPtr name_len, NT_String[] arr, UIntPtr size,
             int force);
 
     }

@@ -74,7 +74,7 @@ namespace NetworkTables.NTCore
 
         public void Dispose()
         {
-            NT_DisposeEntryInfoArray(arrayPtr, arraySize);
+            //NT_DisposeEntryInfoArray(arrayPtr, arraySize);
             info = null;
         }
     }
@@ -113,7 +113,7 @@ namespace NetworkTables.NTCore
 
         public void Dispose()
         {
-            NT_DisposeConnectionInfoArray(arrayPtr, arraySize);
+            //NT_DisposeConnectionInfoArray(arrayPtr, arraySize);
             info = null;
         }
     }

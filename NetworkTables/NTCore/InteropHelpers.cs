@@ -10,7 +10,7 @@ using static NetworkTables.NTCore.Interop;
 
 namespace NetworkTables.NTCore
 {
-    internal class InteropHelpers
+    public class InteropHelpers
     {
         public static void SetEntryFlags(string name, uint flags)
         {
@@ -290,8 +290,8 @@ namespace NetworkTables.NTCore
             UIntPtr size;
             byte[] namePtr = CreateUTF8String(name, out size);
 
-            UIntPtr arrSize = (UIntPtr)value.Length;
-            IntPtr boolArr = NT_AllocateBooleanArray(arrSize);
+            //UIntPtr arrSize = (UIntPtr)value.Length;
+            //IntPtr boolArr = NT_AllocateBooleanArray(arrSize);
 
             int[] valueIntArr = new int[value.Length];
             for (int i = 0; i < value.Length; i++)
@@ -299,11 +299,11 @@ namespace NetworkTables.NTCore
                 valueIntArr[i] = value[i] ? 1 : 0;
             }
 
-            Marshal.Copy(valueIntArr, 0, boolArr, value.Length);
+            //Marshal.Copy(valueIntArr, 0, boolArr, value.Length);
 
-            int retVal = NT_SetEntryBooleanArray(namePtr, size, boolArr, arrSize, force ? 1 : 0);
+            int retVal = NT_SetEntryBooleanArray(namePtr, size, valueIntArr, (UIntPtr)valueIntArr.Length, force ? 1 : 0);
 
-            NT_FreeBooleanArray(boolArr);
+            //NT_FreeBooleanArray(boolArr);
             return retVal != 0;
         }
 
@@ -312,14 +312,14 @@ namespace NetworkTables.NTCore
             UIntPtr size;
             byte[] namePtr = CreateUTF8String(name, out size);
 
-            UIntPtr arrSize = (UIntPtr)value.Length;
-            IntPtr nativeArray = NT_AllocateDoubleArray(arrSize);
+            //UIntPtr arrSize = (UIntPtr)value.Length;
+            //IntPtr nativeArray = NT_AllocateDoubleArray(arrSize);
 
-            Marshal.Copy(value, 0, nativeArray, value.Length);
+            //Marshal.Copy(value, 0, nativeArray, value.Length);
 
-            int retVal = NT_SetEntryDoubleArray(namePtr, size, nativeArray, arrSize, force ? 1 : 0);
+            int retVal = NT_SetEntryDoubleArray(namePtr, size, value, (UIntPtr)value.Length, force ? 1 : 0);
 
-            NT_FreeDoubleArray(nativeArray);
+            //NT_FreeDoubleArray(nativeArray);
             return retVal != 0;
         }
 
@@ -328,12 +328,22 @@ namespace NetworkTables.NTCore
             UIntPtr size;
             byte[] namePtr = CreateUTF8String(name, out size);
 
-            UIntPtr arrSize;
-            IntPtr nativeArray = StringArrayToPtr(value, out arrSize);
+            //UIntPtr arrSize;
+            //IntPtr nativeArray = StringArrayToPtr(value, out arrSize);
+            NT_String[] ntStrings = new NT_String[value.Length];
+            for (int i = 0; i < value.Length; i++)
+            {
+                ntStrings[i] = new NT_String(value[i]);
+            }
 
-            int retVal = NT_SetEntryStringArray(namePtr, size, nativeArray, arrSize, force ? 1 : 0);
+            int retVal = NT_SetEntryStringArray(namePtr, size, ntStrings, (UIntPtr)ntStrings.Length, force ? 1 : 0);
 
-            NT_FreeStringArray(nativeArray, arrSize);
+            foreach (var ntString in ntStrings)
+            {
+                ntString.Dispose();
+            }
+
+            //NT_FreeStringArray(nativeArray, arrSize);
             return retVal != 0;
         }
 

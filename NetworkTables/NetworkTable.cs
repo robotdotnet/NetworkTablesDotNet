@@ -13,13 +13,18 @@ namespace NetworkTables
     {
         public string Path { get; }
 
-        internal const char PATH_SEPERATOR_CHAR = '/';
+        public const char PATH_SEPERATOR_CHAR = '/';
         private const uint DEFAULT_PORT = 1735;
         private static string s_ipAddress = null;
         private static bool client = false;
         private static bool running = false;
 
         private readonly Dictionary<uint, ITableListener> m_listeners = new Dictionary<uint, ITableListener>();
+
+        private NetworkTable(string path)
+        {
+            this.Path = path;
+        }
 
         public static void Initialize()
         {
@@ -73,11 +78,6 @@ namespace NetworkTables
             return new NetworkTable(PATH_SEPERATOR_CHAR + key);
         }
 
-        private NetworkTable(string path)
-        {
-            this.Path = path;
-        }
-
         public void Dispose()
         {
             foreach (var key in m_listeners.Keys)
@@ -85,6 +85,43 @@ namespace NetworkTables
                 Interop.NT_RemoveEntryListener(key);
             }
             m_listeners.Clear();
+        }
+
+        public void AddTableListener(ITableListener listener, bool immediateNotify = false)
+        {
+            string path = Path + PATH_SEPERATOR_CHAR;
+            uint id = AddEntryListener(path, this, listener.ValueChanged, immediateNotify);
+            m_listeners.Add(id, listener);
+        }
+
+        public void AddTableListener(string key, ITableListener listener, bool immediateNotify)
+        {
+            string path = Path + PATH_SEPERATOR_CHAR + key;
+            uint id = AddEntryListener(path, this, listener.ValueChanged, immediateNotify);
+            m_listeners.Add(id, listener);
+        }
+
+        public void RemoveTableListener(ITableListener listener)
+        {
+            List<uint> keyMatches = new List<uint>();
+            foreach (KeyValuePair<uint, ITableListener> valuePair in m_listeners)
+            {
+                if (valuePair.Value == listener)
+                {
+                    Interop.NT_RemoveEntryListener(valuePair.Key);
+                    keyMatches.Add(valuePair.Key);
+                }
+            }
+            foreach (var keyMatch in keyMatches)
+            {
+                m_listeners.Remove(keyMatch);
+            }
+        }
+
+        public ITable GetSubTable(string key)
+        {
+            string path = Path + PATH_SEPERATOR_CHAR + key;
+            return new NetworkTable(path);
         }
 
         public bool ContainsKey(string key)
@@ -106,12 +143,6 @@ namespace NetworkTables
         {
             string path = Path + PATH_SEPERATOR_CHAR + key;
             SetEntryFlags(path, (uint)NT_EntryFlags.NT_PERSISTENT);
-        }
-
-        public ITable GetSubTable(string key)
-        {
-            string path = Path + PATH_SEPERATOR_CHAR + key;
-            return new NetworkTable(key);
         }
 
         public void PutNumber(string key, double value)
@@ -164,42 +195,6 @@ namespace NetworkTables
                 return defaultValue;
             }
             return retVal;
-        }
-
-        public void AddTableListener(ITableListener listener)
-        {
-            AddTableListener(listener, false);
-        }
-
-        public void AddTableListener(ITableListener listener, bool immediateNotify)
-        {
-            string path = Path + PATH_SEPERATOR_CHAR;
-            uint id = AddEntryListener(path, this, listener.ValueChanged, immediateNotify);
-            m_listeners.Add(id, listener);
-        }
-
-        public void AddTableListener(string key, ITableListener listener, bool immediateNotify)
-        {
-            string path = Path + PATH_SEPERATOR_CHAR + key;
-            uint id = AddEntryListener(path, this, listener.ValueChanged, immediateNotify);
-            m_listeners.Add(id, listener);
-        }
-
-        public void RemoveTableListener(ITableListener listener)
-        {
-            List<uint> keyMatches = new List<uint>();
-            foreach (KeyValuePair<uint, ITableListener> valuePair in m_listeners)
-            {
-                if (valuePair.Value == listener)
-                {
-                    Interop.NT_RemoveEntryListener(valuePair.Key);
-                    keyMatches.Add(valuePair.Key);
-                }
-            }
-            foreach (var keyMatch in keyMatches)
-            {
-                m_listeners.Remove(keyMatch);
-            }
         }
     }
 }

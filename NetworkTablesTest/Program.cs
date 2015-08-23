@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NetworkTables;
 using NetworkTables.NetworkTables;
+using NetworkTables.NTCore;
 using NetworkTables.Tables;
 
 namespace NetworkTablesTest
@@ -92,10 +93,37 @@ namespace NetworkTablesTest
 
             Thread.Sleep(500);
 
+            InteropHelpers.SetEntryDoubleArray("/SD/myArray", new[] {2.56, 3.85, 4.58});
 
+            Thread.Sleep(50);
+
+            ulong lc = 0;
+            double[] dbl = InteropHelpers.GetEntryDoubleArray("/SD/myArray", ref lc);
+
+            foreach (var d in dbl)
+            {
+                Console.WriteLine(d);
+            }
+
+            /*
             table.PutString("string", "value");
 
             Thread.Sleep(100);
+
+            Console.WriteLine(table.ContainsKey("string"));
+
+            Thread.Sleep(50);
+
+            ITable subtable = table.GetSubTable("subtable");
+
+            Console.WriteLine(table.ContainsSubTable("subtable"));
+
+            subtable.PutNumber("SubNumber", 3.56);
+
+            Thread.Sleep(50);
+
+            Console.WriteLine(table.ContainsSubTable("subtable"));
+
 
             Console.WriteLine(table.GetString("string", "default"));
 

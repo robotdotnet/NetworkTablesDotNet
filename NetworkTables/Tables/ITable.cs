@@ -22,8 +22,7 @@ namespace NetworkTables.Tables
          void PutBoolean(string key, bool value);
          bool GetBoolean(string key, bool defaultValue);
 
-         void AddTableListener(ITableListener listener);
-         void AddTableListener(ITableListener listener, bool immediateNotify);
+         void AddTableListener(ITableListener listener, bool immediateNotify = false);
          void AddTableListener(string key, ITableListener listener, bool immediateNotify);
          void RemoveTableListener(ITableListener listener);
 
