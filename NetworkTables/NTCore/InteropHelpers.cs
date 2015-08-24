@@ -290,20 +290,14 @@ namespace NetworkTables.NTCore
             UIntPtr size;
             byte[] namePtr = CreateUTF8String(name, out size);
 
-            //UIntPtr arrSize = (UIntPtr)value.Length;
-            //IntPtr boolArr = NT_AllocateBooleanArray(arrSize);
-
             int[] valueIntArr = new int[value.Length];
             for (int i = 0; i < value.Length; i++)
             {
                 valueIntArr[i] = value[i] ? 1 : 0;
             }
 
-            //Marshal.Copy(valueIntArr, 0, boolArr, value.Length);
-
             int retVal = NT_SetEntryBooleanArray(namePtr, size, valueIntArr, (UIntPtr)valueIntArr.Length, force ? 1 : 0);
 
-            //NT_FreeBooleanArray(boolArr);
             return retVal != 0;
         }
 
@@ -380,11 +374,12 @@ namespace NetworkTables.NTCore
             }
             return strArray;
         }
-
+        /*
         private static IntPtr StringArrayToPtr(string[] arr, out UIntPtr size)
         {
             size = (UIntPtr)arr.Length;
-            IntPtr nativeArray = NT_AllocateNTStringArray(size);
+            IntPtr nativeArray = Marshal.AllocHGlobal(arr.Length * Marshal.SizeOf(typeof (NT_String)));
+            //IntPtr nativeArray = NT_AllocateNTStringArray(size);
             int ntStringSize = Marshal.SizeOf(typeof(NT_String));
 
             for (int i = 0; i < (int)size; i++)
@@ -395,6 +390,7 @@ namespace NetworkTables.NTCore
             }
             return nativeArray;
         }
+        */
 
         private static byte[] CreateUTF8String(string str, out UIntPtr size)
         {

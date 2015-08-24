@@ -35,7 +35,6 @@ namespace NetworkTables.NTCore
         public static extern void NT_Flush();
 
         //Callback Functions
-
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern uint NT_AddEntryListener(byte[] prefix, UIntPtr prefix_len, IntPtr data,
             NT_EntryListenerCallback callback, int immediate_notify);
@@ -48,10 +47,10 @@ namespace NetworkTables.NTCore
 
         //Ignoring RPC for now
 
+
         //Client/Server Functions
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_SetNetworkIdentity(byte[] name, UIntPtr name_len);
-
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_StartServer(byte[] persist_filename, byte[] listen_address, uint port);
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
@@ -102,19 +101,15 @@ namespace NetworkTables.NTCore
 
         //Interop Utility Functions
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr NT_AllocateDoubleArray(UIntPtr size);
-        [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr NT_AllocateBooleanArray(UIntPtr size);
-        [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr NT_AllocateNTStringArray(UIntPtr size);
-        [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern NT_String NT_AllocateNTString(UIntPtr size);
+        
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_FreeBooleanArray(IntPtr arr);
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_FreeDoubleArray(IntPtr arr);
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_FreeStringArray(IntPtr arr, UIntPtr arr_size);
+        
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern NT_Type NT_GetTypeFromValue(IntPtr value);
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
