@@ -306,14 +306,8 @@ namespace NetworkTables.NTCore
             UIntPtr size;
             byte[] namePtr = CreateUTF8String(name, out size);
 
-            //UIntPtr arrSize = (UIntPtr)value.Length;
-            //IntPtr nativeArray = NT_AllocateDoubleArray(arrSize);
-
-            //Marshal.Copy(value, 0, nativeArray, value.Length);
-
             int retVal = NT_SetEntryDoubleArray(namePtr, size, value, (UIntPtr)value.Length, force ? 1 : 0);
 
-            //NT_FreeDoubleArray(nativeArray);
             return retVal != 0;
         }
 
@@ -322,8 +316,6 @@ namespace NetworkTables.NTCore
             UIntPtr size;
             byte[] namePtr = CreateUTF8String(name, out size);
 
-            //UIntPtr arrSize;
-            //IntPtr nativeArray = StringArrayToPtr(value, out arrSize);
             NT_String[] ntStrings = new NT_String[value.Length];
             for (int i = 0; i < value.Length; i++)
             {
@@ -337,7 +329,6 @@ namespace NetworkTables.NTCore
                 ntString.Dispose();
             }
 
-            //NT_FreeStringArray(nativeArray, arrSize);
             return retVal != 0;
         }
 
@@ -374,23 +365,6 @@ namespace NetworkTables.NTCore
             }
             return strArray;
         }
-        /*
-        private static IntPtr StringArrayToPtr(string[] arr, out UIntPtr size)
-        {
-            size = (UIntPtr)arr.Length;
-            IntPtr nativeArray = Marshal.AllocHGlobal(arr.Length * Marshal.SizeOf(typeof (NT_String)));
-            //IntPtr nativeArray = NT_AllocateNTStringArray(size);
-            int ntStringSize = Marshal.SizeOf(typeof(NT_String));
-
-            for (int i = 0; i < (int)size; i++)
-            {
-                NT_String str = new NT_String(arr[i]);
-                IntPtr data = new IntPtr(nativeArray.ToInt64() + ntStringSize * i);
-                Marshal.StructureToPtr(str, data, false);
-            }
-            return nativeArray;
-        }
-        */
 
         private static byte[] CreateUTF8String(string str, out UIntPtr size)
         {
@@ -402,20 +376,6 @@ namespace NetworkTables.NTCore
             buffer[bytes] = 0;
             return buffer;
         }
-        /*
-        public static IntPtr CreateUTF8StringPtr(string str, out UIntPtr size)
-        {
-            var bytes = Encoding.UTF8.GetByteCount(str);
-
-            var buffer = new byte[bytes + 1];
-
-            Encoding.UTF8.GetBytes(str, 0, str.Length, buffer, 0);
-            var ptr = Marshal.AllocHGlobal(bytes + 1);
-            Marshal.Copy(buffer, 0, ptr, bytes);
-            size = (UIntPtr)bytes;
-            return ptr;
-        }
-        */
 
         //Must be null terminated
         internal static string ReadUTF8String(IntPtr str, UIntPtr size)

@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace NetworkTables.NTCore
 {
+    [SuppressUnmanagedCodeSecurity]
     internal class Interop
     {
         internal const string NTSharedFile = "ntcore";
