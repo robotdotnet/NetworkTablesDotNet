@@ -114,6 +114,8 @@
     <Compile Include="NTCore\InteropHelpers.cs" />
     <Compile Include="NTCore\Enums.cs" />
     <Compile Include="NTCore\Interop.cs" />
+    <Compile Include="NTCore\RPC\Interop.cs" />
+    <Compile Include="NTCore\RPC\Structs.cs" />
     <Compile Include="NTCore\Structs.cs" />
     <Compile Include="Tables\IRemote.cs" />
     <Compile Include="Tables\IRemoteConnectionListener.cs" />
