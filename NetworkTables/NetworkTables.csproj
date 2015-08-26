@@ -45,7 +45,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NTCore\CoreConnections.cs" />
     <Compile Include="NetworkTable.cs" />
+    <Compile Include="NetworkTableCore.cs" />
     <Compile Include="NetworkTables2\AbstractNetworkTableEntryStore.cs" />
     <Compile Include="NetworkTables2\Client\ClientConnectionAdapter.cs" />
     <Compile Include="NetworkTables2\Client\ClientConnectionListenerManager.cs" />
@@ -103,7 +105,7 @@
     <Compile Include="NetworkTables2\Util\Stack.cs" />
     <Compile Include="NetworkTables2\Util\StringCache.cs" />
     <Compile Include="NetworkTables2\WriteManager.cs" />
-    <Compile Include="NetworkTableOld.cs" />
+    <Compile Include="NetworkTableManaged.cs" />
     <Compile Include="NetworkTables\NetworkTableConnectionListenerAdapter.cs" />
     <Compile Include="NetworkTables2\NetworkTableNode.cs" />
     <Compile Include="NetworkTables\NetworkTableKeyListenerAdapter.cs" />
@@ -111,12 +113,13 @@
     <Compile Include="NetworkTables\NetworkTableMode.cs" />
     <Compile Include="NetworkTables\NetworkTableProvider.cs" />
     <Compile Include="NetworkTables\NetworkTableSubListenerAdapter.cs" />
-    <Compile Include="NTCore\InteropHelpers.cs" />
+    <Compile Include="NTCore\CoreMethods.cs" />
     <Compile Include="NTCore\Enums.cs" />
     <Compile Include="NTCore\Interop.cs" />
     <Compile Include="NTCore\RPC\Interop.cs" />
     <Compile Include="NTCore\RPC\Structs.cs" />
     <Compile Include="NTCore\Structs.cs" />
+    <Compile Include="StaticNetworkTableProviders.cs" />
     <Compile Include="Tables\IRemote.cs" />
     <Compile Include="Tables\IRemoteConnectionListener.cs" />
     <Compile Include="Tables\ITable.cs" />
@@ -125,7 +128,19 @@
     <Compile Include="Tables\TableKeyNotDefinedException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Content\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="libntcore.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ntcore.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

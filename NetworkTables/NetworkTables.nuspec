@@ -13,4 +13,8 @@
     <copyright>Copyright 2015</copyright>
     <tags>WPILib FRC FIRST RoboRIO</tags>
   </metadata>
+  <files>
+		<file src="Content\FRC.NetworkTables.props" target="build\" />
+		<file src="libntcore.so" target="content\" />
+	</files>
 </package>

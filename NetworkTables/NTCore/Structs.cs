@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using static NetworkTables.NTCore.Interop;
 
 namespace NetworkTables.NTCore
@@ -74,7 +71,7 @@ namespace NetworkTables.NTCore
 
         public void Dispose()
         {
-            //NT_DisposeEntryInfoArray(arrayPtr, arraySize);
+            NT_DisposeEntryInfoArray(arrayPtr, arraySize);
             info = null;
         }
     }
@@ -89,7 +86,7 @@ namespace NetworkTables.NTCore
         public readonly ulong LastUpdate;
         public readonly uint ProtocolVersion;
 
-        public string RemoteName => InteropHelpers.ReadUTF8String(remote_name);
+        public string RemoteName => CoreMethods.ReadUTF8String(remote_name);
 
         public string RemoteID => remote_id.ToString();
     }
@@ -113,7 +110,7 @@ namespace NetworkTables.NTCore
 
         public void Dispose()
         {
-            //NT_DisposeConnectionInfoArray(arrayPtr, arraySize);
+            NT_DisposeConnectionInfoArray(arrayPtr, arraySize);
             info = null;
         }
     }

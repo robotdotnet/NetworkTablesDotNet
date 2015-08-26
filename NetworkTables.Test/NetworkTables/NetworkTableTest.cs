@@ -11,16 +11,16 @@ namespace NetworkTables.Test.NetworkTables
     {
         private static NetworkTableClient client;
         private static NetworkTableProvider provider;
-        private static NetworkTableOld testTable1;
-        private static NetworkTableOld testTable2;
+        private static NetworkTableManaged testTable1;
+        private static NetworkTableManaged testTable2;
 
         [TestFixtureSetUp]
         public static void Init()
         {
             client = new NetworkTableClient(new IOClass());
             provider = new NetworkTableProvider(client);
-            testTable1 = (NetworkTableOld)provider.GetTable("/test1");
-            testTable2 = (NetworkTableOld)provider.GetTable("/test2");
+            testTable1 = (NetworkTableManaged)provider.GetTable("/test1");
+            testTable2 = (NetworkTableManaged)provider.GetTable("/test2");
         }
 
         [TestFixtureTearDown]

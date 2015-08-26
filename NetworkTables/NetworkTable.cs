@@ -1,200 +1,181 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NetworkTables.NTCore;
 using NetworkTables.Tables;
-using static NetworkTables.NTCore.InteropHelpers;
 
 namespace NetworkTables
 {
-    public class NetworkTable : ITable, IDisposable
+    public class NetworkTable : ITable
     {
-        public string Path { get; }
+        private static StaticNetworkTable NetworkTableProvider = null;
+
+        private ITable Table;
 
         public const char PATH_SEPERATOR_CHAR = '/';
-        private const uint DEFAULT_PORT = 1735;
-        private static string s_ipAddress = null;
-        private static bool client = false;
-        private static bool running = false;
+        internal const uint DEFAULT_PORT = 1735;
+        internal static string s_ipAddress = null;
+        internal static bool client = false;
+        internal static bool running = false;
 
-        private readonly Dictionary<uint, ITableListener> m_listeners = new Dictionary<uint, ITableListener>();
-
-        private NetworkTable(string path)
+        static NetworkTable()
         {
-            this.Path = path;
+            if (IntPtr.Size != 4)
+            {
+                //Running in 64 Bit. NTCore only supports 32 bit processes, so run as managed
+                NetworkTableProvider = new StaticNetworkTableManaged();
+                return;
+            }
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                //If not on WinNT, Check for RoboRIO
+                if (File.Exists("/usr/local/frc/bin/frcRunRobot.sh"))
+                {
+                    //We are on RoboRIO, Use NT Core
+                    NetworkTableProvider = new StaticNetworkTableCore();
+                }
+                else
+                {
+                    //We are on either linux or unix, use NT Managed
+                    NetworkTableProvider = new StaticNetworkTableManaged();
+                }
+                return;
+            }
+            //We can assume we are running on Windows 32 Bit, so we can use NTCore.
+            //This will probably not be right if used on Windows Phone, 
+            //So we have the force method that users can use there.
+            NetworkTableProvider = new StaticNetworkTableCore();
+
+            //If we are core, Check for the library. If not found fall back to managed
+
+            Console.WriteLine(NetworkTableProvider.ToString());
+        }
+
+        public static void ForceManaged()
+        {
+            NetworkTableProvider = new StaticNetworkTableManaged();
         }
 
         public static void Initialize()
         {
-            if (client)
-            {
-                StartClient(s_ipAddress, DEFAULT_PORT);
-            }
-            else
-            {
-                StartServer("networktables.ini", "", DEFAULT_PORT);
-            }
-            running = true;
+            NetworkTableProvider?.Initialize();
         }
+
 
         public static void Shutdown()
         {
-            if (client)
-            {
-                Interop.NT_StopClient();
-            }
-            else
-            {
-                Interop.NT_StopServer();
-            }
-            running = false;
+            NetworkTableProvider?.Shutdown();
         }
 
         public static void SetClientMode()
         {
-            client = true;
+            NetworkTableProvider?.SetClientMode();
         }
 
         public static void SetServerMode()
         {
-            client = false;
+            NetworkTableProvider?.SetServerMode();
         }
 
         public static void SetTeam(int team)
         {
-            SetIPAddress($"10.{(team / 100)}.{(team % 100)}.2");
+            NetworkTableProvider?.SetTeam(team);
         }
 
         public static void SetIPAddress(string address)
         {
-            s_ipAddress = address;
+            NetworkTableProvider?.SetIPAddress(address);
         }
 
         public static NetworkTable GetTable(string key)
         {
-            if (!running) Initialize();
-            return new NetworkTable(PATH_SEPERATOR_CHAR + key);
+            
+            return new NetworkTable(NetworkTableProvider?.GetTable(key));
         }
 
-        public void Dispose()
+        internal NetworkTable(ITable table)
         {
-            foreach (var key in m_listeners.Keys)
-            {
-                Interop.NT_RemoveEntryListener(key);
-            }
-            m_listeners.Clear();
+            Path = table.Path;
+            Table = table;
         }
 
-        public void AddTableListener(ITableListener listener, bool immediateNotify = false)
-        {
-            string path = Path + PATH_SEPERATOR_CHAR;
-            uint id = AddEntryListener(path, this, listener.ValueChanged, immediateNotify);
-            m_listeners.Add(id, listener);
-        }
-
-        public void AddTableListener(string key, ITableListener listener, bool immediateNotify)
-        {
-            string path = Path + PATH_SEPERATOR_CHAR + key;
-            uint id = AddEntryListener(path, this, listener.ValueChanged, immediateNotify);
-            m_listeners.Add(id, listener);
-        }
-
-        public void RemoveTableListener(ITableListener listener)
-        {
-            List<uint> keyMatches = new List<uint>();
-            foreach (KeyValuePair<uint, ITableListener> valuePair in m_listeners)
-            {
-                if (valuePair.Value == listener)
-                {
-                    Interop.NT_RemoveEntryListener(valuePair.Key);
-                    keyMatches.Add(valuePair.Key);
-                }
-            }
-            foreach (var keyMatch in keyMatches)
-            {
-                m_listeners.Remove(keyMatch);
-            }
-        }
-
-        public ITable GetSubTable(string key)
-        {
-            string path = Path + PATH_SEPERATOR_CHAR + key;
-            return new NetworkTable(path);
-        }
+        public string Path { get; }
 
         public bool ContainsKey(string key)
         {
-            string path = Path + PATH_SEPERATOR_CHAR + key;
-            return InteropHelpers.GetType(path) != NT_Type.NT_UNASSIGNED;
+            return Table.ContainsKey(key);
         }
 
         public bool ContainsSubTable(string key)
         {
-            string path = Path + PATH_SEPERATOR_CHAR + key;
-            using (EntryInfoArray array = GetEntryInfo(path, 0))
-            {
-                return array.Length != 0;
-            }
+            return Table.ContainsKey(key);
+        }
+
+        public ITable GetSubTable(string key)
+        {
+            return Table.GetSubTable(key);
         }
 
         public void Persist(string key)
         {
-            string path = Path + PATH_SEPERATOR_CHAR + key;
-            SetEntryFlags(path, (uint)NT_EntryFlags.NT_PERSISTENT);
+            Table.Persist(key);
+        }
+
+        public object GetValue(string key)
+        {
+            return Table.GetValue(key);
+        }
+
+        public void PutValue(string key, object value)
+        {
+            Table.PutValue(key, value);
         }
 
         public void PutNumber(string key, double value)
         {
-            string path = Path + PATH_SEPERATOR_CHAR + key;
-            SetEntryDouble(path, value);
+            Table.PutNumber(key, value);
         }
 
         public double GetNumber(string key, double defaultValue)
         {
-            string path = Path + PATH_SEPERATOR_CHAR + key;
-            int status = 0;
-            ulong lc = 0;
-            double retVal = GetEntryDouble(path, ref lc, ref status);
-            if (status == 0)
-            {
-                return defaultValue;
-            }
-            return retVal;
+            return Table.GetNumber(key, defaultValue);
         }
 
         public void PutString(string key, string value)
         {
-            string path = Path + PATH_SEPERATOR_CHAR + key;
-            SetEntryString(path, value);
+            Table.PutString(key, value);
         }
 
         public string GetString(string key, string defaultValue)
         {
-            string path = Path + PATH_SEPERATOR_CHAR + key;
-            ulong lc = 0;
-            string retVal = GetEntryString(path, ref lc);
-            return retVal ?? defaultValue;
+            return Table.GetString(key, defaultValue);
         }
 
         public void PutBoolean(string key, bool value)
         {
-            string path = Path + PATH_SEPERATOR_CHAR + key;
-            SetEntryBoolean(path, value);
+            Table.PutBoolean(key, value);
         }
 
         public bool GetBoolean(string key, bool defaultValue)
         {
-            string path = Path + PATH_SEPERATOR_CHAR + key;
-            int status = 0;
-            ulong lc = 0;
-            bool retVal = GetEntryBoolean(path, ref lc, ref status);
-            if (status == 0)
-            {
-                return defaultValue;
-            }
-            return retVal;
+            return Table.GetBoolean(key, defaultValue);
+        }
+
+        public void AddTableListener(ITableListener listener, bool immediateNotify = false)
+        {
+            Table.AddTableListener(listener, immediateNotify);
+        }
+
+        public void AddTableListener(string key, ITableListener listener, bool immediateNotify)
+        {
+            Table.AddTableListener(key, listener, immediateNotify);
+        }
+
+        public void RemoveTableListener(ITableListener listener)
+        {
+            Table.RemoveTableListener(listener);
         }
     }
 }

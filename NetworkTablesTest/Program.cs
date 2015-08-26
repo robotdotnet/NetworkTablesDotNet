@@ -65,6 +65,41 @@ namespace NetworkTablesTest
         {
             
             NetworkTable.SetServerMode();
+            //CoreMethods.EnableDebugLogging(true, NT_LogLevel.NT_LOG_INFO);
+            //NetworkTable.SetIPAddress("172.22.11.2");
+            
+            CoreMethods.AddConnectionListener(((uid, connected, connection) =>
+            {
+                Console.WriteLine(uid);
+                Console.WriteLine(connected);
+                Console.WriteLine(connection.ProtocolVersion);
+                Console.WriteLine(connection.RemoteName);
+            }));
+            
+            var nt = NetworkTable.GetTable("SmartDashboard");
+
+            
+            nt.PutString("test", "HELLO FROM NT LAND");
+
+            while (true)
+            {
+                
+                var connections = CoreMethods.GetConnectionInfo();
+                for (int i = 0; i < connections.Length; i++)
+                {
+                    Console.WriteLine(connections[i].ProtocolVersion);
+                    Console.WriteLine(connections[i].RemoteName);
+                    Console.WriteLine(connections[i].RemotePort);
+                }
+                connections.Dispose();
+                
+                Console.WriteLine(nt.GetString("test", "Default"));
+                
+                Thread.Sleep(500);
+                //Console.WriteLine("Loop");
+            }
+            /*
+            NetworkTable.SetServerMode();
             NetworkTable.Initialize();
             /*
             var sd = NetworkTable.GetTable("SmartDashboard");
@@ -81,7 +116,7 @@ namespace NetworkTablesTest
                 Console.WriteLine(sd.GetNumber("MyNumber", 3.2) + ": Number");
                 Console.WriteLine(sd.GetString("MyString", "DefaultMyString") + ": String");
                 Thread.Sleep(500);
-            }*/
+            }
 
             var table = NetworkTable.GetTable("SD");
             table.PutBoolean("boolean", false);
@@ -132,7 +167,7 @@ namespace NetworkTablesTest
             /*
             //var s = new TcpClient("172.22.11.2", 1735);
            *
-            NetworkTable.SetIPAddress("172.22.11.2\n");
+            NetworkTable.SetIPAddress("172.22.11.2");
             NetworkTable.SetClientMode();
             NetworkTable.Initialize();
             
@@ -143,8 +178,8 @@ namespace NetworkTablesTest
                 try
                 {
                     Console.WriteLine(table.GetString("test", "DEFAULt"));
-                    table.PutString("test", "YOLO");
-                    NetworkTable.Flush();
+                    table.PutString("test", "New Client");
+                    //NetworkTable.Flush();
                 }
                 catch
                 {

@@ -96,7 +96,7 @@ namespace NetworkTables.NTCore
 
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern ulong NT_Now();
-
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void NT_LogFunc(uint level, IntPtr file, uint line, IntPtr msg);
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_SetLogger(NT_LogFunc funct, uint min_level);

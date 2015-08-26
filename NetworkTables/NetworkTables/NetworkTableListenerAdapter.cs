@@ -26,7 +26,7 @@ namespace NetworkTables.NetworkTables
             if (key.StartsWith(prefix))
             {
                 string relativeKey = key.Substring(prefix.Length);
-                if (Contains(relativeKey, NetworkTableOld.PATH_SEPARATOR))
+                if (Contains(relativeKey, NetworkTable.PATH_SEPERATOR_CHAR))
                     return;
                 targetListener.ValueChanged(targetSource, relativeKey, value, isNew);
             }

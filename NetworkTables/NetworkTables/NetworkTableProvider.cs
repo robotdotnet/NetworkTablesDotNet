@@ -33,7 +33,7 @@ namespace NetworkTables.NetworkTables
             }
             else
             {
-                NetworkTableOld table = new NetworkTableOld(key, this);
+                NetworkTableManaged table = new NetworkTableManaged(key, this);
                 tables.Add(key, table);
                 return table;
             }
