@@ -8,7 +8,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using NetworkTables;
 using NetworkTables.NetworkTables;
+using NetworkTables.NetworkTables2.Util;
 using NetworkTables.NTCore;
+using NetworkTables.NTCore.RPC;
 using NetworkTables.Tables;
 
 namespace NetworkTablesTest
@@ -61,9 +63,54 @@ namespace NetworkTablesTest
     }
     class Program
     {
+        static byte[] callback1(string name, byte[] params_str)
+        {
+            var param = RpcMethods.UnpackRpcValues(params_str, NT_Type.NT_DOUBLE);
+            if (param.Count == 0)
+            {
+                Console.WriteLine("Empty Params?");
+                return new byte[0];
+            }
+            Console.WriteLine($"Called with {param[0].Value}");
+            return RpcMethods.PackRpcValues(new RPCValue((double) param[0].Value + 1.2));
+        }
         static void Main(string[] args)
         {
             
+            CoreLogging.SetLogFunction(((level, file, line, msg) =>
+            {
+                Console.Error.WriteLine(msg);
+            }), 0);
+            uint version = 1;
+            string name = "myfunc1";
+            List<NT_RpcParamDef> paramList = new List<NT_RpcParamDef>();
+            paramList.Add(new NT_RpcParamDef("param1", new RPCValue(0.0)));
+            List<NT_RpcResultDef> resultList = new List<NT_RpcResultDef>();
+            resultList.Add(new NT_RpcResultDef("result1", NT_Type.NT_DOUBLE));
+            NT_RpcDefinition def = new NT_RpcDefinition(version,name, paramList.ToArray(), resultList.ToArray());
+
+            RpcMethods.CreateRpc("func1", def, callback1);
+            Console.WriteLine("Calling rpc");
+            uint call1_uid = RpcMethods.CallRpc("func1", new RPCValue(2.0));
+
+            byte[] call1ResultStr;
+            Console.WriteLine("Waiting for Rpc Result");
+
+            RpcMethods.GetRpcResult(true, call1_uid, out call1ResultStr);
+
+            var result = RpcMethods.UnpackRpcValues(call1ResultStr, NT_Type.NT_DOUBLE);
+            if (result.Count == 0)
+            {
+                Console.WriteLine("Empty Result?");
+                Console.ReadKey();
+                return;
+            }
+            Console.WriteLine($"Got {result[0].Value}");
+            Console.ReadKey();
+            //def.SetParams(new NT_RpcParamDef("param1", NT_Type.NT_DOUBLE));
+
+
+            /*
             NetworkTable.SetServerMode();
             //CoreMethods.EnableDebugLogging(true, NT_LogLevel.NT_LOG_INFO);
             //NetworkTable.SetIPAddress("172.22.11.2");

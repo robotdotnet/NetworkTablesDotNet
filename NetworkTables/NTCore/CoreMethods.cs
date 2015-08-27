@@ -415,7 +415,16 @@ namespace NetworkTables.NTCore
             return strArray;
         }
 
-        internal static byte[] CreateUTF8String(string str, out UIntPtr size)
+        //Must be null terminated
+        public static byte[] ReadUTF8StringToByteArray(IntPtr str, UIntPtr size)
+        {
+            int iSize = (int)size.ToUInt64();
+            byte[] data = new byte[iSize];
+            Marshal.Copy(str, data, 0, iSize);
+            return data;
+        }
+
+        public static byte[] CreateUTF8String(string str, out UIntPtr size)
         {
             var bytes = Encoding.UTF8.GetByteCount(str);
 
@@ -427,7 +436,7 @@ namespace NetworkTables.NTCore
         }
 
         //Must be null terminated
-        internal static string ReadUTF8String(IntPtr str, UIntPtr size)
+        public static string ReadUTF8String(IntPtr str, UIntPtr size)
         {
             int iSize = (int)size.ToUInt64();
             byte[] data = new byte[iSize];
@@ -435,7 +444,7 @@ namespace NetworkTables.NTCore
             return Encoding.UTF8.GetString(data);
         }
 
-        internal static string ReadUTF8String(IntPtr ptr)
+        public static string ReadUTF8String(IntPtr ptr)
         {
             var data = new List<byte>();
             var off = 0;

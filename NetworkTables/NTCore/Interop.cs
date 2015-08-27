@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
+using NetworkTables.NTCore.RPC;
 
 namespace NetworkTables.NTCore
 {
@@ -104,7 +105,10 @@ namespace NetworkTables.NTCore
         //Interop Utility Functions
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern NT_String NT_AllocateNTString(UIntPtr size);
-        
+
+        [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr NT_AllocateCharArray(UIntPtr size);
+
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern void NT_FreeBooleanArray(IntPtr arr);
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
@@ -164,6 +168,33 @@ namespace NetworkTables.NTCore
         [DllImport(NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
         public static extern int NT_SetEntryStringArray(byte[] name, UIntPtr name_len, NT_String[] arr, UIntPtr size,
             int force);
+
+
+
+        //RPC
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate IntPtr NT_RPCCallback(
+            IntPtr data, IntPtr name, UIntPtr name_len, IntPtr param, UIntPtr params_len, ref UIntPtr results_len);
+
+        [DllImport(NTCore.Interop.NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void NT_CreateRpc(byte[] name, UIntPtr name_len, byte[] def, UIntPtr def_len, IntPtr data,
+            NT_RPCCallback callback);
+
+        [DllImport(NTCore.Interop.NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void NT_CreatePolledRpc(byte[] name, UIntPtr name_len, byte[] def, UIntPtr def_len);
+
+        [DllImport(NTCore.Interop.NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int NT_PollRpc(int blocking, ref NT_RpcCallInfo call_info);
+
+        [DllImport(NTCore.Interop.NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void NT_PostRpcResponse(uint rpc_id, uint call_uid, byte[] result, UIntPtr result_len);
+
+        [DllImport(NTCore.Interop.NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
+        public static extern uint NT_CallRpc(byte[] name, UIntPtr name_len, byte[] param, UIntPtr params_len);
+
+        [DllImport(NTCore.Interop.NTSharedFile, CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr NT_GetRpcResult(int blocking, uint call_uid, ref UIntPtr result_len);
 
     }
 }
