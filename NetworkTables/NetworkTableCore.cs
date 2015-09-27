@@ -78,7 +78,7 @@ namespace NetworkTables
     /// </code>
     /// </example>
 
-    public class NetworkTableCore : ITable, IDisposable
+    public class NetworkTableCore : ITable, IRemote, IDisposable
     {
         public string Path { get; }
 
@@ -260,6 +260,26 @@ namespace NetworkTables
                 return defaultValue;
             }
             return retVal;
+        }
+
+        public void AddConnectionListener(IRemoteConnectionListener listener, bool immediateNotify)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveConnectionListener(IRemoteConnectionListener listener)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsConnected()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsServer()
+        {
+            throw new NotImplementedException();
         }
     }
 }

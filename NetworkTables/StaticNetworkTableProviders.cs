@@ -42,7 +42,7 @@ namespace NetworkTables
             lock (s_lockObject)
             {
                 CheckInit();
-                s_staticProvider = new NetworkTableProvider(s_mode(NetworkTable.s_ipAddress, (int)NetworkTable.DEFAULT_PORT, s_threadManager));
+                s_staticProvider = new NetworkTableProvider(s_mode(NetworkTable.s_ipAddress, (int)NetworkTable.Port, s_threadManager));
             }
         }
 
@@ -129,25 +129,39 @@ namespace NetworkTables
                 return s_staticProvider?.GetTable(NetworkTable.PATH_SEPERATOR_CHAR + key);
             }
         }
+
+        public void SetPort(uint port)
+        {
+            CheckInit();
+            NetworkTable.Port = port;
+        }
     }
 
     internal class StaticNetworkTableCore : StaticNetworkTable
     {
+        private void CheckInit()
+        {
+            if (NetworkTable.running)
+                throw new InvalidOperationException("Network Tables has already been initialized");
+        }
+
         public void Initialize()
         {
+            CheckInit();
             if (NetworkTable.client)
             {
-                StartClient(NetworkTable.s_ipAddress, NetworkTable.DEFAULT_PORT);
+                StartClient(NetworkTable.s_ipAddress, NetworkTable.Port);
             }
             else
             {
-                StartServer("networktables.ini", "", NetworkTable.DEFAULT_PORT);
+                StartServer("networktables.ini", "", NetworkTable.Port);
             }
             NetworkTable.running = true;
         }
 
         public void Shutdown()
         {
+            CheckInit();
             if (NetworkTable.client)
             {
                 StopClient();
@@ -161,11 +175,13 @@ namespace NetworkTables
 
         public void SetClientMode()
         {
+            CheckInit();
             NetworkTable.client = true;
         }
 
         public void SetServerMode()
         {
+            CheckInit();
             NetworkTable.client = false;
         }
 
@@ -176,13 +192,22 @@ namespace NetworkTables
 
         public void SetIPAddress(string address)
         {
+            CheckInit();
             NetworkTable.s_ipAddress = address;
         }
 
         public ITable GetTable(string key)
         {
             if (!NetworkTable.running) Initialize();
+            if (key == "")
+                return new NetworkTableCore(key);
             return new NetworkTableCore(NetworkTable.PATH_SEPERATOR_CHAR + key);
+        }
+
+        public void SetPort(uint port)
+        {
+            CheckInit();
+            NetworkTable.Port = port;
         }
     }
 
@@ -195,5 +220,7 @@ namespace NetworkTables
         void SetTeam(int team);
         void SetIPAddress(string address);
         ITable GetTable(string key);
+
+        void SetPort(uint port);
     }
 }

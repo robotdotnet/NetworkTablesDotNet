@@ -8,7 +8,7 @@ using NetworkTables.Tables;
 
 namespace NetworkTables
 {
-    public class NetworkTable : ITable
+    public class NetworkTable : ITable, IRemote
     {
         private static StaticNetworkTable NetworkTableProvider = null;
 
@@ -16,6 +16,7 @@ namespace NetworkTables
 
         public const char PATH_SEPERATOR_CHAR = '/';
         internal const uint DEFAULT_PORT = 1735;
+        internal static uint Port = DEFAULT_PORT;
         internal static string s_ipAddress = null;
         internal static bool client = false;
         internal static bool running = false;
@@ -93,6 +94,11 @@ namespace NetworkTables
         {
             
             return new NetworkTable(NetworkTableProvider?.GetTable(key));
+        }
+
+        public static void SetPort(uint port)
+        {
+            NetworkTableProvider?.SetPort(port);
         }
 
         internal NetworkTable(ITable table)
@@ -176,6 +182,26 @@ namespace NetworkTables
         public void RemoveTableListener(ITableListener listener)
         {
             Table.RemoveTableListener(listener);
+        }
+
+        public void AddConnectionListener(IRemoteConnectionListener listener, bool immediateNotify)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveConnectionListener(IRemoteConnectionListener listener)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsConnected()
+        {
+            return true;
+        }
+
+        public bool IsServer()
+        {
+            throw new NotImplementedException();
         }
     }
 }

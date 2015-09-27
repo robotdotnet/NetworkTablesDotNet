@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NetworkTables.NTCore
 {
-    public class CoreLogging
+    public static class CoreLogging
     {
         public delegate void NTLogger(int level, string file, int line, string msg);
 
@@ -14,7 +14,7 @@ namespace NetworkTables.NTCore
 
         private static Interop.NT_LogFunc nativeLog;
 
-        public void SetLogFunction(NTLogger logFunc, NT_LogLevel level)
+        public static void SetLogFunction(NTLogger logFunc, NT_LogLevel level)
         {
             if (!logSet)
             {
@@ -24,9 +24,9 @@ namespace NetworkTables.NTCore
                     string message = CoreMethods.ReadUTF8String(msg);
                     string fileName = CoreMethods.ReadUTF8String(file);
 
-                    logFunc((int) u, fileName, (int) line, message);
+                    logFunc((int)u, fileName, (int)line, message);
                 };
-                Interop.NT_SetLogger(nativeLog, (uint) level);
+                Interop.NT_SetLogger(nativeLog, (uint)level);
             }
         }
     }

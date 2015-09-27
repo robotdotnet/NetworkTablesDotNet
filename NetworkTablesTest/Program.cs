@@ -61,6 +61,14 @@ namespace NetworkTablesTest
             }
         }
     }
+
+    struct str
+    {
+        private IntPtr ptr;
+        private UIntPtr uptr;
+        //bool Arr { get; set; }
+    }
+
     class Program
     {
         static byte[] callback1(string name, byte[] params_str)
@@ -77,6 +85,12 @@ namespace NetworkTablesTest
         static void Main(string[] args)
         {
             
+            Console.WriteLine(Marshal.SizeOf(typeof(str)));
+            Console.WriteLine(Marshal.SizeOf(typeof(NT_String)));
+
+            Console.ReadKey();
+
+
             CoreLogging.SetLogFunction(((level, file, line, msg) =>
             {
                 Console.Error.WriteLine(msg);

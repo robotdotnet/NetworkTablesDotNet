@@ -11,7 +11,7 @@ namespace NetworkTables.NTCore
 {
     public static class RpcMethods
     {
-        public delegate byte[] RPCCallback(string name, byte[] params_str);
+        public delegate byte[] RpcCallback(string name, byte[] params_str);
 
 
         public static byte[] PackRpcValues(params RPCValue[] values)
@@ -40,7 +40,7 @@ namespace NetworkTables.NTCore
 
         private static readonly List<NT_RPCCallback> s_rpcCallbacks = new List<NT_RPCCallback>();
 
-        public static void CreateRpc(string name, NT_RpcDefinition def, RPCCallback callback)
+        public static void CreateRpc(string name, NT_RpcDefinition def, RpcCallback callback)
         {
             Interop.NT_RPCCallback modCallback =
                 (IntPtr data, IntPtr ptr, UIntPtr len, IntPtr intPtr, UIntPtr paramsLen, ref UIntPtr resultsLen) =>
