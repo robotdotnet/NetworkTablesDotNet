@@ -9,11 +9,14 @@ Please use [NetworkTablesCore](https://github.com/robotdotnet/NetworkTablesCore)
 
 
 
-
+Documentation
+=============
 
 This is a native DotNet implementation of NetworkTables. Much of the externally facing code, and the method casing were derived from the C++ implementation, with other internal parts derived from the Java implementation. NetworkTables are used to pass non-Driver Station data to and from the robot across the network.
 
 The implementation is currently compiled for .Net 4.5, but as long as you are using VS 2015, you should be able to compile it to .Net 3.5 without much modification. 
+
+Only supports the NetworkTables 2.0 protocol. Use NetworkTablesCore for the 3.0 protocol and up to date support.
 
 
 .. note:: NetworkTables is a protocol used for robot communication in the
