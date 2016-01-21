@@ -27,7 +27,7 @@ namespace NetworkTables.TcpSockets
             m_server = new TcpListener(IPAddress.Parse(m_address), m_port);
             m_server.Start();
 
-
+            return 1;
         }
 
         public void Shutdown()

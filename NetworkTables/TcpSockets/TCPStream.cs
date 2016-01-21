@@ -6,10 +6,11 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace NetworkTables.TcpSockets
 {
-    public class TCPStream : INetworkStream
+    public class TCPStream : INetworkStream, IDisposable
     {
         Socket m_socket;
         string m_peerIP;
@@ -17,23 +18,55 @@ namespace NetworkTables.TcpSockets
 
         public TCPStream(Socket socket)
         {
+            m_socket = socket;
+
             IPEndPoint ipEp = socket.RemoteEndPoint as IPEndPoint;
             m_peerIP = ipEp.Address.ToString();
             m_peerPort = ipEp.Port;
-            m_socket = socket;
-
         }
 
-        public int Send(byte[] buffer, int len, ref NetworkStreamError error)
+        public void Dispose()
+        {
+            Close();
+        }
+
+        public int Send(byte[] buffer, int len, ref NetworkStreamError err)
         {
             if (m_socket == null)
             {
-                error = NetworkStreamError.kConnectionClosed;
+                err = NetworkStreamError.kConnectionClosed;
                 return 0;
             }
+            int rv = 0;
+            int errorCode = 0;
+            while (true)
+            {
+                try
+                {
+                    rv = m_socket.Send(buffer, len, SocketFlags.None);
+                    break;
+                }
+                catch (SocketException e)
+                {
+                    if (e.NativeErrorCode != 10035)//WSAEWOULDBLOCK 
+                    {
+                        errorCode = e.NativeErrorCode;
+                        break;
+                    }
+                    else
+                    {
+                        Thread.Sleep(1);
+                    }
+                }
 
-            int rv = m_socket.Send(buffer, len, SocketFlags.None);
-            //TODO: Add tons of error checking
+            }
+            if (errorCode != 0)
+            {
+                string error = $"Send() failed: WSA error={errorCode}\n";
+                //Send the error
+                err = NetworkStreamError.kConnectionReset;
+                return 0;
+            }
             return rv;
         }
 
