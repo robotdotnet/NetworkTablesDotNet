@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NetworkTables
 {
-    internal class NTValue
+    public class NTValue
     {
         public NtType Type { get; }
 
