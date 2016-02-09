@@ -265,7 +265,39 @@ namespace NetworkTables
                             }
                             break;
                         }
-                        
+                    case kFlagsUpdate:
+                        {
+                            uint id = msg.Id();
+                            if (id >= m_idMap.Count || m_idMap[(int) id] == null)
+                            {
+                                Monitor.Exit(m_mutex);
+                                lockEntered = false;
+                                //Debug
+                                return;
+                            }
+
+                            Entry entry = m_idMap[(int) id];
+
+                            if (entry.flags == msg.Flags()) return;
+
+                            if ((entry.flags & (int) NT_EntryFlags.NT_PERSISTENT) !=
+                                (msg.Flags() & (int) NT_EntryFlags.NT_PERSISTENT))
+                                m_persistentDirty = true;
+
+                            entry.flags = msg.Flags();
+
+                            m_notifier.NotifyEntry(entry.name, entry.value, (uint)NT_NotifyKind.NT_NOTIFY_FLAGS);
+
+                            if (m_server && m_queueOutgoing != null)
+                            {
+                                var queueOutgoing = m_queueOutgoing;
+                                Monitor.Exit(m_mutex);
+                                lockEntered = false;
+                                queueOutgoing(msg, null, conn);
+                            }
+                            break;
+                        }
+
                 }
             }
             finally

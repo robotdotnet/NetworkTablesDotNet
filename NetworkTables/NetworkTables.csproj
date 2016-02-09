@@ -52,6 +52,8 @@
     <Compile Include="Notifier.cs" />
     <Compile Include="NTType.cs" />
     <Compile Include="NT_NotifyKind.cs" />
+    <Compile Include="RawIStream.cs" />
+    <Compile Include="RawSocketIStream.cs" />
     <Compile Include="SequenceNumber.cs" />
     <Compile Include="Storage.cs" />
     <Compile Include="Tables\IRemote.cs" />

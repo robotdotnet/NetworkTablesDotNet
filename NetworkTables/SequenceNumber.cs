@@ -32,5 +32,25 @@ namespace NetworkTables
             if (input.m_value > 0xffff) input.m_value = 0;
             return input;
         }
+
+        public static bool operator <(SequenceNumber lhs, SequenceNumber rhs)
+        {
+            if (lhs.m_value < rhs.m_value)
+                return (rhs.m_value - lhs.m_value) < (1u << 15);
+            else if (lhs.m_value > rhs.m_value)
+                return (lhs.m_value - rhs.m_value) > (1u << 15);
+            else
+                return false;
+        }
+
+        public static bool operator >(SequenceNumber lhs, SequenceNumber rhs)
+        {
+            if (lhs.m_value < rhs.m_value)
+                return (rhs.m_value - lhs.m_value) > (1u << 15);
+            else if (lhs.m_value > rhs.m_value)
+                return (lhs.m_value - rhs.m_value) < (1u << 15);
+            else
+                return false;
+        }
     }
 }

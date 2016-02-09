@@ -8,10 +8,10 @@ namespace NetworkTables
 {
     public struct ConnectionInfo
     {
-        string remote_id;
-        string remote_name;
-        uint remote_port;
-        ulong last_update;
-        uint protocol_version;
+        public string remote_id;
+        public string remote_name;
+        public uint remote_port;
+        public ulong last_update;
+        public uint protocol_version;
     }
 }

@@ -186,11 +186,6 @@ namespace NetworkTables
                     msg.m_id = rdproto;
                     break;
                 case MsgType.kServerHelloDone:
-                    if (decoder.ProtoRev < 0x0300u)
-                    {
-                        decoder.Error = "received SERVER_HELLO_DONE in protocol < 3.0";
-                        return null;
-                    }
                     break;
                 case MsgType.kServerHello:
                     if (decoder.ProtoRev < 0x0300u)
