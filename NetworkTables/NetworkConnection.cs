@@ -8,5 +8,9 @@ namespace NetworkTables
 {
     public class NetworkConnection
     {
+
+        private uint m_protoRev;
+
+        public uint ProtoRev => m_protoRev;
     }
 }

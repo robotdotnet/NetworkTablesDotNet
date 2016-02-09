@@ -5,7 +5,7 @@ using System.Text;
 
 namespace NetworkTables
 {
-    internal class WireDecoder
+    public class WireDecoder
     {
         public static double ReadDouble(byte[] buf, int start)
         {
@@ -15,9 +15,11 @@ namespace NetworkTables
         private readonly byte[] m_buffer;
         private int m_count;
 
-        public string Error { get; private set; }
+        public string Error { get; internal set; }
 
         private uint m_protoRev;
+
+        public uint ProtoRev => m_protoRev;
 
         public WireDecoder(byte[] buffer, uint protoRev)
         {

@@ -44,11 +44,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConnectionInfo.cs" />
     <Compile Include="Leb128.cs" />
+    <Compile Include="Message.cs" />
     <Compile Include="NetworkConnection.cs" />
     <Compile Include="NetworkTable.cs" />
     <Compile Include="Notifier.cs" />
     <Compile Include="NTType.cs" />
+    <Compile Include="NT_NotifyKind.cs" />
+    <Compile Include="SequenceNumber.cs" />
     <Compile Include="Storage.cs" />
     <Compile Include="Tables\IRemote.cs" />
     <Compile Include="Tables\IRemoteConnectionListener.cs" />

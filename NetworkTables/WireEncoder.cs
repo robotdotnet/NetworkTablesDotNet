@@ -6,7 +6,7 @@ using System.Text;
 
 namespace NetworkTables
 {
-    internal class WireEncoder
+    public class WireEncoder
     {
         private readonly List<byte> m_buffer = new List<byte>(1024);
 
@@ -24,6 +24,8 @@ namespace NetworkTables
         }
 
         private uint m_protoRev;
+
+        public uint ProtoRev => m_protoRev;
 
         public WireEncoder(uint protoRev)
         {
