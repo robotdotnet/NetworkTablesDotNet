@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConnectionInfo.cs" />
+    <Compile Include="Dispatcher.cs" />
     <Compile Include="Leb128.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="NetworkConnection.cs" />
@@ -56,6 +57,7 @@
     <Compile Include="RawSocketIStream.cs" />
     <Compile Include="SequenceNumber.cs" />
     <Compile Include="Storage.cs" />
+    <Compile Include="Support\Timestamp.cs" />
     <Compile Include="Tables\IRemote.cs" />
     <Compile Include="Tables\IRemoteConnectionListener.cs" />
     <Compile Include="Tables\ITable.cs" />

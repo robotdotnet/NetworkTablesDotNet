@@ -15,8 +15,8 @@ namespace NetworkTables.TcpSockets
     }
     public interface INetworkStream
     {
-        int Send(byte[] buffer, int len, ref NetworkStreamError error);
-        int Receive(ref byte[] buffer, int len, ref NetworkStreamError err, int timeout = 0);
+        int Send(byte[] buffer, int pos, int len, ref NetworkStreamError error);
+        int Receive(byte[] buffer, int pos, int len, ref NetworkStreamError err, int timeout = 0);
         void Close();
 
         string GetPeerIP();

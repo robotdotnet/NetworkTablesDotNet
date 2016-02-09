@@ -30,7 +30,7 @@ namespace NetworkTables.TcpSockets
             Close();
         }
 
-        public int Send(byte[] buffer, int len, ref NetworkStreamError err)
+        public int Send(byte[] buffer, int pos, int len, ref NetworkStreamError err)
         {
             if (m_socket == null)
             {
@@ -43,7 +43,7 @@ namespace NetworkTables.TcpSockets
             {
                 try
                 {
-                    rv = m_socket.Send(buffer, len, SocketFlags.None);
+                    rv = m_socket.Send(buffer, pos, len, SocketFlags.None);
                     break;
                 }
                 catch (SocketException e)
@@ -70,7 +70,7 @@ namespace NetworkTables.TcpSockets
             return rv;
         }
 
-        public int Receive(ref byte[] buffer, int len, ref NetworkStreamError err, int timeout = 0)
+        public int Receive(byte[] buffer, int pos, int len, ref NetworkStreamError err, int timeout = 0)
         {
             if (m_socket == null)
             {
@@ -82,11 +82,11 @@ namespace NetworkTables.TcpSockets
 
             if (timeout <= 0)
             {
-                rv = m_socket.Receive(buffer, len, 0);
+                rv = m_socket.Receive(buffer, pos, len, 0);
             }
             else if (WaitForReadEvent(timeout))
             {
-                rv = m_socket.Receive(buffer, len, 0);
+                rv = m_socket.Receive(buffer, pos, len, 0);
             }
             else
             {

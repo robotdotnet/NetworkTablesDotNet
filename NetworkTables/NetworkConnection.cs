@@ -5,12 +5,29 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NetworkTables.Support;
 using NetworkTables.TcpSockets;
 
 namespace NetworkTables
 {
     public class NetworkConnection : IDisposable
     {
+
+        private struct Pair
+        {
+            public int First { get; private set; }
+            public int Second { get; private set; }
+
+            public void SetFirst(int first)
+            {
+                First = first;
+            }
+
+            public void SetSecond(int second)
+            {
+                Second = second;
+            }
+        }
 
         private uint m_protoRev;
 
@@ -50,13 +67,15 @@ namespace NetworkTables
 
         private ulong m_lastUpdate;
 
-        private DateTime m_lastPost;
+        private DateTime m_lastPost = DateTime.UtcNow;
 
         private readonly object m_pendingMutex = new object();
 
         private readonly object m_remoteIdMutex = new object();
-        
-        private List<Message> m_pendingOutgoing = new List<Message>(); 
+
+        private List<Message> m_pendingOutgoing = new List<Message>();
+
+        private List<Pair> m_pendingUpdate = new List<Pair>();
 
         public NetworkConnection(INetworkStream stream, Notifier notifier, HandshakeFunc handshake,
             Message.GetEntryTypeFunc getEntryType)
@@ -91,7 +110,7 @@ namespace NetworkTables
             m_state = State.kInit;
             List<Message> temp = new List<Message>();
             while (!m_outgoing.IsEmpty) m_outgoing.TryDequeue(out temp);
-            
+
             m_writeThread = new Thread(WriteThreadMain);
             m_writeThread.Start();
 
@@ -129,7 +148,7 @@ namespace NetworkTables
             ConnectionInfo info = new ConnectionInfo
             {
                 remote_id = RemoteId(),
-                remote_port = (uint) m_stream.GetPeerPort(),
+                remote_port = (uint)m_stream.GetPeerPort(),
                 remote_name = m_stream.GetPeerIP(),
                 last_update = m_lastUpdate,
                 protocol_version = m_protoRev
@@ -149,12 +168,139 @@ namespace NetworkTables
 
         public void QueueOutgoing(Message msg)
         {
-            
+            lock (m_pendingMutex)
+            {
+                Message.MsgType type = msg.Type();
+
+                switch (type)
+                {
+                    case Message.MsgType.kEntryAssign:
+                    case Message.MsgType.kEntryUpdate:
+                        {
+                            uint id = msg.Id();
+                            if (id == 0xffff)
+                            {
+                                m_pendingOutgoing.Add(msg);
+                                break;
+                            }
+                            if (id < m_pendingUpdate.Count && m_pendingUpdate[(int)id].First != 0)
+                            {
+                                var oldmsg = m_pendingOutgoing[m_pendingUpdate[(int)id].First];
+                                if (oldmsg != null && oldmsg.Is(Message.MsgType.kEntryAssign) &&
+                                    msg.Is(Message.MsgType.kEntryUpdate))
+                                {
+                                    m_pendingOutgoing[m_pendingUpdate[(int)id].First] = Message.EntryAssign(oldmsg.Str(), id, msg.SeqNumUid(), msg.Value(),
+                                        oldmsg.Flags());
+
+                                }
+                                else
+                                {
+                                    m_pendingOutgoing[m_pendingUpdate[(int)id].First] = msg;
+                                }
+                            }
+                            else
+                            {
+                                int pos = m_pendingOutgoing.Count;
+                                m_pendingOutgoing.Add(msg);
+                                if (id >= m_pendingUpdate.Count) m_pendingUpdate.Add(new Pair());
+                                m_pendingUpdate[(int)id].SetFirst(pos + 1);
+                            }
+                            break;
+                        }
+                    case Message.MsgType.kEntryDelete:
+                        {
+                            uint id = msg.Id();
+                            if (id == 0xffff)
+                            {
+                                m_pendingOutgoing.Add(msg);
+                                break;
+                            }
+
+                            if (id < m_pendingUpdate.Count)
+                            {
+                                if (m_pendingUpdate[(int)id].First != 0)
+                                {
+                                    m_pendingOutgoing[m_pendingUpdate[(int)id].First - 1] = new Message();
+                                    m_pendingUpdate[(int)id].SetFirst(0);
+                                }
+                                if (m_pendingUpdate[(int)id].Second != 0)
+                                {
+                                    m_pendingOutgoing[m_pendingUpdate[(int)id].Second - 1] = new Message();
+                                    m_pendingUpdate[(int)id].SetSecond(0);
+                                }
+                            }
+
+                            m_pendingOutgoing.Add(msg);
+                            break;
+                        }
+                    case Message.MsgType.kFlagsUpdate:
+                        {
+                            uint id = msg.Id();
+                            if (id == 0xffff)
+                            {
+                                m_pendingOutgoing.Add(msg);
+                                break;
+                            }
+
+                            if (id < m_pendingUpdate.Count && m_pendingUpdate[(int)id].Second != 0)
+                            {
+                                m_pendingOutgoing[m_pendingUpdate[(int)id].Second - 1] = msg;
+                            }
+                            else
+                            {
+                                int pos = m_pendingOutgoing.Count;
+                                m_pendingOutgoing.Add(msg);
+                                if (id > m_pendingUpdate.Count) m_pendingUpdate.Add(new Pair());
+                                m_pendingUpdate[(int)id].SetSecond(pos + 1);
+
+                            }
+                            break;
+                        }
+                    case Message.MsgType.kClearEntries:
+                        {
+                            for (int i = 0; i < m_pendingOutgoing.Count; i++)
+                            {
+                                var message = m_pendingOutgoing[i];
+                                if (message == null) continue;
+                                var t = message.Type();
+                                if (t == Message.MsgType.kEntryAssign || t == Message.MsgType.kEntryUpdate
+                                    || t == Message.MsgType.kFlagsUpdate || t == Message.MsgType.kEntryDelete
+                                    || t == Message.MsgType.kClearEntries)
+                                {
+                                    m_pendingOutgoing[i] = new Message();
+                                }
+                            }
+                            m_pendingUpdate.Clear();
+                            m_pendingOutgoing.Add(msg);
+                            break;
+                        }
+                    default:
+                        m_pendingOutgoing.Add(msg);
+                        break;
+                }
+            }
         }
 
         public void PostOutgoing(bool keepAlive)
         {
-            
+            lock (m_pendingMutex)
+            {
+                var now = DateTime.UtcNow;
+                if (m_pendingOutgoing.Count == 0)
+                {
+                    if (!keepAlive) return;
+                    if ((now - m_lastPost) < TimeSpan.FromSeconds(1)) return;
+                    m_outgoing.Enqueue(new List<Message> {Message.KeepAlive()});
+                }
+                else
+                {
+                    m_outgoing.Enqueue(new List<Message>(m_pendingOutgoing));
+                    m_pendingOutgoing.Clear();
+                    m_pendingUpdate.Clear();
+                    
+                }
+                m_lastPost = DateTime.UtcNow;
+            }
         }
 
         public uint Uid()
@@ -198,22 +344,91 @@ namespace NetworkTables
 
         private void ReadThreadMain()
         {
-            
-            WireDecoder decoder = new WireDecoder();
+            RawSocketIStream istream = new RawSocketIStream(m_stream);
+            WireDecoder decoder = new WireDecoder(istream, m_protoRev);
 
             m_state = State.kHandshake;
 
             if (!m_handshake(this, () =>
             {
-                decoder.ProtoRev = m_protoRev;
+                decoder.SetProtoRev(m_protoRev);
                 var msg = Message.Read(decoder, m_getEntryType);
-
+                if (msg == null && decoder.Error != null)
+                {
+                    //Debug
+                }
+                return msg;
+            }, messages =>
+            {
+                m_outgoing.Enqueue(messages.ToList());
             }))
+            {
+                m_state = State.kDead;
+                m_active = false;
+                return;
+            }
+
+            m_state = State.kActive;
+            m_notifier.NotifyConnection(true, Info());
+            while (m_active)
+            {
+                if (m_stream == null) break;
+                decoder.SetProtoRev(m_protoRev);
+                decoder.Reset();
+                var msg = Message.Read(decoder, m_getEntryType);
+                if (msg == null)
+                {
+                    if (decoder.Error != null) //Debug;
+                    {
+
+                    }
+                    m_stream?.Close();
+                    break;
+                }
+                //Debug
+                m_lastUpdate = Timestamp.Now();
+                m_processIncoming(msg, this);
+            }
+
+            //Debug
+            if (m_state != State.kDead) m_notifier.NotifyConnection(false, Info());
+            m_active = false;
+            m_outgoing.Enqueue(new List<Message>()); // Also kill write thread
         }
 
         private void WriteThreadMain()
         {
-            
+            WireEncoder encoder = new WireEncoder(m_protoRev);
+
+            while (m_active)
+            {
+                List<Message> messages;
+                bool validQueueData = m_outgoing.TryDequeue(out messages);
+
+                if (!validQueueData) continue;
+                encoder.SetProtoRev(m_protoRev);
+                encoder.Reset();
+                //Debug
+                foreach (var message in messages)
+                {
+                    if (message != null)
+                    {
+                        //Debug
+                        message.Write(encoder);
+                    }
+                }
+
+                NetworkStreamError err = NetworkStreamError.kConnectionClosed;
+                if (m_stream == null) break;
+                if (encoder.Size() == 0) continue;
+                if (m_stream.Send(encoder.Buffer, 0, encoder.Size(), ref err) == 0) break;
+                //Debug
+            }
+            //Debug
+            if (m_state != State.kDead) m_notifier.NotifyConnection(false, Info());
+            m_state = State.kDead;
+            m_active = false;
+            m_stream?.Close();
         }
 
     }

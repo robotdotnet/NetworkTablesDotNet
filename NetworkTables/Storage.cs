@@ -356,17 +356,17 @@ namespace NetworkTables
 
         }
 
-        void NotifyEntries(string prefix, EntryListenerCallback only = null)
+        public void NotifyEntries(string prefix, Notifier.EntryListenerCallback only = null)
         {
 
         }
 
-        string SavePersistent(string filename, bool periodic)
+        public string SavePersistent(string filename, bool periodic)
         {
 
         }
 
-        string LoadPersistent(string filename, Action<int, string> warn)
+        public string LoadPersistent(string filename, Action<int, string> warn)
         {
 
         }
@@ -376,7 +376,7 @@ namespace NetworkTables
 
         }
 
-        public bool LoadPersisten(Stream stream, Action<int, string> warn)
+        public bool LoadPersistent(Stream stream, Action<int, string> warn)
         {
 
         }

@@ -80,7 +80,7 @@ namespace NetworkTables
 
         const uint kClearAllMagic = 0xD06CB27Au;
 
-        public void Write(ref WireEncoder encoder)
+        public void Write(WireEncoder encoder)
         {
             switch (m_type)
             {

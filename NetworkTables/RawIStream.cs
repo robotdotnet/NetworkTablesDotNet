@@ -8,7 +8,7 @@ namespace NetworkTables
 {
     public interface IRawIStream
     {
-        bool Read(object data, int len);
+        bool Read(byte[] data, int len);
         void Close();
 
 
@@ -16,18 +16,23 @@ namespace NetworkTables
 
     public class RawMemIStream : IRawIStream
     {
-        private byte[] m_cur;
+        private byte[] m_data;
+        private int m_cur;
         private int m_left;
 
         public RawMemIStream(byte[] mem, int len)
         {
-            m_cur = mem;
+            m_data = mem;
+            m_cur = 0;
             m_left = len;
         }
 
-        public virtual bool Read(object data, int len)
+        public virtual bool Read(byte[] data, int len)
         {
             if (len > m_left) return false;
+            Array.Copy(data, m_data, len);
+            m_cur += len;
+            m_left -= len;
             return true;
         }
 

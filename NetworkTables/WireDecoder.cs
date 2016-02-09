@@ -12,7 +12,10 @@ namespace NetworkTables
             return BitConverter.Int64BitsToDouble(IPAddress.NetworkToHostOrder(BitConverter.ToInt64(buf, start)));
         }
 
-        private readonly byte[] m_buffer;
+        private byte[] m_buffer;
+
+        private int m_allocated;
+        private IRawIStream m_is;
         private int m_count;
 
         public string Error { get; internal set; }
@@ -21,15 +24,42 @@ namespace NetworkTables
 
         public uint ProtoRev => m_protoRev;
 
-        public WireDecoder(byte[] buffer, uint protoRev)
+        internal void SetProtoRev(uint protoRev)
         {
             m_protoRev = protoRev;
-            m_buffer = buffer;
+        }
+
+        public WireDecoder(IRawIStream istream, uint protoRev)
+        {
+            m_allocated = 1024;
+            m_buffer = new byte[m_allocated];
+            Error = null;
+
+            m_protoRev = protoRev;
+        }
+
+        private void Realloc(int len)
+        {
+            if (m_allocated >= len) return;
+            int newLen = m_allocated*2;
+            while (newLen < len) newLen *= 2;
+            byte[] newBuf = new byte[newLen];
+            Array.Copy(m_buffer, newBuf, m_buffer.Length);
+            m_buffer = newBuf;
+            m_allocated = newLen;
         }
 
         public void Reset()
         {
             Error = null;
+        }
+
+        public bool Read(ref byte[] buf, int len)
+        {
+            if (len > m_allocated) Realloc(len);
+            buf = m_buffer;
+            bool rv = m_is.Read(m_buffer, len);
+            return rv;
         }
 
         public bool ReadType(ref NtType type)

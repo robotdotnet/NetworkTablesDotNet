@@ -23,9 +23,16 @@ namespace NetworkTables
             m_buffer.AddRange(bytes);
         }
 
+        public int Size() => m_buffer.Count;
+
         private uint m_protoRev;
 
         public uint ProtoRev => m_protoRev;
+
+        internal void SetProtoRev(uint protoRev)
+        {
+            m_protoRev = protoRev;
+        }
 
         public WireEncoder(uint protoRev)
         {

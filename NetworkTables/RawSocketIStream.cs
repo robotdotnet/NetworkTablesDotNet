@@ -14,12 +14,22 @@ namespace NetworkTables
 
         public RawSocketIStream(INetworkStream stream, int timeout = 0)
         {
-            
+            m_stream = stream;
+            m_timeout = timeout;
         }
 
-        public virtual bool Read(object data, int len)
+        public virtual bool Read(byte[] data, int len)
         {
-            bool[] cdata = (bool[]) data;
+            int pos = 0;
+
+            while (pos < len)
+            {
+                NetworkStreamError err = NetworkStreamError.kConnectionClosed;
+                int count = m_stream.Receive(data, pos, len - pos, ref err, m_timeout);
+                if (count == 0) return false;
+                pos += count;
+            }
+            return true;
 
         }
 
