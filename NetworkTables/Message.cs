@@ -31,7 +31,7 @@ namespace NetworkTables
 
         private MsgType m_type;
         private string m_str;
-        private NTValue m_value;
+        private Value m_value;
         uint m_id;
         uint m_flags;
         uint m_seq_num_uid;
@@ -67,7 +67,7 @@ namespace NetworkTables
             return m_str;
         }
 
-        public NTValue Value()
+        public Value Value()
         {
             return m_value;
         }
@@ -231,7 +231,7 @@ namespace NetworkTables
             return msg;
         }
 
-        public static Message EntryAssign(string name, uint id, uint seqNum, NTValue value, uint flags)
+        public static Message EntryAssign(string name, uint id, uint seqNum, Value value, uint flags)
         {
             var msg = new Message(MsgType.kEntryAssign);
             msg.m_str = name;
@@ -242,7 +242,7 @@ namespace NetworkTables
             return msg;
         }
 
-        public static Message EntryUpdate(uint id, uint seqNum, NTValue value)
+        public static Message EntryUpdate(uint id, uint seqNum, Value value)
         {
             var msg = new Message(MsgType.kEntryUpdate);
             msg.m_value = value;

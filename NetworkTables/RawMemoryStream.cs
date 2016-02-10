@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NetworkTables
 {
-    public interface IRawIStream
+    public interface IInputStream
     {
         bool Read(byte[] data, int len);
         void Close();
@@ -14,13 +14,13 @@ namespace NetworkTables
 
     }
 
-    public class RawMemIStream : IRawIStream
+    public class RawMemoryStream : IInputStream
     {
         private byte[] m_data;
         private int m_cur;
         private int m_left;
 
-        public RawMemIStream(byte[] mem, int len)
+        public RawMemoryStream(byte[] mem, int len)
         {
             m_data = mem;
             m_cur = 0;
@@ -30,7 +30,7 @@ namespace NetworkTables
         public virtual bool Read(byte[] data, int len)
         {
             if (len > m_left) return false;
-            Array.Copy(data, m_data, len);
+            Array.Copy(data, 0, m_data, m_cur, len);
             m_cur += len;
             m_left -= len;
             return true;

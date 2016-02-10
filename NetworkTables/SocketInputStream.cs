@@ -7,12 +7,12 @@ using NetworkTables.TcpSockets;
 
 namespace NetworkTables
 {
-    public class RawSocketIStream : IRawIStream
+    public class SocketInputStream : IInputStream
     {
         private INetworkStream m_stream;
         private int m_timeout;
 
-        public RawSocketIStream(INetworkStream stream, int timeout = 0)
+        public SocketInputStream(INetworkStream stream, int timeout = 0)
         {
             m_stream = stream;
             m_timeout = timeout;

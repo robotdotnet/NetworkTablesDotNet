@@ -143,17 +143,9 @@ namespace NetworkTables
             while (!m_outgoing.IsEmpty) m_outgoing.TryDequeue(out temp);
         }
 
-        public ConnectionInfo Info()
+        public ConnectionInfo GetConnectionInfo()
         {
-            ConnectionInfo info = new ConnectionInfo
-            {
-                remote_id = RemoteId(),
-                remote_port = (uint)m_stream.GetPeerPort(),
-                remote_name = m_stream.GetPeerIP(),
-                last_update = m_lastUpdate,
-                protocol_version = m_protoRev
-            };
-            return info;
+            return new ConnectionInfo(RemoteId(), m_stream.GetPeerIP(), (uint)m_stream.GetPeerPort(), (uint)m_lastUpdate, m_protoRev);
         }
 
         public bool Active()
@@ -344,7 +336,7 @@ namespace NetworkTables
 
         private void ReadThreadMain()
         {
-            RawSocketIStream istream = new RawSocketIStream(m_stream);
+            SocketInputStream istream = new SocketInputStream(m_stream);
             WireDecoder decoder = new WireDecoder(istream, m_protoRev);
 
             m_state = State.kHandshake;
@@ -369,7 +361,7 @@ namespace NetworkTables
             }
 
             m_state = State.kActive;
-            m_notifier.NotifyConnection(true, Info());
+            m_notifier.NotifyConnection(true, GetConnectionInfo());
             while (m_active)
             {
                 if (m_stream == null) break;
@@ -391,7 +383,7 @@ namespace NetworkTables
             }
 
             //Debug
-            if (m_state != State.kDead) m_notifier.NotifyConnection(false, Info());
+            if (m_state != State.kDead) m_notifier.NotifyConnection(false, GetConnectionInfo());
             m_active = false;
             m_outgoing.Enqueue(new List<Message>()); // Also kill write thread
         }
@@ -425,7 +417,7 @@ namespace NetworkTables
                 //Debug
             }
             //Debug
-            if (m_state != State.kDead) m_notifier.NotifyConnection(false, Info());
+            if (m_state != State.kDead) m_notifier.NotifyConnection(false, GetConnectionInfo());
             m_state = State.kDead;
             m_active = false;
             m_stream?.Close();

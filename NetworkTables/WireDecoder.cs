@@ -15,7 +15,7 @@ namespace NetworkTables
         private byte[] m_buffer;
 
         private int m_allocated;
-        private IRawIStream m_is;
+        private IInputStream m_is;
         private int m_count;
 
         public string Error { get; internal set; }
@@ -29,7 +29,7 @@ namespace NetworkTables
             m_protoRev = protoRev;
         }
 
-        public WireDecoder(IRawIStream istream, uint protoRev)
+        public WireDecoder(IInputStream istream, uint protoRev)
         {
             m_allocated = 1024;
             m_buffer = new byte[m_allocated];
@@ -100,7 +100,7 @@ namespace NetworkTables
             return true;
         }
 
-        public NTValue ReadValue(NtType type)
+        public Value ReadValue(NtType type)
         {
             byte size = 0;
             byte[] buf;
@@ -109,10 +109,10 @@ namespace NetworkTables
             {
                 case NtType.Boolean:
                     byte vB = 0;
-                    return !Read8(ref vB) ? null : NTValue.MakeBoolean(vB != 0);
+                    return !Read8(ref vB) ? null : Value.MakeBoolean(vB != 0);
                 case NtType.Double:
                     double vD = 0;
-                    return !ReadDouble(ref vD) ? null : NTValue.MakeDouble(vD);
+                    return !ReadDouble(ref vD) ? null : Value.MakeDouble(vD);
                 case NtType.Raw:
                     if (m_protoRev < 0x0300u)
                     {
@@ -120,7 +120,7 @@ namespace NetworkTables
                         return null;
                     }
                     byte[] vRa = null;
-                    return !ReadRaw(ref vRa) ? null : NTValue.MakeRaw(vRa);
+                    return !ReadRaw(ref vRa) ? null : Value.MakeRaw(vRa);
                 case NtType.Rpc:
                     if (m_protoRev < 0x0300u)
                     {
@@ -128,10 +128,10 @@ namespace NetworkTables
                         return null;
                     }
                     string vR = "";
-                    return !ReadString(ref vR) ? null : NTValue.MakeRPC(vR);
+                    return !ReadString(ref vR) ? null : Value.MakeRPC(vR);
                 case NtType.String:
                     string vS = "";
-                    return !ReadString(ref vS) ? null : NTValue.MakeString(vS);
+                    return !ReadString(ref vS) ? null : Value.MakeString(vS);
                 case NtType.BooleanArray:
                     if (!Read8(ref size)) return null;
                     buf = ReadArray(size);
@@ -141,7 +141,7 @@ namespace NetworkTables
                     {
                         bBuf[i] = buf[i] != 0;
                     }
-                    return NTValue.MakeBooleanArray(bBuf);
+                    return Value.MakeBooleanArray(bBuf);
                 case NtType.DoubleArray:
                     if (!Read8(ref size)) return null;
                     buf = ReadArray(size * 8);
@@ -151,7 +151,7 @@ namespace NetworkTables
                     {
                         dBuf[i] = ReadDouble(buf, i * 8);
                     }
-                    return NTValue.MakeDoubleArray(dBuf);
+                    return Value.MakeDoubleArray(dBuf);
                 case NtType.StringArray:
                     if (!Read8(ref size)) return null;
                     string[] sBuf = new string[size];
@@ -159,7 +159,7 @@ namespace NetworkTables
                     {
                         if (!ReadString(ref sBuf[i])) return null;
                     }
-                    return NTValue.MakeStringArray(sBuf);
+                    return Value.MakeStringArray(sBuf);
                 default:
                     Error = "invalid type when trying to read value";
                     Console.WriteLine("invalid type when trying to read value");

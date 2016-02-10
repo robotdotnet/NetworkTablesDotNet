@@ -46,15 +46,16 @@
   <ItemGroup>
     <Compile Include="ConnectionInfo.cs" />
     <Compile Include="Dispatcher.cs" />
+    <Compile Include="EntryInfo.cs" />
     <Compile Include="Leb128.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="NetworkConnection.cs" />
     <Compile Include="NetworkTable.cs" />
     <Compile Include="Notifier.cs" />
     <Compile Include="NTType.cs" />
-    <Compile Include="NT_NotifyKind.cs" />
-    <Compile Include="RawIStream.cs" />
-    <Compile Include="RawSocketIStream.cs" />
+    <Compile Include="Enumerations.cs" />
+    <Compile Include="RawMemoryStream.cs" />
+    <Compile Include="SocketInputStream.cs" />
     <Compile Include="SequenceNumber.cs" />
     <Compile Include="Storage.cs" />
     <Compile Include="Support\Timestamp.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="TcpSockets\TCPAcceptor.cs" />
     <Compile Include="TcpSockets\TCPConnector.cs" />
     <Compile Include="TcpSockets\TCPStream.cs" />
+    <Compile Include="Value.cs" />
     <Compile Include="WireDecoder.cs" />
     <Compile Include="WireEncoder.cs" />
   </ItemGroup>

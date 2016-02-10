@@ -139,7 +139,7 @@ namespace NetworkTables
                 foreach (var networkConnection in m_connections)
                 {
                     if (networkConnection.GetState() != NetworkConnection.State.kActive) continue;
-                    conns.Add(networkConnection.Info());
+                    conns.Add(networkConnection.GetConnectionInfo());
                 }
             }
 

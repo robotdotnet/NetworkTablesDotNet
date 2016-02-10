@@ -9,7 +9,7 @@ namespace NetworkTables
 {
     public class Notifier
     {
-        public delegate void EntryListenerCallback(uint uid, string name, NTValue value, uint flags);
+        public delegate void EntryListenerCallback(uint uid, string name, Value value, uint flags);
         public delegate void ConnectionListenerCallback(uint uid, bool connected, ConnectionInfo conn);
 
         private static Notifier s_instance;
@@ -37,7 +37,7 @@ namespace NetworkTables
 
         private struct EntryNotification
         {
-            public EntryNotification(string name_, NTValue value_, uint flags_,
+            public EntryNotification(string name_, Value value_, uint flags_,
                 EntryListenerCallback only_)
             {
                 name = name_;
@@ -47,7 +47,7 @@ namespace NetworkTables
             }
 
             public string name;
-            public NTValue value;
+            public Value value;
             public uint flags;
             public EntryListenerCallback only;
         }
@@ -129,7 +129,7 @@ namespace NetworkTables
 
                             uint listenFlags = m_entryListeners[i].flags;
                             uint flags = item.flags;
-                            uint assignBoth = (uint)(NT_NotifyKind.NT_NOTIFY_UPDATE | NT_NotifyKind.NT_NOTIFY_FLAGS);
+                            uint assignBoth = (uint)(NotifyFlags.NotifyUpdate | NotifyFlags.NotifyFlagsChanged);
 
                             if ((flags & assignBoth) == assignBoth)
                             {
@@ -228,7 +228,7 @@ namespace NetworkTables
             {
                 uint uid = (uint)m_entryListeners.Count;
                 m_entryListeners.Add(new EntryListener(prefix, callback, flags));
-                if ((flags & (uint)NT_NotifyKind.NT_NOTIFY_LOCAL) != 0) m_localNotifiers = true;
+                if ((flags & (uint)NotifyFlags.NotifyLocal) != 0) m_localNotifiers = true;
                 return uid + 1;
             }
         }
@@ -246,10 +246,10 @@ namespace NetworkTables
             }
         }
 
-        public void NotifyEntry(string name, NTValue value, uint flags, EntryListenerCallback only = null)
+        public void NotifyEntry(string name, Value value, uint flags, EntryListenerCallback only = null)
         {
             if (!m_active) return;
-            if ((flags & (uint)NT_NotifyKind.NT_NOTIFY_LOCAL) != 0 && !m_localNotifiers) return;
+            if ((flags & (uint)NotifyFlags.NotifyLocal) != 0 && !m_localNotifiers) return;
             lock (m_mutex)
             {
                 m_entryNotifications.Enqueue(new EntryNotification(name, value, flags, only));

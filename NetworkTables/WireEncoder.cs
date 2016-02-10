@@ -110,7 +110,7 @@ namespace NetworkTables
             }
             Error = null;
         }
-        public int GetValueSize(NTValue value)
+        public int GetValueSize(Value value)
         {
             if (value == null) return 0;
             int size;
@@ -122,22 +122,22 @@ namespace NetworkTables
                     return 8;
                 case NtType.Raw:
                     if (m_protoRev < 0x0300u) return 0;
-                    return GetRawSize((byte[])value.Value);
+                    return GetRawSize((byte[])value.Val);
                 case NtType.Rpc:
                     if (m_protoRev < 0x0300u) return 0;
-                    return GetStringSize((string)value.Value);
+                    return GetStringSize((string)value.Val);
                 case NtType.String:
-                    return GetStringSize((string)value.Value);
+                    return GetStringSize((string)value.Val);
                 case NtType.BooleanArray:
-                    size = ((bool[])value.Value).Length;
+                    size = ((bool[])value.Val).Length;
                     if (size > 0xff) size = 0xff;
                     return 1 + size;
                 case NtType.DoubleArray:
-                    size = ((double[])value.Value).Length;
+                    size = ((double[])value.Val).Length;
                     if (size > 0xff) size = 0xff;
                     return 1 + size * 8;
                 case NtType.StringArray:
-                    string[] v = (string[])value.Value;
+                    string[] v = (string[])value.Val;
                     size = v.Length;
                     if (size > 0xff) size = 0xff;
                     int len = 1;
@@ -151,7 +151,7 @@ namespace NetworkTables
             }
         }
 
-        public void WriteValue(NTValue value)
+        public void WriteValue(Value value)
         {
             if (value == null)
             {
@@ -161,10 +161,10 @@ namespace NetworkTables
             switch (value.Type)
             {
                 case NtType.Boolean:
-                    Write8((bool)value.Value ? (byte)1 : (byte)0);
+                    Write8((bool)value.Val ? (byte)1 : (byte)0);
                     break;
                 case NtType.Double:
-                    WriteDouble((double)value.Value);
+                    WriteDouble((double)value.Val);
                     break;
                 case NtType.Raw:
                     if (m_protoRev < 0x0300u)
@@ -172,10 +172,10 @@ namespace NetworkTables
                         Error = "Raw values not supported in protocol < 3.0";
                         return;
                     }
-                    WriteRaw((byte[])value.Value);
+                    WriteRaw((byte[])value.Val);
                     break;
                 case NtType.String:
-                    WriteString((string)value.Value);
+                    WriteString((string)value.Val);
                     break;
                 case NtType.Rpc:
                     if(m_protoRev < 0x0300u)
@@ -183,10 +183,10 @@ namespace NetworkTables
                         Error = "RPC values not supported in protocol < 3.0";
                         return;
                     }
-                    WriteString((string)value.Value);
+                    WriteString((string)value.Val);
                     break;
                 case NtType.BooleanArray:
-                    var vB = (bool[])value.Value;
+                    var vB = (bool[])value.Val;
                     int sizeB = vB.Length;
                     if (sizeB > 0xff) sizeB = 0xff;
                     Write8((byte)sizeB);
@@ -196,7 +196,7 @@ namespace NetworkTables
                     }
                     break;
                 case NtType.DoubleArray:
-                    var vD = (double[])value.Value;
+                    var vD = (double[])value.Val;
                     int sizeD = vD.Length;
                     if (sizeD > 0xff) sizeD = 0xff;
                     Write8((byte)sizeD);
@@ -206,7 +206,7 @@ namespace NetworkTables
                     }
                     break;
                 case NtType.StringArray:
-                    var vS = (string[])value.Value;
+                    var vS = (string[])value.Val;
                     int sizeS = vS.Length;
                     if (sizeS > 0xff) sizeS = 0xff;
                     Write8((byte)sizeS);
