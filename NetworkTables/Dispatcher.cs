@@ -556,14 +556,14 @@ namespace NetworkTables
             }
         }
 
-        public void StartServer(string persistentFilename, string listenAddress, uint port)
+        public void StartServer(string persistentFilename, string listenAddress, int port)
         {
-            base.StartServer(persistentFilename, new TCPAcceptor((int)port, listenAddress));
+            base.StartServer(persistentFilename, new TCPAcceptor(port, listenAddress));
         }
 
-        public void StartClient(string serverName, uint port)
+        public void StartClient(string serverName, int port)
         {
-            base.StartClient(() => TCPConnector.Connect(serverName, (int)port, 1));
+            base.StartClient(() => TCPConnector.Connect(serverName, port, 1));
         }
 
         private Dispatcher() : this(Storage.Instance, Notifier.Instance)

@@ -144,7 +144,7 @@ namespace NetworkTables
 
                             Monitor.Exit(m_mutex);
                             lockEntered = false;
-                            callback((uint)(i + 1), name, item.value, (NotifyFlags)item.flags);
+                            callback((i + 1), name, item.value, (NotifyFlags)item.flags);
                             Monitor.Enter(m_mutex, ref lockEntered);
                         }
 
@@ -171,7 +171,7 @@ namespace NetworkTables
 
                             Monitor.Exit(m_mutex);
                             lockEntered = false;
-                            callback((uint)(i + 1), item.connected, item.conn_info);
+                            callback((i + 1), item.connected, item.conn_info);
                             Monitor.Enter(m_mutex, ref lockEntered);
                         }
                     }
@@ -222,25 +222,25 @@ namespace NetworkTables
             return s_destroyed;
         }
 
-        public uint AddEntryListener(string prefix, NtCore.EntryListenerCallback callback, NotifyFlags flags)
+        public int AddEntryListener(string prefix, NtCore.EntryListenerCallback callback, NotifyFlags flags)
         {
             lock (m_mutex)
             {
-                uint uid = (uint)m_entryListeners.Count;
+                int uid = m_entryListeners.Count;
                 m_entryListeners.Add(new EntryListener(prefix, callback, flags));
                 if ((flags & NotifyFlags.NotifyLocal) != 0) m_localNotifiers = true;
                 return uid + 1;
             }
         }
 
-        public void RemoveEntryListener(uint entryListenerUid)
+        public void RemoveEntryListener(int entryListenerUid)
         {
             --entryListenerUid;
             lock (m_mutex)
             {
                 if (entryListenerUid < m_entryListeners.Count)
                 {
-                    var listener = m_entryListeners[(int)entryListenerUid];
+                    var listener = m_entryListeners[entryListenerUid];
                     listener.callback = null;
                 }
             }
@@ -257,24 +257,24 @@ namespace NetworkTables
             m_cond.Set();
         }
 
-        public uint AddConnectionListener(NtCore.ConnectionListenerCallback callback)
+        public int AddConnectionListener(NtCore.ConnectionListenerCallback callback)
         {
             lock (m_mutex)
             {
-                uint uid = (uint)m_connListeners.Count;
+                int uid = m_connListeners.Count;
                 m_connListeners.Add(callback);
                 return uid + 1;
             }
         }
 
-        public void RemoveConnectionListener(uint connListenerUid)
+        public void RemoveConnectionListener(int connListenerUid)
         {
             --connListenerUid;
             lock (m_mutex)
             {
                 if (connListenerUid < m_connListeners.Count)
                 {
-                    m_connListeners[(int)connListenerUid] = null;
+                    m_connListeners[connListenerUid] = null;
                 }
             }
         }

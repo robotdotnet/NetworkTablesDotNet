@@ -53,35 +53,35 @@ namespace NetworkTables
             Dispatcher.Instance.Flush();
         }
 
-        public delegate void EntryListenerCallback(uint uid, string name, Value value, NotifyFlags flags);
+        public delegate void EntryListenerCallback(int uid, string name, Value value, NotifyFlags flags);
 
-        public delegate void ConnectionListenerCallback(uint uid, bool connected, ConnectionInfo conn);
+        public delegate void ConnectionListenerCallback(int uid, bool connected, ConnectionInfo conn);
 
-        public static uint AddEntryListener(string prefix, EntryListenerCallback callback, NotifyFlags flags)
+        public static int AddEntryListener(string prefix, EntryListenerCallback callback, NotifyFlags flags)
         {
             Notifier notifier = Notifier.Instance;
-            uint uid = notifier.AddEntryListener(prefix, callback, flags);
+            int uid = notifier.AddEntryListener(prefix, callback, flags);
             notifier.Start();
             if ((flags & NotifyFlags.NotifyImmediate) != 0)
                 Storage.Instance.NotifyEntries(prefix, callback);
             return uid;
         }
 
-        public static void RemoveEntryListener(uint uid)
+        public static void RemoveEntryListener(int uid)
         {
             Notifier.Instance.RemoveEntryListener(uid);
         }
 
-        public static uint AddConnectionListener(ConnectionListenerCallback callback, bool immediateNotify)
+        public static int AddConnectionListener(ConnectionListenerCallback callback, bool immediateNotify)
         {
             Notifier notifier = Notifier.Instance;
-            uint uid = notifier.AddConnectionListener(callback);
+            int uid = notifier.AddConnectionListener(callback);
             notifier.Start();
             if (immediateNotify) Dispatcher.Instance.NotifyConnections(callback);
             return uid;
         }
 
-        public static void RemoveConnectionListener(uint uid)
+        public static void RemoveConnectionListener(int uid)
         {
             Notifier.Instance.RemoveConnectionListener(uid);
         }
@@ -97,7 +97,7 @@ namespace NetworkTables
             Dispatcher.Instance.SetIdentity(name);
         }
 
-        public static void StartServer(string persistFilename, string listenAddress, uint port)
+        public static void StartServer(string persistFilename, string listenAddress, int port)
         {
             Dispatcher.Instance.StartServer(persistFilename, listenAddress, port);
         }
@@ -107,9 +107,14 @@ namespace NetworkTables
             Dispatcher.Instance.Stop();
         }
 
-        public static void StartClient(string serverName, uint port)
+        public static void StartClient(string serverName, int port)
         {
             Dispatcher.Instance.StartClient(serverName, port);
+        }
+
+        public static void StopClient()
+        {
+            Dispatcher.Instance.Stop();
         }
 
         public static void StopRpcServer()
@@ -147,13 +152,120 @@ namespace NetworkTables
             return Support.Timestamp.Now();
         }
 
-        public delegate void LogFunc(uint level, string file, uint line, string msg);
+        public delegate void LogFunc(LogLevel level, string file, int line, string msg);
 
-        public static void SetLogger(LogFunc func, uint minLevel)
+        public static void SetLogger(LogFunc func, LogLevel minLevel)
         {
             Logger logger = Logger.Instance;
             logger.SetLogger(func);
             logger.SetMinLevel(minLevel);
         }
+        /*
+        public static NtType GetType(string name)
+        {
+            var v = GetEntryValue(name);
+            if (v == null) return NtType.Unassigned;
+            return v.Type;
+        }
+
+        public static bool ContainsKey(string name)
+        {
+            return GetType(name) != NtType.Unassigned;
+        }
+
+        public static EntryInfo[] GetEntries(string prefix, NtType types)
+        {
+            var arr = GetEntryInfo(prefix, types);
+            return arr.ToArray();
+        }
+
+        public static bool SetEntryDouble(string name, double value, bool force)
+        {
+            if (force)
+            {
+                SetEntryTypeValue(name, Value.MakeDouble(value));
+                return true;
+            }
+            else return SetEntryValue(name, Value.MakeDouble(value));
+        }
+
+        public static bool SetEntryBoolean(string name, bool value, bool force)
+        {
+            if (force)
+            {
+                SetEntryTypeValue(name, Value.MakeBoolean(value));
+                return true;
+            }
+            else return SetEntryValue(name, Value.MakeBoolean(value));
+        }
+
+        public static bool SetEntryString(string name, string value, bool force)
+        {
+            if (force)
+            {
+                SetEntryTypeValue(name, Value.MakeString(value));
+                return true;
+            }
+            else return SetEntryValue(name, Value.MakeString(value));
+        }
+
+        public static bool SetEntryRaw(string name, byte[] value, bool force)
+        {
+            if (force)
+            {
+                SetEntryTypeValue(name, Value.MakeRaw(value));
+                return true;
+            }
+            else return SetEntryValue(name, Value.MakeRaw(value));
+        }
+
+        public static bool SetEntryBooleanArray(string name, bool[] value, bool force)
+        {
+            if (force)
+            {
+                SetEntryTypeValue(name, Value.MakeBooleanArray(value));
+                return true;
+            }
+            else return SetEntryValue(name, Value.MakeBooleanArray(value));
+        }
+
+        public static bool SetEntryDoubleArray(string name, double[] value, bool force)
+        {
+            if (force)
+            {
+                SetEntryTypeValue(name, Value.MakeDoubleArray(value));
+                return true;
+            }
+            else return SetEntryValue(name, Value.MakeDoubleArray(value));
+        }
+
+        public static bool SetStringArray(string name, string[] value, bool force)
+        {
+            if (force)
+            {
+                SetEntryTypeValue(name, Value.MakeStringArray(value));
+                return true;
+            }
+            else return SetEntryValue(name, Value.MakeStringArray(value));
+        }
+
+        public static bool GetEntryBoolean(string name, ref ulong lastChange, ref bool value)
+        {
+            var v = GetEntryValue(name);
+            if (v == null || !v.IsBoolean()) return false;
+            value = v.GetBoolean();
+            lastChange = v.LastChange;
+            return true;
+        }
+
+        public static bool GetEntryDouble(string name, ref ulong lastChange, ref double value)
+        {
+            var v = GetEntryValue(name);
+            if (v == null || !v.IsDouble()) return false;
+            value = v.GetDouble();
+            lastChange = v.LastChange;
+            return true;
+        }
+        */
     }
 }

@@ -145,7 +145,7 @@ namespace NetworkTables
 
         public ConnectionInfo GetConnectionInfo()
         {
-            return new ConnectionInfo(RemoteId(), m_stream.GetPeerIP(), (uint)m_stream.GetPeerPort(), (uint)m_lastUpdate, m_protoRev);
+            return new ConnectionInfo(RemoteId(), m_stream.GetPeerIP(), m_stream.GetPeerPort(), (int)m_lastUpdate, m_protoRev);
         }
 
         public bool Active()

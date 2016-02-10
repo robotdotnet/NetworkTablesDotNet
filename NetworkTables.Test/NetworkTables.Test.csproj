@@ -50,17 +50,18 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
-    <Compile Include="NetworkTables2\Connection\BadMessageExceptionTest.cs" />
-    <Compile Include="NetworkTables2\Connection\ConnectionMonitorThreadTest.cs" />
-    <Compile Include="NetworkTables2\NetworkTableEntryTest.cs" />
-    <Compile Include="NetworkTables2\TransactionDirtierTest.cs" />
-    <Compile Include="NetworkTables2\Util\ListTest.cs" />
-    <Compile Include="NetworkTables2\Util\StackTest.cs" />
-    <Compile Include="NetworkTables\NetworkTableListenerTest.cs" />
-    <Compile Include="NetworkTables\NetworkTableTest.cs" />
-    <Compile Include="Tables\TableKeyNotDefinedExceptionTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Util\NetworkTableEntryUtil.cs" />
+    <Compile Include="TestBase.cs" />
+    <Compile Include="TestInfoStructures.cs" />
+    <Compile Include="TestLeb128.cs" />
+    <Compile Include="TestNetworkTableAPIListeners.cs" />
+    <Compile Include="TestNetworkTableErrors.cs" />
+    <Compile Include="TestNetworkTablesAPI.cs" />
+    <Compile Include="TestNetworkTablesStaticAPI.cs" />
+    <Compile Include="TestRPC.cs" />
+    <Compile Include="TestTearDownFixture.cs" />
+    <Compile Include="TestWireDecoder.cs" />
+    <Compile Include="TestWireEncoder.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NetworkTables\NetworkTables.csproj">

@@ -10,11 +10,11 @@ namespace NetworkTables
     {
         public string RemoteId { get; }
         public string RemoteName { get; }
-        public uint RemotePort { get; }
-        public ulong LastUpdate { get; }
+        public int RemotePort { get; }
+        public long LastUpdate { get; }
         public uint ProtocolVersion { get; }
 
-        public ConnectionInfo(string remoteId, string remoteName, uint remotePort, uint lastUpdate, uint protocolVersion)
+        public ConnectionInfo(string remoteId, string remoteName, int remotePort, long lastUpdate, uint protocolVersion)
         {
             RemoteId = remoteId;
             RemoteName = remoteName;

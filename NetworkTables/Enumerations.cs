@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace NetworkTables
 {
     [Flags]
-    public enum NotifyFlags : uint
+    public enum NotifyFlags
     {
         NotifyNone = 0,
         NotifyImmediate = 0x01, /* initial listener addition */
@@ -19,13 +19,13 @@ namespace NetworkTables
     }
 
     [Flags]
-    public enum EntryFlags : uint
+    public enum EntryFlags
     {
         None = 0x00,
         Persistent = 0x01
     }
 
-    public enum LogLevel : uint
+    public enum LogLevel
     {
         LogCritical = 50,
         LogError = 40,
