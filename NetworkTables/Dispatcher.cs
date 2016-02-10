@@ -102,7 +102,7 @@ namespace NetworkTables
                 interval = 0.1;
             else if (interval > 1.0)
                 interval = 1.0;
-            m_updateRate = (uint) (interval*1000);
+            m_updateRate = (uint)(interval * 1000);
         }
 
         public void SetIdentity(string name)
@@ -148,7 +148,7 @@ namespace NetworkTables
 
         public void NotifyConnections(Notifier.ConnectionListenerCallback callback)
         {
-            
+
         }
 
         public bool Active() => m_active;
@@ -161,14 +161,119 @@ namespace NetworkTables
             m_updateRate = 100;
         }
 
+        private static readonly TimeSpan saveDeltaTime = TimeSpan.FromSeconds(1);
+
         private void DispatchThreadMain()
         {
-            
+            var timeoutTime = DateTime.UtcNow;
+
+            var nextSaveTime = timeoutTime + saveDeltaTime;
+
+            int count = 0;
+
+            bool lockEntered = false;
+            try
+            {
+                Monitor.Enter(m_flushMutex, ref lockEntered);
+                while (m_active)
+                {
+                    var start = DateTime.UtcNow;
+                    if (start > timeoutTime)
+                        timeoutTime = start;
+
+                    timeoutTime += TimeSpan.FromMilliseconds(m_updateRate);
+                    Monitor.Exit(m_flushMutex);
+                    lockEntered = false;
+                    m_flushCv.WaitOne(TimeSpan.FromMilliseconds(m_updateRate));
+                    m_doFlush = false;
+                    if (!m_active) break;
+
+                    if (m_server && !string.IsNullOrEmpty(m_persistFilename) && start > nextSaveTime)
+                    {
+                        nextSaveTime += saveDeltaTime;
+                        if (start > nextSaveTime) nextSaveTime = start + saveDeltaTime;
+                        string err = m_storage.SavePersistent(m_persistFilename, true);
+                        if (err != null)
+                        {
+                            //Warning
+                        }
+                    }
+
+                    lock (m_userMutex)
+                    {
+                        bool reconnect = false;
+
+                        if (++count > 10)
+                        {
+                            //Dispatch Running
+                            count = 0;
+                        }
+
+                        foreach (var conn in m_connections)
+                        {
+                            if (conn.GetState() == NetworkConnection.State.kActive)
+                                conn.PostOutgoing(!m_server);
+
+                            if (!m_server && conn.GetState() == NetworkConnection.State.kDead)
+                                reconnect = true;
+                        }
+
+                        if (reconnect && !m_doReconnect)
+                        {
+                            m_doReconnect = true;
+                            m_reconnectCv.Set();
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                if (lockEntered) Monitor.Exit(m_flushMutex);
+            }
+
         }
 
         private void ServerThreadMain()
         {
-            
+            if (m_serverAccepter.Start() != 0)
+            {
+                m_active = false;
+                return;
+            }
+
+            while (m_active)
+            {
+                var stream = m_serverAccepter.Accept();
+                if (stream == null)
+                {
+                    m_active = false;
+                    return;
+                }
+                if (!m_active) return;
+
+                //Debug
+
+                var conn = new NetworkConnection(stream, m_notifier, ServerHandshake, m_storage.GetEntryType);
+                conn.SetProcessIncoming(m_storage.ProcessIncoming);
+
+                lock (m_userMutex)
+                {
+                    bool placed = false;
+                    for (int i = 0; i < m_connections.Count; i++)
+                    {
+                        var c = m_connections[i];
+                        if (c.GetState() == NetworkConnection.State.kDead)
+                        {
+                            m_connections[i] = conn;
+                            placed = true;
+                            break;
+                        }
+                    }
+
+                    if (!placed) m_connections.Add(conn);
+                    conn.Start();
+                }
+            }
         }
 
         private void ClientThreadMain(object o)
@@ -179,27 +284,230 @@ namespace NetworkTables
                 throw new Exception("Client not passed a correct variable");
             }
 
+            while (m_active)
+            {
+                Thread.Sleep(TimeSpan.FromMilliseconds(500));
 
+                //Debug
+                var stream = connect();
+                if (stream == null) continue; //keep retrying
+                //Debug
+
+                bool lockEntered = false;
+                try
+                {
+                    Monitor.Enter(m_userMutex, ref lockEntered);
+                    var conn = new NetworkConnection(stream, m_notifier, ClientHandshake, m_storage.GetEntryType);
+                    conn.SetProcessIncoming(m_storage.ProcessIncoming);
+                    foreach(var s in m_connections)
+                    {
+                        s.Dispose();
+                    }
+
+                    m_connections.Clear();
+
+                    m_connections.Add(conn);
+
+                    conn.SetProtoRev(m_reconnectProtoRev);
+
+                    conn.Start();
+
+                    m_doReconnect = false;
+
+                    Monitor.Exit(m_userMutex);
+                    lockEntered = false;
+                    m_reconnectCv.WaitOne();
+                }
+                finally
+                {
+                    if (lockEntered) Monitor.Exit(m_userMutex);
+                }
+            }
         }
 
         private bool ClientHandshake(NetworkConnection conn, Func<Message> getMsg, Action<Message[]> sendMsgs)
         {
-            
+            string selfId;
+            lock(m_userMutex)
+            {
+                selfId = m_identity;
+            }
+
+            //Debug
+            sendMsgs(new Message[] { Message.ClientHello(selfId) });
+
+            var msg = getMsg();
+            if (msg == null)
+            {
+                //Disconnected
+                //Debug;
+                return false;
+            }
+
+            if (msg.Is(Message.MsgType.kProtoUnsup))
+            {
+                if (msg.Id() == 0x0200) ClientReconnect(0x0200);
+                return false;
+            }
+
+            bool newServer = true;
+            if (conn.ProtoRev >= 0x0300)
+            {
+                if (!msg.Is(Message.MsgType.kServerHello)) return false;
+                conn.SetRemoteId(msg.Str());
+                if ((msg.Flags() & 1) != 0) newServer = false;
+                msg = getMsg();
+            }
+
+            List<Message> incoming = new List<Message>();
+
+            for(;;)
+            {
+                if (msg == null)
+                {
+                    //disconnected, retry
+                    //Debug
+                    return false;
+                }
+
+                //Debug
+
+                if (msg.Is(Message.MsgType.kServerHelloDone)) break;
+                if (!msg.Is(Message.MsgType.kEntryAssign))
+                {
+                    //Unexpected
+                    //Debug
+                    return false;
+                }
+
+                incoming.Add(msg);
+
+                msg = getMsg();
+            }
+
+            List<Message> outgoing = new List<Message>();
+            m_storage.ApplyInitialAssignments(conn, incoming.ToArray(), newServer, outgoing);
+
+            if (conn.ProtoRev > 0x0300)
+            {
+                outgoing.Add(Message.ClientHelloDone());
+            }
+
+            if (outgoing.Count != 0) sendMsgs(outgoing.ToArray());
+
+            //Info
+
+            return true;
         }
 
         private bool ServerHandshake(NetworkConnection conn, Func<Message> getMsg, Action<Message[]> sendMsgs)
         {
-            
+            var msg = getMsg();
+
+            if (msg == null)
+            {
+                //debug
+                return false;
+            }
+
+            if (!msg.Is(Message.MsgType.kClientHello))
+            {
+                //Debug
+                return false;
+            }
+
+            uint protoRev = msg.Id();
+
+            if (protoRev > 0x0300)
+            {
+                //Debug
+                sendMsgs(new Message[] { Message.ProtoUnsup() });
+                return false;
+            }
+
+            if (protoRev >= 0x0300) conn.SetRemoteId(msg.Str());
+
+            //Debug
+            conn.SetProtoRev(protoRev);
+
+            List<Message> outgoing = new List<Message>();
+
+            if (protoRev >= 0x0300)
+            {
+                lock (m_userMutex)
+                {
+                    outgoing.Add(Message.ServerHello(0, m_identity));
+                }
+            }
+
+            m_storage.GetInitialAssignments(conn, outgoing);
+
+            //Debug
+            sendMsgs(outgoing.ToArray());
+
+            if (protoRev >= 0x0300)
+            {
+                List<Message> incoming = new List<Message>();
+
+                msg = getMsg();
+
+                for (;;)
+                {
+                    if (msg == null)
+                    {
+                        //Disconnected Retry
+                        //Debug
+                        return false;
+                    }
+
+                    if (msg.Is(Message.MsgType.kClientHelloDone)) break;
+                    if (!msg.Is(Message.MsgType.kEntryAssign))
+                    {
+                        //Debug
+                        return false;
+                    }
+
+                    incoming.Add(msg);
+
+                    msg = getMsg();
+                }
+
+                foreach(var m in incoming)
+                {
+                    m_storage.ProcessIncoming(msg, conn);
+                }
+            }
+
+            //Info
+            return true;
         }
 
         private void ClientReconnect(uint protoRev = 0x0300)
         {
-            
+            if (m_server) return;
+            lock (m_userMutex)
+            {
+                m_reconnectProtoRev = protoRev;
+                m_doReconnect = true;
+            }
+
+            m_reconnectCv.Set();
         }
 
         private void QueueOutgoing(Message msg, NetworkConnection only, NetworkConnection except)
         {
-            
+            lock (m_userMutex)
+            {
+                foreach (var conn in m_connections)
+                {
+                    if (conn == except) continue;
+                    if (only != null && conn != only) continue;
+                    var state = conn.GetState();
+                    if (state != NetworkConnection.State.kSynchronized &&
+                        state != NetworkConnection.State.kActive) continue;
+                    conn.QueueOutgoing(msg);
+                }
+            }
         }
 
         private Storage m_storage;
@@ -242,24 +550,24 @@ namespace NetworkTables
 
         public void StartServer(string persistentFilename, string listenAddress, uint port)
         {
-            base.StartServer(persistentFilename, new TCPAcceptor((int)port, listenAddress));   
+            base.StartServer(persistentFilename, new TCPAcceptor((int)port, listenAddress));
         }
 
         public void StartClient(string serverName, uint port)
         {
-            base.StartClient(() => TCPConnector.Connect(serverName, (int) port, 1));
+            base.StartClient(() => TCPConnector.Connect(serverName, (int)port, 1));
         }
 
         private Dispatcher() : this(Storage.Instance, Notifier.Instance)
         {
-            
+
         }
 
         private Dispatcher(Storage storage, Notifier notifier)
             : base(storage, notifier)
         {
         }
-    
-    
+
+
     }
 }

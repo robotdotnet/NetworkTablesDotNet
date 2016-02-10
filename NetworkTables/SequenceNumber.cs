@@ -52,5 +52,26 @@ namespace NetworkTables
             else
                 return false;
         }
+
+        public static bool operator <=(SequenceNumber lhs, SequenceNumber rhs)
+        {
+            return lhs == rhs || lhs < rhs;
+        }
+
+        public static bool operator >=(SequenceNumber lhs, SequenceNumber rhs)
+        {
+            return lhs == rhs || lhs > rhs;
+        }
+
+        public static bool operator==(SequenceNumber lhs, SequenceNumber rhs)
+        {
+            return lhs.m_value == rhs.m_value;
+        }
+
+        public static bool operator!=(SequenceNumber lhs, SequenceNumber rhs)
+        {
+            return lhs.m_value != rhs.m_value;
+        }
+
     }
 }

@@ -196,7 +196,7 @@ namespace NetworkTables
             }
         }
 
-        public void ProcessIncoming(Message msg, NetworkConnection conn, NetworkConnection conn_weak)
+        public void ProcessIncoming(Message msg, NetworkConnection conn)
         {
             bool lockEntered = false;
             try
