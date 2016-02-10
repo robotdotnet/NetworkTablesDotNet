@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NetworkTables;
-using NetworkTables.NetworkTables;
 
 namespace NetworkTablesTest
 {
@@ -14,9 +13,11 @@ namespace NetworkTablesTest
     {
         static void Main(string[] args)
         {
-            
+            NtCore.StartClient("localhost", 1735);
+
+            Thread.Sleep(Timeout.Infinite);
             //var s = new TcpClient("172.22.11.2", 1735);
-           
+           /*
             NetworkTable.SetIPAddress("roborio-4488.local");
             NetworkTable.SetClientMode();
             NetworkTable.Initialize();
@@ -58,7 +59,7 @@ namespace NetworkTablesTest
                 Thread.Sleep(500);
             }
             
-
+    */
         }
     }
 }

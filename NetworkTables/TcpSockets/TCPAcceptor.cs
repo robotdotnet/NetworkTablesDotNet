@@ -23,11 +23,19 @@ namespace NetworkTables.TcpSockets
 
         public int Start()
         {
-
-            m_server = new TcpListener(IPAddress.Parse(m_address), m_port);
+            IPAddress address = null;
+            if (!string.IsNullOrEmpty(m_address))
+            {
+                address = IPAddress.Parse(m_address);
+            }
+            else
+            {
+                address = IPAddress.Any;
+            }
+            m_server = new TcpListener(address, m_port);
             m_server.Start();
 
-            return 1;
+            return 0;
         }
 
         public void Shutdown()

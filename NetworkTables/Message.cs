@@ -9,9 +9,9 @@ namespace NetworkTables
 {
     public class Message
     {
-        public enum MsgType
+        public enum MsgType : uint
         {
-            kUnknown = -1,
+            kUnknown = 0xffff,
             kKeepAlive = 0x00,
             kClientHello = 0x01,
             kProtoUnsup = 0x02,
@@ -29,9 +29,9 @@ namespace NetworkTables
 
         public delegate NtType GetEntryTypeFunc(uint id);
 
-        private MsgType m_type;
-        private string m_str;
-        private Value m_value;
+        private MsgType m_type = 0;
+        private string m_str = "";
+        private Value m_value = new Value();
         uint m_id;
         uint m_flags;
         uint m_seq_num_uid;
@@ -167,7 +167,7 @@ namespace NetworkTables
             if (!decoder.Read8(ref msgType)) return null;
             MsgType type = (MsgType)msgType;
             var msg = new Message(type);
-            switch(type)
+            switch (type)
             {
                 case MsgType.kKeepAlive:
                     break;
@@ -231,13 +231,13 @@ namespace NetworkTables
             return msg;
         }
 
-        public static Message EntryAssign(string name, uint id, uint seqNum, Value value, uint flags)
+        public static Message EntryAssign(string name, uint id, uint seqNum, Value value, EntryFlags flags)
         {
             var msg = new Message(MsgType.kEntryAssign);
             msg.m_str = name;
             msg.m_value = value;
             msg.m_id = id;
-            msg.m_flags = flags;
+            msg.m_flags = (uint)flags;
             msg.m_seq_num_uid = seqNum;
             return msg;
         }
@@ -251,11 +251,11 @@ namespace NetworkTables
             return msg;
         }
 
-        public static Message FlagsUpdate(uint id, uint flags)
+        public static Message FlagsUpdate(uint id, EntryFlags flags)
         {
             var msg = new Message(MsgType.kFlagsUpdate);
             msg.m_id = id;
-            msg.m_flags = flags;
+            msg.m_flags = (uint)flags;
             return msg;
         }
 

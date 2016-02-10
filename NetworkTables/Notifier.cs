@@ -9,8 +9,7 @@ namespace NetworkTables
 {
     public class Notifier
     {
-        public delegate void EntryListenerCallback(uint uid, string name, Value value, uint flags);
-        public delegate void ConnectionListenerCallback(uint uid, bool connected, ConnectionInfo conn);
+        
 
         private static Notifier s_instance;
         private static bool s_destroyed;
@@ -20,7 +19,7 @@ namespace NetworkTables
 
         private struct EntryListener
         {
-            public EntryListener(string prefix_, EntryListenerCallback callback_, uint flags_)
+            public EntryListener(string prefix_, NtCore.EntryListenerCallback callback_, NotifyFlags flags_)
             {
                 prefix = prefix_;
                 callback = callback_;
@@ -28,17 +27,17 @@ namespace NetworkTables
             }
 
             public string prefix;
-            public EntryListenerCallback callback;
-            public uint flags;
+            public NtCore.EntryListenerCallback callback;
+            public NotifyFlags flags;
         }
 
         private List<EntryListener> m_entryListeners;
-        private List<ConnectionListenerCallback> m_connListeners;
+        private List<NtCore.ConnectionListenerCallback> m_connListeners;
 
         private struct EntryNotification
         {
-            public EntryNotification(string name_, Value value_, uint flags_,
-                EntryListenerCallback only_)
+            public EntryNotification(string name_, Value value_, NotifyFlags flags_,
+                NtCore.EntryListenerCallback only_)
             {
                 name = name_;
                 value = value_;
@@ -48,15 +47,15 @@ namespace NetworkTables
 
             public string name;
             public Value value;
-            public uint flags;
-            public EntryListenerCallback only;
+            public NotifyFlags flags;
+            public NtCore.EntryListenerCallback only;
         }
 
         private Queue<EntryNotification> m_entryNotifications;
 
         private struct ConnectionNotification
         {
-            public ConnectionNotification(bool connected_, ConnectionInfo conn_info_, ConnectionListenerCallback only_)
+            public ConnectionNotification(bool connected_, ConnectionInfo conn_info_, NtCore.ConnectionListenerCallback only_)
             {
                 connected = connected_;
                 conn_info = conn_info_;
@@ -64,7 +63,7 @@ namespace NetworkTables
             }
             public bool connected;
             public ConnectionInfo conn_info;
-            public ConnectionListenerCallback only;
+            public NtCore.ConnectionListenerCallback only;
         }
 
         private Queue<ConnectionNotification> m_connNotifications;
@@ -118,7 +117,7 @@ namespace NetworkTables
                         {
                             Monitor.Exit(m_mutex);
                             lockEntered = false;
-                            item.only(0, name, item.value, item.flags);
+                            item.only(0, name, item.value, (NotifyFlags)item.flags);
                             Monitor.Enter(m_mutex, ref lockEntered);
                             continue;
                         }
@@ -127,9 +126,9 @@ namespace NetworkTables
                         {
                             if (m_entryListeners[i].callback == null) continue;
 
-                            uint listenFlags = m_entryListeners[i].flags;
-                            uint flags = item.flags;
-                            uint assignBoth = (uint)(NotifyFlags.NotifyUpdate | NotifyFlags.NotifyFlagsChanged);
+                            NotifyFlags listenFlags = m_entryListeners[i].flags;
+                            NotifyFlags flags = (NotifyFlags)item.flags;
+                            NotifyFlags assignBoth = (NotifyFlags.NotifyUpdate | NotifyFlags.NotifyFlagsChanged);
 
                             if ((flags & assignBoth) == assignBoth)
                             {
@@ -145,7 +144,7 @@ namespace NetworkTables
 
                             Monitor.Exit(m_mutex);
                             lockEntered = false;
-                            callback((uint)(i + 1), name, item.value, item.flags);
+                            callback((uint)(i + 1), name, item.value, (NotifyFlags)item.flags);
                             Monitor.Enter(m_mutex, ref lockEntered);
                         }
 
@@ -222,13 +221,13 @@ namespace NetworkTables
             return s_destroyed;
         }
 
-        public uint AddEntryListener(string prefix, EntryListenerCallback callback, uint flags)
+        public uint AddEntryListener(string prefix, NtCore.EntryListenerCallback callback, NotifyFlags flags)
         {
             lock (m_mutex)
             {
                 uint uid = (uint)m_entryListeners.Count;
                 m_entryListeners.Add(new EntryListener(prefix, callback, flags));
-                if ((flags & (uint)NotifyFlags.NotifyLocal) != 0) m_localNotifiers = true;
+                if ((flags & NotifyFlags.NotifyLocal) != 0) m_localNotifiers = true;
                 return uid + 1;
             }
         }
@@ -246,10 +245,10 @@ namespace NetworkTables
             }
         }
 
-        public void NotifyEntry(string name, Value value, uint flags, EntryListenerCallback only = null)
+        public void NotifyEntry(string name, Value value, NotifyFlags flags, NtCore.EntryListenerCallback only = null)
         {
             if (!m_active) return;
-            if ((flags & (uint)NotifyFlags.NotifyLocal) != 0 && !m_localNotifiers) return;
+            if ((flags & NotifyFlags.NotifyLocal) != 0 && !m_localNotifiers) return;
             lock (m_mutex)
             {
                 m_entryNotifications.Enqueue(new EntryNotification(name, value, flags, only));
@@ -257,7 +256,7 @@ namespace NetworkTables
             m_cond.Set();
         }
 
-        public uint AddConnectionListener(ConnectionListenerCallback callback)
+        public uint AddConnectionListener(NtCore.ConnectionListenerCallback callback)
         {
             lock (m_mutex)
             {
@@ -279,7 +278,7 @@ namespace NetworkTables
             }
         }
 
-        public void NotifyConnection(bool connected, ConnectionInfo conn_info, ConnectionListenerCallback only = null)
+        public void NotifyConnection(bool connected, ConnectionInfo conn_info, NtCore.ConnectionListenerCallback only = null)
         {
             if (!m_active) return;
             lock (m_mutex)

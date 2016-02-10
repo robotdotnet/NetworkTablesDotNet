@@ -47,7 +47,7 @@ namespace NetworkTables
 
         private Notifier m_notifier;
 
-        private ConcurrentQueue<List<Message>> m_outgoing;
+        private ConcurrentQueue<List<Message>> m_outgoing = new ConcurrentQueue<List<Message>>();
 
         private HandshakeFunc m_handshake;
 
@@ -182,7 +182,7 @@ namespace NetworkTables
                                     msg.Is(Message.MsgType.kEntryUpdate))
                                 {
                                     m_pendingOutgoing[m_pendingUpdate[(int)id].First] = Message.EntryAssign(oldmsg.Str(), id, msg.SeqNumUid(), msg.Value(),
-                                        oldmsg.Flags());
+                                        (EntryFlags)oldmsg.Flags());
 
                                 }
                                 else
@@ -348,6 +348,7 @@ namespace NetworkTables
                 if (msg == null && decoder.Error != null)
                 {
                     //Debug
+                    Console.WriteLine("Error reading in handchake: " + decoder.Error);
                 }
                 return msg;
             }, messages =>

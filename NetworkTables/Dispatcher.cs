@@ -146,7 +146,7 @@ namespace NetworkTables
             return conns;
         }
 
-        public void NotifyConnections(Notifier.ConnectionListenerCallback callback)
+        public void NotifyConnections(NtCore.ConnectionListenerCallback callback)
         {
 
         }
@@ -185,6 +185,7 @@ namespace NetworkTables
                     Monitor.Exit(m_flushMutex);
                     lockEntered = false;
                     m_flushCv.WaitOne(TimeSpan.FromMilliseconds(m_updateRate));
+                    Monitor.Enter(m_flushMutex, ref lockEntered);
                     m_doFlush = false;
                     if (!m_active) break;
 
@@ -251,6 +252,9 @@ namespace NetworkTables
                 }
                 if (!m_active) return;
 
+                Console.WriteLine("server: client connection from " + stream.GetPeerIP() + " port "
+                                            + stream.GetPeerPort());
+
                 //Debug
 
                 var conn = new NetworkConnection(stream, m_notifier, ServerHandshake, m_storage.GetEntryType);
@@ -292,6 +296,7 @@ namespace NetworkTables
                 var stream = connect();
                 if (stream == null) continue; //keep retrying
                 //Debug
+                Console.WriteLine("Client Connected");
 
                 bool lockEntered = false;
                 try
@@ -523,7 +528,7 @@ namespace NetworkTables
 
         private readonly object m_userMutex = new object();
         private List<NetworkConnection> m_connections = new List<NetworkConnection>();
-        private string m_identity;
+        private string m_identity = "";
 
         private bool m_active;
         private uint m_updateRate;
@@ -540,7 +545,7 @@ namespace NetworkTables
     {
         private static Dispatcher s_instance;
 
-        public Dispatcher Instance
+        public static Dispatcher Instance
         {
             get
             {

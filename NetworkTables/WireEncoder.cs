@@ -52,12 +52,13 @@ namespace NetworkTables
 
         public void Write16(ushort val)
         {
-            m_buffer.AddRange(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(val)));
+            var tmp = BitConverter.GetBytes(IPAddress.HostToNetworkOrder((short)val));
+            m_buffer.AddRange(tmp);
         }
 
         public void Write32(uint val)
         {
-            m_buffer.AddRange(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(val)));
+            m_buffer.AddRange(BitConverter.GetBytes(IPAddress.HostToNetworkOrder((int)val)));
         }
 
         public void WriteUleb128(ulong val)

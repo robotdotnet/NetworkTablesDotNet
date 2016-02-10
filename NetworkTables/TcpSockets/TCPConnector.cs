@@ -28,6 +28,17 @@ namespace NetworkTables.TcpSockets
 
         public static INetworkStream Connect(string server, int port, int timeout = 0)
         {
+            try
+            {
+                TcpClient client = new TcpClient(server, port);
+                return new TCPStream(client.Client);
+            }
+            catch (SocketException)
+            {
+                return null;
+            }
+            
+            /*
             IPAddress addr = null;
             if (ResolveHostName(server, ref addr) != 0)
             {
@@ -51,7 +62,7 @@ namespace NetworkTables.TcpSockets
                 return new TCPStream(socket);
             }
 
-            var sct = new Socket(AddressFamily.InterNetwork, SocketType.Stream, 0);
+            var sct = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             //TODO: A lot more timeout stuff.
             sct.Blocking = false;
@@ -71,6 +82,7 @@ namespace NetworkTables.TcpSockets
             sct.Blocking = true;
 
             return new TCPStream(sct);
+            */
         }
     }
 }
