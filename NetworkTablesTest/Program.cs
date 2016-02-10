@@ -13,7 +13,18 @@ namespace NetworkTablesTest
     {
         static void Main(string[] args)
         {
+            NtCore.SetLogger((level, file, line, msg) =>
+            {
+                Console.WriteLine($"NT: {level}: {msg} ({file}:{line}");
+            }, (int)0);
             NtCore.StartClient("localhost", 1735);
+
+            while(true)
+            {
+                Value val = NtCore.GetEntryValue("/test/key");
+                //Console.WriteLine(val?.GetDouble());
+                Thread.Sleep(500);
+            }
 
             Thread.Sleep(Timeout.Infinite);
             //var s = new TcpClient("172.22.11.2", 1735);

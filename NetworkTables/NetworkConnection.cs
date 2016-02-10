@@ -10,7 +10,7 @@ using NetworkTables.TcpSockets;
 
 namespace NetworkTables
 {
-    public class NetworkConnection : IDisposable
+    internal class NetworkConnection : IDisposable
     {
 
         private struct Pair
@@ -181,7 +181,7 @@ namespace NetworkTables
                                 if (oldmsg != null && oldmsg.Is(Message.MsgType.kEntryAssign) &&
                                     msg.Is(Message.MsgType.kEntryUpdate))
                                 {
-                                    m_pendingOutgoing[m_pendingUpdate[(int)id].First] = Message.EntryAssign(oldmsg.Str(), id, msg.SeqNumUid(), msg.Value(),
+                                    m_pendingOutgoing[m_pendingUpdate[(int)id].First] = Message.EntryAssign(oldmsg.Str(), id, msg.SeqNumUid(), msg.Val(),
                                         (EntryFlags)oldmsg.Flags());
 
                                 }

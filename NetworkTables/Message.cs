@@ -7,7 +7,7 @@ using static NetworkTables.Message.MsgType;
 
 namespace NetworkTables
 {
-    public class Message
+    internal class Message
     {
         public enum MsgType : uint
         {
@@ -67,7 +67,7 @@ namespace NetworkTables
             return m_str;
         }
 
-        public Value Value()
+        public Value Val()
         {
             return m_value;
         }
@@ -147,14 +147,14 @@ namespace NetworkTables
                     encoder.Write8((byte)kExecuteRpc);
                     encoder.Write16((ushort)m_id);
                     encoder.Write16((ushort)m_seq_num_uid);
-                    encoder.WriteString(m_str);
+                    encoder.WriteValue(m_value);
                     break;
                 case kRpcResponse:
                     if (encoder.ProtoRev < 0x0300u) return;  // new message in version 3.0
                     encoder.Write8((byte)kRpcResponse);
                     encoder.Write16((ushort)m_id);
                     encoder.Write16((ushort)m_seq_num_uid);
-                    encoder.WriteString(m_str);
+                    encoder.WriteValue(m_value);
                     break;
                 default:
                     break;
@@ -165,9 +165,13 @@ namespace NetworkTables
         {
             byte msgType = 0;
             if (!decoder.Read8(ref msgType)) return null;
-            MsgType type = (MsgType)msgType;
-            var msg = new Message(type);
-            switch (type)
+            MsgType mtype = (MsgType)msgType;
+            var msg = new Message(mtype);
+            NtType type = 0;
+            byte tmpB = 0;
+            ushort tmpUs = 0;
+            uint tmpUi = 0;
+            switch (mtype)
             {
                 case MsgType.kKeepAlive:
                     break;
@@ -198,6 +202,115 @@ namespace NetworkTables
                     msg.m_flags = rdflgs;
                     if (!decoder.ReadString(ref msg.m_str)) return null;
                     break;
+                case MsgType.kClientHelloDone:
+                    if (decoder.ProtoRev < 0x0300)
+                    {
+                        decoder.Error = "recieved SERVER_HELLO_DONE in protocol < 3.0";
+                        return null;
+                    }
+                    break;
+                case MsgType.kEntryAssign:
+                    if (!decoder.ReadString(ref msg.m_str)) return null;
+                    if (!decoder.ReadType(ref type)) return null;
+                    if (!decoder.Read16(ref tmpUs)) return null;
+                    msg.m_id = tmpUs;
+                    if (!decoder.Read16(ref tmpUs)) return null;
+                    msg.m_seq_num_uid = tmpUs;
+                    if (decoder.ProtoRev >= 0x0300)
+                    {
+                        if (!decoder.Read8(ref tmpB)) return null;
+                        msg.m_flags = tmpB;
+                    }
+                    msg.m_value = decoder.ReadValue(type);
+                    if (msg.m_value == null) return null;
+                    break;
+                case kEntryUpdate:
+                    if (!decoder.Read16(ref tmpUs)) return null;
+                    msg.m_id = tmpUs;
+                    if (!decoder.Read16(ref tmpUs)) return null;
+                    msg.m_seq_num_uid = tmpUs;
+                    if (decoder.ProtoRev >= 0x0300)
+                    {
+                        if (!decoder.ReadType(ref type)) return null;
+                    }
+                    else
+                    {
+                        type = getEntryType(msg.m_id);
+                    }
+                    //Debug
+                    msg.m_value = decoder.ReadValue(type);
+                    if (msg.m_value == null) return null;
+                    break;
+                case kFlagsUpdate:
+                    if (decoder.ProtoRev < 0x0300)
+                    {
+                        decoder.Error = "received FLAGS_UPDATE in protocol < 3.0";
+                        return null;
+                    }
+                    if (!decoder.Read16(ref tmpUs)) return null;
+                    msg.m_id = tmpUs;
+                    if (!decoder.Read8(ref tmpB)) return null;
+                    msg.m_flags = tmpB;
+                    break;
+                case MsgType.kEntryDelete:
+                    if (decoder.ProtoRev < 0x0300)
+                    {
+                        decoder.Error = "received ENTRY_DELETE in protocol < 3.0";
+                        return null;
+                    }
+                    if (!decoder.Read16(ref tmpUs)) return null;
+                    msg.m_id = tmpUs;
+                    break;
+                case kClearEntries:
+                    if (decoder.ProtoRev < 0x0300)
+                    {
+                        decoder.Error = "received CLEAR_ENTRIES in protocol < 3.0";
+                        return null;
+                    }
+                    uint magic = 0;
+                    if (!decoder.Read32(ref magic)) return null;
+                    if (magic != kClearAllMagic)
+                    {
+                        decoder.Error = "received incorrect CLEAR_ENTRIES magic value, ignoring";
+                        return null;
+                    }
+                    break;
+                case kExecuteRpc:
+                    if (decoder.ProtoRev < 0x0300)
+                    {
+                        decoder.Error = "received EXECUTE_RPC in protocol < 3.0";
+                        return null;
+                    }
+                    if (!decoder.Read16(ref tmpUs)) return null;
+                    msg.m_id = tmpUs;
+                    if (!decoder.Read16(ref tmpUs)) return null;
+                    msg.m_seq_num_uid = tmpUs;
+                    ulong size = 0;
+                    if (!decoder.ReadUleb128(out size)) return null;
+                    byte[] results = null;
+                    if (!decoder.Read(out results, (int)size)) return null;
+                    msg.m_value = Value.MakeRpc(results, (int)size);
+                    break;
+                case kRpcResponse:
+                    if (decoder.ProtoRev < 0x0300)
+                    {
+                        decoder.Error = "received RPC_RESPONSE in protocol < 3.0";
+                        return null;
+                    }
+                    if (!decoder.Read16(ref tmpUs)) return null;
+                    msg.m_id = tmpUs;
+                    if (!decoder.Read16(ref tmpUs)) return null;
+                    msg.m_seq_num_uid = tmpUs;
+                    ulong size2 = 0;
+                    if (!decoder.ReadUleb128(out size2)) return null;
+                    byte[] results2 = null;
+                    if (!decoder.Read(out results2, (int)size2)) return null;
+                    msg.m_value = Value.MakeRpc(results2, (int)size2);
+                    break;
+                default:
+                    decoder.Error = "unrecognized message type";
+                    //Info
+                    return null;
                     //TODO:: Tons of these
             }
             return msg;
@@ -263,6 +376,24 @@ namespace NetworkTables
         {
             var msg = new Message(MsgType.kEntryDelete);
             msg.m_id = id;
+            return msg;
+        }
+
+        public static Message ExecuteRpc(uint id, uint uid, byte[] param)
+        {
+            var msg = new Message(kExecuteRpc);
+            msg.m_value = Value.MakeRpc(param, param.Length);
+            msg.m_id = id;
+            msg.m_seq_num_uid = uid;
+            return msg;
+        }
+
+        public static Message RpcResponse(uint id, uint uid, byte[] results)
+        {
+            var msg = new Message(kRpcResponse);
+            msg.m_value = Value.MakeRpc(results, results.Length);
+            msg.m_id = id;
+            msg.m_seq_num_uid = uid;
             return msg;
         }
 

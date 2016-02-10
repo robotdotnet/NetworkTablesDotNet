@@ -5,7 +5,7 @@ using System.Text;
 
 namespace NetworkTables
 {
-    public class WireDecoder
+    internal class WireDecoder
     {
         public static double ReadDouble(byte[] buf, int count)
         {
@@ -128,8 +128,8 @@ namespace NetworkTables
                         Error = "Received raw value in protocol < 3.0";
                         return null;
                     }
-                    string vR = "";
-                    return !ReadString(ref vR) ? null : Value.MakeRPC(vR);
+                    byte[] vR = null;
+                    return !ReadRaw(ref vR) ? null : Value.MakeRpc(vR, vR.Length);
                 case NtType.String:
                     string vS = "";
                     return !ReadString(ref vS) ? null : Value.MakeString(vS);
@@ -184,7 +184,7 @@ namespace NetworkTables
         {
             byte[] buf;
             if (!Read(out buf, 2)) return false;
-            val = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToUInt16(buf, 0));
+            val = (ushort)IPAddress.NetworkToHostOrder((short)BitConverter.ToUInt16(buf, 0));
             return true;
         }
 
@@ -192,7 +192,7 @@ namespace NetworkTables
         {
             byte[] buf;
             if (!Read(out buf, 4)) return false;
-            val = (uint)IPAddress.NetworkToHostOrder(BitConverter.ToUInt32(buf, 0));
+            val = (uint)IPAddress.NetworkToHostOrder((int)BitConverter.ToUInt32(buf, 0));
             return true;
         }
 

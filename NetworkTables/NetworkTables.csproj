@@ -48,7 +48,12 @@
     <Compile Include="Dispatcher.cs" />
     <Compile Include="EntryInfo.cs" />
     <Compile Include="Leb128.cs" />
+    <Compile Include="Log.cs" />
     <Compile Include="Message.cs" />
+    <Compile Include="Native\Exceptions\NtTypeMismatchException.cs" />
+    <Compile Include="Native\Exceptions\PersistentException.cs" />
+    <Compile Include="Native\Exceptions\TableKeyDifferentTypeException.cs" />
+    <Compile Include="Native\Exceptions\TableKeyNotDefinedException.cs" />
     <Compile Include="NetworkConnection.cs" />
     <Compile Include="NetworkTable.cs" />
     <Compile Include="Notifier.cs" />
@@ -64,8 +69,6 @@
     <Compile Include="Tables\IRemoteConnectionListener.cs" />
     <Compile Include="Tables\ITable.cs" />
     <Compile Include="Tables\ITableListener.cs" />
-    <Compile Include="Tables\ITableProvider.cs" />
-    <Compile Include="Tables\TableKeyNotDefinedException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TcpSockets\INetworkAcceptor.cs" />
     <Compile Include="TcpSockets\INetworkStream.cs" />

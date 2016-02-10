@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NetworkTables.TcpSockets
 {
-    public interface INetworkAcceptor
+    internal interface INetworkAcceptor
     {
         int Start();
         void Shutdown();

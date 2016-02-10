@@ -6,7 +6,7 @@ using System.Text;
 
 namespace NetworkTables
 {
-    public class WireEncoder
+    internal class WireEncoder
     {
         private readonly List<byte> m_buffer = new List<byte>(1024);
 
@@ -184,7 +184,7 @@ namespace NetworkTables
                         Error = "RPC values not supported in protocol < 3.0";
                         return;
                     }
-                    WriteString((string)value.Val);
+                    WriteRaw((byte[])value.Val);
                     break;
                 case NtType.BooleanArray:
                     var vB = (bool[])value.Val;

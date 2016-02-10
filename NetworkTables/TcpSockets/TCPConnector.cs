@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace NetworkTables.TcpSockets
 {
-    public class TCPConnector
+    internal class TCPConnector
     {
         private static int ResolveHostName(string hostName, ref IPAddress addr)
         {

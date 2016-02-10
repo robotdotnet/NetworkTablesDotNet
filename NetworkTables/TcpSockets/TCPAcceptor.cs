@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace NetworkTables.TcpSockets
 {
-    public class TCPAcceptor : INetworkAcceptor
+    internal class TCPAcceptor : INetworkAcceptor
     {
         private TcpListener m_server;
         private int m_port;

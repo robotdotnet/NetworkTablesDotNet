@@ -1,19 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NetworkTables.Native.Exceptions;
 
 namespace NetworkTables
 {
-    public class NtTypeMismatchException : InvalidOperationException
-    {
-        public NtTypeMismatchException(NtType requested, NtType actual)
-            : base($"Requested Type {requested} does not match actual Type {actual}.")
-        {
 
-        }
-    }
 
     public class Value
     {
@@ -120,10 +110,10 @@ namespace NetworkTables
             return Val.ToString();
         }
 
-
-
         public static bool operator ==(Value lhs, Value rhs)
         {
+            if (ReferenceEquals(lhs, rhs)) return true;
+            if (((object)lhs == null) || ((object)rhs == null)) return false;
             if (lhs.Type != rhs.Type) return false;
             switch (lhs.Type)
             {
@@ -131,11 +121,51 @@ namespace NetworkTables
                     return true;
                 case NtType.Boolean:
                     return (bool)lhs.Val == (bool)rhs.Val;
+                case NtType.Double:
+                    return (double)lhs.Val == (double)rhs.Val;
+                case NtType.String:
+                    return (string)lhs.Val == (string)rhs.Val;
+                case NtType.Raw:
+                case NtType.Rpc:
+                    byte[] rawLhs = (byte[])lhs.Val;
+                    byte[] rawRhs = (byte[])rhs.Val;
+                    if (rawLhs.Length != rawRhs.Length) return false;
+                    for (int i = 0; i < rawLhs.Length; i++)
+                    {
+                        if (rawLhs[i] != rawRhs[i]) return false;
+                    }
+                    return true;
+                case NtType.BooleanArray:
+                    bool[] boolLhs = (bool[])lhs.Val;
+                    bool[] boolRhs = (bool[])rhs.Val;
+                    if (boolLhs.Length != boolRhs.Length) return false;
+                    for (int i = 0; i < boolLhs.Length; i++)
+                    {
+                        if (boolLhs[i] != boolRhs[i]) return false;
+                    }
+                    return true;
+                case NtType.DoubleArray:
+                    double[] doubleLhs = (double[])lhs.Val;
+                    double[] doubleRhs = (double[])rhs.Val;
+                    if (doubleLhs.Length != doubleRhs.Length) return false;
+                    for (int i = 0; i < doubleLhs.Length; i++)
+                    {
+                        if (doubleLhs[i] != doubleRhs[i]) return false;
+                    }
+                    return true;
+                case NtType.StringArray:
+                    string[] stringLhs = (string[])lhs.Val;
+                    string[] stringRhs = (string[])rhs.Val;
+                    if (stringLhs.Length != stringRhs.Length) return false;
+                    for (int i = 0; i < stringLhs.Length; i++)
+                    {
+                        if (stringLhs[i] != stringRhs[i]) return false;
+                    }
+                    return true;
                 default:
                     return false;
 
             }
-
         }
 
         public static bool operator !=(Value lhs, Value rhs)
@@ -165,10 +195,11 @@ namespace NetworkTables
             return new Value(tmp);
         }
 
-        public static Value MakeRpc(params byte[] val)
+        public static Value MakeRpc(byte[] val, int size)
         {
-            byte[] tmp = new byte[val.Length];
-            Array.Copy(val, tmp, val.Length);
+            if (size > val.Length) return null;
+            byte[] tmp = new byte[size];
+            Array.Copy(val, tmp, size);
             return new Value(tmp, true);
         }
 
@@ -191,11 +222,6 @@ namespace NetworkTables
             string[] tmp = new string[val.Length];
             Array.Copy(val, tmp, val.Length);
             return new Value(tmp);
-        }
-
-        public static Value MakeRPC(string val)
-        {
-            return new Value(val, true);
         }
 
         internal static Value MakeEmpty()

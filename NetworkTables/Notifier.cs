@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace NetworkTables
 {
-    public class Notifier
+    internal class Notifier
     {
         
 
@@ -72,7 +72,7 @@ namespace NetworkTables
         {
             get
             {
-                return (s_instance ?? new Notifier());
+                return s_instance ?? (s_instance = new Notifier());
             }
         }
 
@@ -204,10 +204,11 @@ namespace NetworkTables
             //Notify condition so thread terminates.
             m_cond.Set();
             TimeSpan timeout = TimeSpan.FromSeconds(1);
+            if (m_thread == null) return;
             bool joined = m_thread.Join(timeout);
             if (!joined)
             {
-                m_thread.Abort();
+                m_thread?.Abort();
             }
         }
 

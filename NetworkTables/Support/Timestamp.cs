@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NetworkTables.Support
 {
-    public static class Timestamp
+    internal static class Timestamp
     {
         public static ulong Now()
         {

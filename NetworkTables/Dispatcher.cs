@@ -5,10 +5,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NetworkTables.TcpSockets;
+using static NetworkTables.Logger;
 
 namespace NetworkTables
 {
-    public class DispatcherBase : IDisposable
+    internal class DispatcherBase : IDisposable
     {
         public void Dispose()
         {
@@ -34,9 +35,9 @@ namespace NetworkTables
                     if (first)
                     {
                         first = false;
-                        //Waring
+                        Waring($"When reading initial persistent values from \" {persistentFilename} \":");
                     }
-                    //Warning
+                    Waring($"{persistentFilename} : {i} : {s}");
                 });
             }
 
@@ -148,7 +149,14 @@ namespace NetworkTables
 
         public void NotifyConnections(NtCore.ConnectionListenerCallback callback)
         {
-
+            lock(m_userMutex)
+            {
+                foreach(var conn in m_connections)
+                {
+                    if (conn.GetState() != NetworkConnection.State.kActive) continue;
+                    m_notifier.NotifyConnection(true, conn.GetConnectionInfo(), callback);
+                }
+            }
         }
 
         public bool Active() => m_active;
@@ -196,7 +204,7 @@ namespace NetworkTables
                         string err = m_storage.SavePersistent(m_persistFilename, true);
                         if (err != null)
                         {
-                            //Warning
+                            Waring($"periodic persistent save: {err}");
                         }
                     }
 
@@ -206,7 +214,7 @@ namespace NetworkTables
 
                         if (++count > 10)
                         {
-                            //Dispatch Running
+                            Debug($"dispatch running {m_connections.Count} connections");
                             count = 0;
                         }
 
@@ -252,10 +260,7 @@ namespace NetworkTables
                 }
                 if (!m_active) return;
 
-                Console.WriteLine("server: client connection from " + stream.GetPeerIP() + " port "
-                                            + stream.GetPeerPort());
-
-                //Debug
+                Debug($"server: client connection from {stream.GetPeerIP()} port {stream.GetPeerPort()}");
 
                 var conn = new NetworkConnection(stream, m_notifier, ServerHandshake, m_storage.GetEntryType);
                 conn.SetProcessIncoming(m_storage.ProcessIncoming);
@@ -292,11 +297,10 @@ namespace NetworkTables
             {
                 Thread.Sleep(TimeSpan.FromMilliseconds(500));
 
-                //Debug
+                Debug("client trying to connect");
                 var stream = connect();
                 if (stream == null) continue; //keep retrying
-                //Debug
-                Console.WriteLine("Client Connected");
+                Debug("client connected");
 
                 bool lockEntered = false;
                 try
@@ -338,14 +342,14 @@ namespace NetworkTables
                 selfId = m_identity;
             }
 
-            //Debug
+            Debug("client: sending hello");
             sendMsgs(new Message[] { Message.ClientHello(selfId) });
 
             var msg = getMsg();
             if (msg == null)
             {
                 //Disconnected
-                //Debug;
+                Debug("client: server disconnected before first response");
                 return false;
             }
 
@@ -371,17 +375,16 @@ namespace NetworkTables
                 if (msg == null)
                 {
                     //disconnected, retry
-                    //Debug
+                    Debug("client: server disconnected during initial entries");
                     return false;
                 }
-
-                //Debug
+                Debug4($"received init str={msg.Str()} id={msg.Id()} seqNum={msg.SeqNumUid()}");
 
                 if (msg.Is(Message.MsgType.kServerHelloDone)) break;
                 if (!msg.Is(Message.MsgType.kEntryAssign))
                 {
                     //Unexpected
-                    //Debug
+                    Debug($"client: received message ({msg.Type()}) other then entry assignment during initial handshake");
                     return false;
                 }
 
@@ -393,14 +396,14 @@ namespace NetworkTables
             List<Message> outgoing = new List<Message>();
             m_storage.ApplyInitialAssignments(conn, incoming.ToArray(), newServer, outgoing);
 
-            if (conn.ProtoRev > 0x0300)
+            if (conn.ProtoRev >= 0x0300)
             {
                 outgoing.Add(Message.ClientHelloDone());
             }
 
             if (outgoing.Count != 0) sendMsgs(outgoing.ToArray());
 
-            //Info
+            Info($"client: CONNECTED to server {conn.Stream().GetPeerIP()} port {conn.Stream().GetPeerPort()}");
 
             return true;
         }
@@ -411,13 +414,13 @@ namespace NetworkTables
 
             if (msg == null)
             {
-                //debug
+                Debug("server: client disconnected before sending hello");
                 return false;
             }
 
             if (!msg.Is(Message.MsgType.kClientHello))
             {
-                //Debug
+                Debug("server: client initial message was not client hello");
                 return false;
             }
 
@@ -425,14 +428,14 @@ namespace NetworkTables
 
             if (protoRev > 0x0300)
             {
-                //Debug
+                Debug("server: client requested proto > 0x0300");
                 sendMsgs(new Message[] { Message.ProtoUnsup() });
                 return false;
             }
 
             if (protoRev >= 0x0300) conn.SetRemoteId(msg.Str());
 
-            //Debug
+            Debug($"server: client protocol {protoRev}");
             conn.SetProtoRev(protoRev);
 
             List<Message> outgoing = new List<Message>();
@@ -447,7 +450,7 @@ namespace NetworkTables
 
             m_storage.GetInitialAssignments(conn, outgoing);
 
-            //Debug
+            Debug("server: sending initial assignments");
             sendMsgs(outgoing.ToArray());
 
             if (protoRev >= 0x0300)
@@ -461,14 +464,14 @@ namespace NetworkTables
                     if (msg == null)
                     {
                         //Disconnected Retry
-                        //Debug
+                        Debug("server: disconnected waiting for initial entries");
                         return false;
                     }
 
                     if (msg.Is(Message.MsgType.kClientHelloDone)) break;
                     if (!msg.Is(Message.MsgType.kEntryAssign))
                     {
-                        //Debug
+                        Debug($"server: received message ({msg.Type()}) other than entry assignment during initial handshake");
                         return false;
                     }
 
@@ -483,7 +486,7 @@ namespace NetworkTables
                 }
             }
 
-            //Info
+            Info($"server: client CONNECTED: {conn.Stream().GetPeerIP()} port {conn.Stream().GetPeerPort()}");
             return true;
         }
 
@@ -541,7 +544,7 @@ namespace NetworkTables
         private bool m_doReconnect = true;
     }
 
-    public class Dispatcher : DispatcherBase
+    internal class Dispatcher : DispatcherBase
     {
         private static Dispatcher s_instance;
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NetworkTables
 {
-    public interface IInputStream
+    internal interface IInputStream
     {
         bool Read(byte[] data, int len);
         void Close();
@@ -14,7 +14,7 @@ namespace NetworkTables
 
     }
 
-    public class RawMemoryStream : IInputStream
+    internal class RawMemoryStream : IInputStream
     {
         private byte[] m_data;
         private int m_cur;

@@ -7,7 +7,7 @@ using NetworkTables.TcpSockets;
 
 namespace NetworkTables
 {
-    public class SocketInputStream : IInputStream
+    internal class SocketInputStream : IInputStream
     {
         private INetworkStream m_stream;
         private int m_timeout;

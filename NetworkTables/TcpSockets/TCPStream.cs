@@ -11,7 +11,7 @@ using System.IO;
 
 namespace NetworkTables.TcpSockets
 {
-    public class TCPStream : INetworkStream, IDisposable
+    internal class TCPStream : INetworkStream, IDisposable
     {
         Socket m_socket;
         string m_peerIP;
@@ -83,11 +83,25 @@ namespace NetworkTables.TcpSockets
 
             if (timeout <= 0)
             {
-                rv = m_socket.Receive(buffer, pos, len, 0);
+                try
+                {
+                    rv = m_socket.Receive(buffer, pos, len, 0);
+                }
+                catch (SocketException)
+                {
+                    rv = -1;
+                }
             }
             else if (WaitForReadEvent(timeout))
             {
-                rv = m_socket.Receive(buffer, pos, len, 0);
+                try
+                {
+                    rv = m_socket.Receive(buffer, pos, len, 0);
+                }
+                catch (SocketException)
+                {
+                    rv = -1;
+                }
             }
             else
             {

@@ -59,7 +59,9 @@ namespace NetworkTables
 
         public static uint AddEntryListener(string prefix, EntryListenerCallback callback, NotifyFlags flags)
         {
-            uint uid = Notifier.Instance.AddEntryListener(prefix, callback, flags);
+            Notifier notifier = Notifier.Instance;
+            uint uid = notifier.AddEntryListener(prefix, callback, flags);
+            notifier.Start();
             if ((flags & NotifyFlags.NotifyImmediate) != 0)
                 Storage.Instance.NotifyEntries(prefix, callback);
             return uid;
@@ -72,7 +74,9 @@ namespace NetworkTables
 
         public static uint AddConnectionListener(ConnectionListenerCallback callback, bool immediateNotify)
         {
-            uint uid = Notifier.Instance.AddConnectionListener(callback);
+            Notifier notifier = Notifier.Instance;
+            uint uid = notifier.AddConnectionListener(callback);
+            notifier.Start();
             if (immediateNotify) Dispatcher.Instance.NotifyConnections(callback);
             return uid;
         }
@@ -147,7 +151,9 @@ namespace NetworkTables
 
         public static void SetLogger(LogFunc func, uint minLevel)
         {
-            //Setup Logger
+            Logger logger = Logger.Instance;
+            logger.SetLogger(func);
+            logger.SetMinLevel(minLevel);
         }
     }
 }

@@ -11,7 +11,7 @@ namespace NetworkTables
 {
 
 
-    public class Storage
+    internal class Storage
     {
         private class StoragePair : IComparable<StoragePair>
         {
@@ -36,7 +36,7 @@ namespace NetworkTables
         {
             get
             {
-                return (s_instance ?? new Storage());
+                return s_instance ?? (s_instance = new Storage());
             }
         }
 
@@ -206,6 +206,9 @@ namespace NetworkTables
             {
                 Monitor.Enter(m_mutex, ref lockEntered);
                 Message.MsgType type = msg.Type();
+                SequenceNumber seqNum = null;
+                Entry entry = null;
+                uint id = 0;
                 switch (type)
                 {
                     case kKeepAlive:
@@ -219,9 +222,8 @@ namespace NetworkTables
                         break;
                     case kEntryAssign:
                         {
-                            uint id = msg.Id();
+                            id = msg.Id();
                             string name = msg.Str();
-                            Entry entry;
                             bool mayNeedUpdate = false;
                             if (m_server)
                             {
@@ -232,7 +234,7 @@ namespace NetworkTables
 
                                     id = (uint)m_idMap.Count;
                                     entry = new Entry(name);
-                                    entry.value = msg.Value();
+                                    entry.value = msg.Val();
                                     entry.flags = (EntryFlags)msg.Flags();
                                     entry.id = id;
                                     m_entries[name] = entry;
@@ -245,7 +247,7 @@ namespace NetworkTables
                                     if (m_queueOutgoing != null)
                                     {
                                         var queueOutgoing = m_queueOutgoing;
-                                        var outMsg = Message.EntryAssign(name, id, entry.seqNum.Value(), msg.Value(), (EntryFlags)msg.Flags());
+                                        var outMsg = Message.EntryAssign(name, id, entry.seqNum.Value(), msg.Val(), (EntryFlags)msg.Flags());
                                         Monitor.Exit(m_mutex);
                                         lockEntered = false;
                                         queueOutgoing(outMsg, null, null);
@@ -280,7 +282,7 @@ namespace NetworkTables
                                     {
                                         //Entry didn't exist at all.
                                         newEntry = new Entry(name);
-                                        newEntry.value = msg.Value();
+                                        newEntry.value = msg.Val();
                                         newEntry.flags = (EntryFlags)msg.Flags();
                                         newEntry.id = id;
                                         m_idMap[(int)id] = newEntry;
@@ -310,7 +312,7 @@ namespace NetworkTables
                                 }
                             }
 
-                            SequenceNumber seqNum = new SequenceNumber(msg.SeqNumUid());
+                            seqNum = new SequenceNumber(msg.SeqNumUid());
                             if (seqNum < entry.seqNum)
                             {
                                 if (mayNeedUpdate)
@@ -347,12 +349,12 @@ namespace NetworkTables
                                 entry.flags = (EntryFlags)msg.Flags();
                             }
 
-                            if (entry.IsPersistent() && entry.value != msg.Value())
+                            if (entry.IsPersistent() && entry.value != msg.Val())
                             {
                                 m_persistentDirty = true;
                             }
 
-                            entry.value = msg.Value();
+                            entry.value = msg.Val();
                             entry.seqNum = seqNum;
 
                             m_notifier.NotifyEntry(name, entry.value, notifyFlags);
@@ -360,16 +362,46 @@ namespace NetworkTables
                             if (m_server && m_queueOutgoing != null)
                             {
                                 var queueOutgoing = m_queueOutgoing;
-                                var outmsg = Message.EntryAssign(entry.name, id, msg.SeqNumUid(), msg.Value(), entry.flags);
+                                var outmsg = Message.EntryAssign(entry.name, id, msg.SeqNumUid(), msg.Val(), entry.flags);
                                 Monitor.Exit(m_mutex);
                                 lockEntered = false;
                                 queueOutgoing(outmsg, null, conn);
                             }
                             break;
                         }
+                    case Message.MsgType.kEntryUpdate:
+                        id = msg.Id();
+                        if (id >= m_idMap.Count || m_idMap[(int)id] == null)
+                        {
+                            Monitor.Exit(m_mutex);
+                            lockEntered = false;
+                            //Debug
+                            return;
+                        }
+
+                        entry = m_idMap[(int)id];
+
+                        seqNum = new SequenceNumber(msg.SeqNumUid());
+
+                        if (seqNum <= entry.seqNum) return;
+
+                        entry.value = msg.Val();
+                        entry.seqNum = seqNum;
+
+                        if (entry.IsPersistent()) m_persistentDirty = true;
+                        m_notifier.NotifyEntry(entry.name, entry.value, NotifyFlags.NotifyUpdate);
+
+                        if (m_server && m_queueOutgoing != null)
+                        {
+                            var queueOutgoing = m_queueOutgoing;
+                            Monitor.Exit(m_mutex);
+                            lockEntered = false;
+                            queueOutgoing(msg, null, conn);
+                        }
+                        break;
                     case kFlagsUpdate:
                         {
-                            uint id = msg.Id();
+                            id = msg.Id();
                             if (id >= m_idMap.Count || m_idMap[(int)id] == null)
                             {
                                 Monitor.Exit(m_mutex);
@@ -378,7 +410,7 @@ namespace NetworkTables
                                 return;
                             }
 
-                            Entry entry = m_idMap[(int)id];
+                            entry = m_idMap[(int)id];
 
                             if (entry.flags == (EntryFlags)msg.Flags()) return;
 
@@ -461,7 +493,7 @@ namespace NetworkTables
                     if (!m_entries.TryGetValue(name, out entry))
                     {
                         entry = new Entry(name);
-                        entry.value = msg.Value();
+                        entry.value = msg.Val();
                         entry.flags = (EntryFlags)msg.Flags();
                         entry.seqNum = seqNum;
                         m_notifier.NotifyEntry(name, entry.value, NotifyFlags.NotifyNew);
@@ -475,7 +507,7 @@ namespace NetworkTables
                         }
                         else
                         {
-                            entry.value = msg.Value();
+                            entry.value = msg.Val();
                             entry.seqNum = seqNum;
                             NotifyFlags notifyFlags = NotifyFlags.NotifyUpdate;
 
@@ -634,6 +666,7 @@ namespace NetworkTables
                 if (!m_entries.TryGetValue(name, out entry)) return;
                 uint id = entry.id;
                 if (entry.IsPersistent()) m_persistentDirty = true;
+
 
                 m_entries.Remove(name);
 
