@@ -6,13 +6,31 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NetworkTables;
+using System.Net;
 
 namespace NetworkTablesTest
 {
     class Program
     {
         static void Main(string[] args)
-        {
+        {/*
+            try
+            {
+                var addrEntry = Dns.GetHostEntry("roborio-4488-frc.local");
+                Console.WriteLine(addrEntry.HostName);
+
+                foreach(var v in addrEntry.AddressList)
+                {
+                    Console.WriteLine(v);
+                }
+            }
+            catch (SocketException ex)
+            {
+                Console.WriteLine(ex.NativeErrorCode);
+            }
+            */
+
+            
             NtCore.SetLogger((level, file, line, msg) =>
             {
                 Console.WriteLine($"NT: {level}: {msg} ({file}:{line}");

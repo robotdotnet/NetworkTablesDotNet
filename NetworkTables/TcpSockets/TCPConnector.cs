@@ -4,23 +4,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
 using System.Threading.Tasks;
+using static NetworkTables.Logger;
 
 namespace NetworkTables.TcpSockets
 {
     internal class TCPConnector
     {
-        private static int ResolveHostName(string hostName, ref IPAddress addr)
+        private static int ResolveHostName(string hostName, out IPAddress[] addr)
         {
             try
             {
+                
                 var addressEntry = Dns.GetHostEntry(hostName);
-                addr = addressEntry.AddressList[0];
+                addr = addressEntry.AddressList;
+
             }
             catch (SocketException e)
             {
+                addr = null;
                 return e.NativeErrorCode;
             }
             return 0;
@@ -28,61 +30,70 @@ namespace NetworkTables.TcpSockets
 
         public static INetworkStream Connect(string server, int port, int timeout = 0)
         {
-            try
-            {
-                TcpClient client = new TcpClient(server, port);
-                return new TCPStream(client.Client);
-            }
-            catch (SocketException)
-            {
-                return null;
-            }
-            
-            /*
-            IPAddress addr = null;
-            if (ResolveHostName(server, ref addr) != 0)
+            IPAddress[] addr = null;
+            if (ResolveHostName(server, out addr) != 0)
             {
                 try
                 {
-                    addr = IPAddress.Parse(server);
+                    addr = new IPAddress[1];
+                    addr[0] = IPAddress.Parse(server);
                 }
-                catch (SocketException e)
+                catch (FormatException)
                 {
-                    //Error
+                    Error($"could not resolve {server} address");
                     return null;
                 }
             }
 
-            if (timeout == 0)
+            //Create our client
+            TcpClient client = new TcpClient();
+
+            if (true)
             {
-                var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, 0);
+                try
+                {
+                    //Try to connect to client
+                    client.Connect(addr, port);
+                }
+                catch (SocketException ex)
+                {
+                    Error($"Connect() to {server} port {port} failed: {ex.SocketErrorCode.ToString()}");
+                    client.Close();
+                    return null;
+                }
 
-                socket.Connect(addr, port);
+                return new TCPStream(client.Client);
+            }            
 
-                return new TCPStream(socket);
+            client.Client.Blocking = false;
+
+            try
+            {
+                client.Connect(addr, port);
+
+                if (true)
+                {
+                    //Connected successfully
+                    client.Client.Blocking = true;
+                    return new TCPStream(client.Client);
+                }
+                else
+                {
+                    //Connection timed out.
+                    Info($"Connect() to {server} port {port} timed out");
+                    client.Close();
+                    return null;
+                }
+            }
+            catch (SocketException ex)
+            {
+                Error($"Connect() to {server} port {port} error {ex.NativeErrorCode} - {ex.SocketErrorCode.ToString()}");
+                client.Close();
+                return null;
             }
 
-            var sct = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-            //TODO: A lot more timeout stuff.
-            sct.Blocking = false;
-            sct.Connect(addr, port);
 
-            ArrayList list = new ArrayList { sct };
-            Socket.Select(null, list, null, timeout * 1000000);
-            if (list.Count > 0)
-            {
-                //Get Val Opt.
-            }
-            else
-            {
-                //Report Timeout
-            }
-
-            sct.Blocking = true;
-
-            return new TCPStream(sct);
-            */
         }
     }
 }
