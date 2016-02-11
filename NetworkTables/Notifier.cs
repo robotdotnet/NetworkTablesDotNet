@@ -9,7 +9,7 @@ namespace NetworkTables
 {
     internal class Notifier
     {
-        
+
 
         private static Notifier s_instance;
         private static bool s_destroyed;
@@ -31,8 +31,8 @@ namespace NetworkTables
             public NotifyFlags flags;
         }
 
-        private List<EntryListener> m_entryListeners;
-        private List<NtCore.ConnectionListenerCallback> m_connListeners;
+        private List<EntryListener> m_entryListeners = new List<EntryListener>();
+        private List<NtCore.ConnectionListenerCallback> m_connListeners = new List<NtCore.ConnectionListenerCallback>();
 
         private struct EntryNotification
         {
@@ -51,7 +51,7 @@ namespace NetworkTables
             public NtCore.EntryListenerCallback only;
         }
 
-        private Queue<EntryNotification> m_entryNotifications;
+        private Queue<EntryNotification> m_entryNotifications = new Queue<EntryNotification>();
 
         private struct ConnectionNotification
         {
@@ -66,7 +66,7 @@ namespace NetworkTables
             public NtCore.ConnectionListenerCallback only;
         }
 
-        private Queue<ConnectionNotification> m_connNotifications;
+        private Queue<ConnectionNotification> m_connNotifications = new Queue<ConnectionNotification>();
 
         public static Notifier Instance
         {
@@ -195,6 +195,8 @@ namespace NetworkTables
                 m_active = true;
             }
             m_thread = new Thread(ThreadMain);
+            m_thread.IsBackground = true;
+            m_thread.Name = "Notifier Thread";
             m_thread.Start();
         }
 

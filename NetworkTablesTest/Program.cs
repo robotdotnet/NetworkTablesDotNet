@@ -41,6 +41,12 @@ namespace NetworkTablesTest
 
             t.PutNumber("ke2", 675);
 
+            Thread.Sleep(5000);
+
+            NetworkTable.Shutdown();
+
+            Thread.Sleep(Timeout.Infinite);
+
 
 
             while (true)

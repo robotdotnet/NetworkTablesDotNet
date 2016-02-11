@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using static NetworkTables.Logger;
 
 namespace NetworkTables.TcpSockets
 {
@@ -14,6 +15,7 @@ namespace NetworkTables.TcpSockets
         private TcpListener m_server;
         private int m_port;
         private string m_address;
+        private bool m_shutdown = false;
 
         public TCPAcceptor(int port, string address)
         {
@@ -33,21 +35,46 @@ namespace NetworkTables.TcpSockets
                 address = IPAddress.Any;
             }
             m_server = new TcpListener(address, m_port);
-            m_server.Start();
+            try
+            {
+                m_server.Start();
+            }
+            catch (SocketException ex)
+            {
+                Error($"Socket Start(): failed {ex.SocketErrorCode}");
+                return ex.NativeErrorCode;
+            }
+            
 
             return 0;
         }
 
         public void Shutdown()
         {
+            m_shutdown = true;
             m_server?.Stop();
+            m_server = null;
         }
 
         public INetworkStream Accept()
         {
-            Socket sd = m_server.AcceptSocket();
-            TCPStream stream = new TCPStream(sd);
-            return stream;
+            try
+            {
+                Socket sd = m_server.AcceptSocket();
+                if (m_shutdown)
+                {
+                    sd.Close();
+                    return null;
+                }
+                TCPStream stream = new TCPStream(sd);
+                return stream;
+            }
+            catch (SocketException ex)
+            {
+                if (!m_shutdown)
+                    Error($"Accept() failed: {ex.SocketErrorCode.ToString()}");
+                return null;
+            }
         }
     }
 }

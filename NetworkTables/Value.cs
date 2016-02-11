@@ -185,6 +185,7 @@ namespace NetworkTables
 
         public static Value MakeString(string val)
         {
+            if (val == null) throw new ArgumentNullException(nameof(val));
             return new Value(val);
         }
 

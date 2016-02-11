@@ -112,9 +112,13 @@ namespace NetworkTables
             while (!m_outgoing.IsEmpty) m_outgoing.TryDequeue(out temp);
 
             m_writeThread = new Thread(WriteThreadMain);
+            m_writeThread.IsBackground = true;
+            m_writeThread.Name = "Connection Write Thread";
             m_writeThread.Start();
 
             m_readThread = new Thread(ReadThreadMain);
+            m_readThread.IsBackground = true;
+            m_readThread.Name = "Connection Read Thread";
             m_readThread.Start();
         }
 

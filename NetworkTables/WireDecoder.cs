@@ -137,8 +137,8 @@ namespace NetworkTables
                     if (!Read8(ref size)) return null;
 
                     if (!Read(out buf, size)) return null;
-                    bool[] bBuf = new bool[buf.Length];
-                    for (int i = 0; i < buf.Length; i++)
+                    bool[] bBuf = new bool[size];
+                    for (int i = 0; i < size; i++)
                     {
                         bBuf[i] = buf[i] != 0;
                     }
@@ -228,7 +228,7 @@ namespace NetworkTables
         public bool ReadRaw(ref byte[] val)
         {
             ulong v;
-            if (ReadUleb128(out v)) return false;
+            if (!ReadUleb128(out v)) return false;
             var len = (int)v;
 
             byte[] buf;

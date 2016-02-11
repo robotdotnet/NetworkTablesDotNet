@@ -30,7 +30,7 @@ namespace NetworkTables
         public virtual bool Read(byte[] data, int len)
         {
             if (len > m_left) return false;
-            Array.Copy(data, 0, m_data, m_cur, len);
+            Array.Copy(m_data, m_cur, data, 0, len);
             m_cur += len;
             m_left -= len;
             return true;

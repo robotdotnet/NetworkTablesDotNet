@@ -44,9 +44,13 @@ namespace NetworkTables
             m_storage.SetOutgoing(QueueOutgoing, m_server);
 
             m_dispatchThread = new Thread(DispatchThreadMain);
+            m_dispatchThread.IsBackground = true;
+            m_dispatchThread.Name = "Dispatch Thread";
             m_dispatchThread.Start();
 
             m_clientServerThread = new Thread(ServerThreadMain);
+            m_clientServerThread.IsBackground = true;
+            m_clientServerThread.Name = "Client Server Thread";
             m_clientServerThread.Start();
         }
 
@@ -62,9 +66,13 @@ namespace NetworkTables
             m_storage.SetOutgoing(QueueOutgoing, m_server);
 
             m_dispatchThread = new Thread(DispatchThreadMain);
+            m_dispatchThread.IsBackground = true;
+            m_dispatchThread.Name = "Dispatch Thread";
             m_dispatchThread.Start();
 
             m_clientServerThread = new Thread(ClientThreadMain);
+            m_clientServerThread.IsBackground = true;
+            m_clientServerThread.Name = "Client Server Thread";
             m_clientServerThread.Start(connect);
         }
 
@@ -74,6 +82,8 @@ namespace NetworkTables
         public void Stop()
         {
             m_active = false;
+
+
             m_flushCv.Set();
 
             ClientReconnect();
@@ -552,7 +562,7 @@ namespace NetworkTables
         {
             get
             {
-                return (s_instance ?? new Dispatcher());
+                return s_instance ?? (s_instance = new Dispatcher());
             }
         }
 

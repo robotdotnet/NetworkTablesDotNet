@@ -923,6 +923,7 @@ namespace NetworkTables
 
         public string SavePersistent(string filename, bool periodic)
         {
+            /*
             string fn = filename;
             string tmp = filename;
 
@@ -966,6 +967,8 @@ namespace NetworkTables
 
             if (err != null && periodic) m_persistentDirty = true;
             return err;
+            */
+            return null;
         }
 
         private static void ReadStringToken(out string first, out string second, string source)

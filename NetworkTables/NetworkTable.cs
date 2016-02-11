@@ -299,7 +299,7 @@ namespace NetworkTables
         /// <returns>True if the table contains the sub-table, otherwise false</returns>
         public bool ContainsSubTable(string key)
         {
-            return GetEntryInfo(m_path + PathSeperatorChar + key + PathSeperatorChar, 0).Count == 0;
+            return GetEntryInfo(m_path + PathSeperatorChar + key + PathSeperatorChar, 0).Count != 0;
         }
 
         /// <summary>
@@ -491,6 +491,7 @@ namespace NetworkTables
         {
             string localPath = m_path + PathSeperatorChar + key;
             var v = GetEntryValue(localPath);
+            if (v == null) throw new TableKeyNotDefinedException(localPath);
             NtType type = v.Type;
             switch (type)
             {
@@ -518,6 +519,7 @@ namespace NetworkTables
         {
             string localPath = m_path + PathSeperatorChar + key;
             var v = GetEntryValue(localPath);
+            if (v == null) return defaultValue;
             NtType type = v.Type;
             switch (type)
             {
@@ -770,7 +772,7 @@ namespace NetworkTables
                 {
                     return;
                 }
-                listener.ValueChanged(this, relativeKey, value, flags_);
+                listener.ValueChanged(this, relativeKey, value.Val, flags_);
             };
 
             int id = NtCore.AddEntryListener(m_path + PathSeperatorChar, func, flags);
@@ -793,7 +795,7 @@ namespace NetworkTables
             {
                 if (!funcKey.Equals(fullKey))
                     return;
-                listener.ValueChanged(this, key, value, flags_);
+                listener.ValueChanged(this, key, value.Val, flags_);
             };
 
             int id = NtCore.AddEntryListener(fullKey, func, flags);
@@ -889,7 +891,7 @@ namespace NetworkTables
                 {
                     return;
                 }
-                listenerDelegate(this, relativeKey, value, flags_);
+                listenerDelegate(this, relativeKey, value.Val, flags_);
             };
 
             int id = NtCore.AddEntryListener(m_path + PathSeperatorChar, func, flags);
@@ -912,7 +914,7 @@ namespace NetworkTables
             {
                 if (!funcKey.Equals(fullKey))
                     return;
-                listenerDelegate(this, key, value, flags_);
+                listenerDelegate(this, key, value.Val, flags_);
             };
 
             int id = NtCore.AddEntryListener(fullKey, func, flags);
