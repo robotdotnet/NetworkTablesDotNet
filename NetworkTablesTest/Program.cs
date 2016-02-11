@@ -30,21 +30,26 @@ namespace NetworkTablesTest
             }
             */
 
-            
-            NtCore.SetLogger((level, file, line, msg) =>
-            {
-                Console.WriteLine($"NT: {level}: {msg} ({file}:{line}");
-            }, (int)0);
-            NtCore.StartClient("localhost", 1735);
 
-            while(true)
+            NetworkTable.SetClientMode();
+            NetworkTable.SetIPAddress("localhost");
+            NetworkTable.Initialize();
+
+            var t = NetworkTable.GetTable("test");
+
+            t.PutNumber("Key1", 5.89);
+
+            t.PutNumber("ke2", 675);
+
+
+
+            while (true)
             {
-                Value val = NtCore.GetEntryValue("/test/key");
-                //Console.WriteLine(val?.GetDouble());
+                double v = t.GetNumber("Key1", 0);
+                Console.WriteLine(v);
                 Thread.Sleep(500);
-            }
 
-            Thread.Sleep(Timeout.Infinite);
+            }
             //var s = new TcpClient("172.22.11.2", 1735);
            /*
             NetworkTable.SetIPAddress("roborio-4488.local");

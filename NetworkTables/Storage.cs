@@ -274,7 +274,7 @@ namespace NetworkTables
                                     Debug("client: received entry assignment request?");
                                     return;
                                 }
-
+                                if (id >= m_idMap.Count) ResizeIdMap(id + 1);
                                 entry = m_idMap[(int)id];
                                 if (entry == null)
                                 {
@@ -511,6 +511,18 @@ namespace NetworkTables
             }
         }
 
+        private void ResizeIdMap(uint newSize)
+        {
+            int currentSize = m_idMap.Count;
+
+            if (newSize > currentSize)
+            {
+                if (newSize > m_idMap.Capacity)
+                    m_idMap.Capacity = (int)newSize;
+                m_idMap.AddRange(Enumerable.Repeat<Entry>(null, (int)newSize - currentSize));
+            }
+        }
+
         public void ApplyInitialAssignments(NetworkConnection conn, Message[] msgs, bool newServer, List<Message> outMsgs)
         {
             bool lockEntered = false;
@@ -581,9 +593,8 @@ namespace NetworkTables
                     }
 
                     entry.id = id;
-                    if (id >= m_idMap.Count) m_idMap.Add(entry);
-
-
+                    if (id >= m_idMap.Count) ResizeIdMap(id + 1);
+                    m_idMap[(int) id] = entry;
                 }
 
                 foreach (var i in m_entries)
@@ -630,7 +641,11 @@ namespace NetworkTables
             {
                 Monitor.Enter(m_mutex, ref lockEntered);
                 Entry entry;
-                if (!m_entries.TryGetValue(name, out entry)) entry = new Entry(name);
+                if (!m_entries.TryGetValue(name, out entry))
+                {
+                    entry = new Entry(name);
+                    m_entries.Add(name, entry);
+                }
                 var oldValue = entry.value;
                 if (oldValue != null && oldValue.Type != value.Type)
                 {
@@ -661,7 +676,7 @@ namespace NetworkTables
 
                 if (m_queueOutgoing == null) return true;
                 var queueOutgoing = m_queueOutgoing;
-                if (oldValue != null)
+                if (oldValue == null)
                 {
                     var msg = Message.EntryAssign(name, entry.id, entry.seqNum.Value(), value, entry.flags);
                     Monitor.Exit(m_mutex);
