@@ -60,7 +60,7 @@
     <Compile Include="NtCore.cs" />
     <Compile Include="NTType.cs" />
     <Compile Include="Enumerations.cs" />
-    <Compile Include="AutoResetEventExtensions.cs" />
+    <Compile Include="Extensions\AutoResetEventExtensions.cs" />
     <Compile Include="RawMemoryStream.cs" />
     <Compile Include="SocketInputStream.cs" />
     <Compile Include="SequenceNumber.cs" />

@@ -47,7 +47,7 @@ namespace NetworkTables.TcpSockets
 
             //Create our client
             TcpClient client = new TcpClient();
-
+            //TODO: Figure this out
             if (true)
             {
                 try

@@ -1,0 +1,30 @@
+version: 2016.0.1.{build}
+skip_tags: true
+os: Visual Studio 2015
+
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: '{version}'
+nuget:
+  disable_publish_on_pr: true
+before_build:
+- cmd: nuget restore
+build_script:
+- cmd: msbuild "NetworkTablesCore.sln" /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /property:Configuration=Release
+
+test_script:
+- .\packages\OpenCover.4.6.166\tools\OpenCover.Console.exe -register:user -target:nunit-console.exe -targetargs:".\NetworkTables.Test\Output\NetworkTables.Test.dll /noshadow /framework:net-4.0 " -filter:"+[Network*]* -[NetworkTables.T*]*" -excludebyattribute:*.ExcludeFromCodeCoverage* -output:coverage.xml -mergeoutput -returntargetcode
+
+- cmd: >-
+
+    nunit-console-x86.exe %APPVEYOR_BUILD_FOLDER%\NetworkTables.Test\Output\NetworkTables.Test.dll /framework:net-4.0
+
+
+- "SET PATH=C:\\Python34;C:\\Python34\\Scripts;%PATH%"
+- pip install codecov
+- codecov -f "coverage.xml"
+
+
