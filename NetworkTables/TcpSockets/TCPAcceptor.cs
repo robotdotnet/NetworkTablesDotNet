@@ -58,6 +58,14 @@ namespace NetworkTables.TcpSockets
 
         public INetworkStream Accept()
         {
+            if (m_server == null)
+            {
+                if (!m_shutdown)
+                {
+                    Error("Accept() failed because of null TcpListener");
+                }
+                return null;
+            }
             try
             {
                 Socket sd = m_server.AcceptSocket();
