@@ -13,7 +13,7 @@ nuget:
 before_build:
 - cmd: nuget restore
 build_script:
-- cmd: msbuild "NetworkTablesCore.sln" /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /property:Configuration=Release
+- cmd: msbuild "NetworkTablesDotNet.sln" /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /property:Configuration=Release
 
 test_script:
 - .\packages\OpenCover.4.6.166\tools\OpenCover.Console.exe -register:user -target:nunit-console.exe -targetargs:".\NetworkTables.Test\Output\NetworkTables.Test.dll /noshadow /framework:net-4.0 " -filter:"+[Network*]* -[NetworkTables.T*]*" -excludebyattribute:*.ExcludeFromCodeCoverage* -output:coverage.xml -mergeoutput -returntargetcode

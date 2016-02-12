@@ -66,7 +66,7 @@ namespace NetworkTables
             else
                 return;
             string fname = Path.GetFileName(file);
-            Console.Error.WriteLine($"NT: {levelmsg}: {msg} ({fname}:{line}");
+            Console.Error.WriteLine($"NT: {levelmsg}: {msg} ({fname}:{line})");
         }
 
 

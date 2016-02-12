@@ -17,6 +17,8 @@ namespace NetworkTables.Extensions
             {
                 throw new SynchronizationLockException();
             }
+            if (timeout < TimeSpan.Zero)
+                timeout = TimeSpan.Zero;
             //While pred is false.
             while (!pred())
             {
