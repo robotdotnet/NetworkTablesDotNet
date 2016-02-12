@@ -90,7 +90,7 @@ namespace NetworkTables
             Log(LogLevel.LogError, msg, memberName, filePath, lineNumber);
         }
 
-        public static void Waring(string msg, [CallerMemberName] string memberName = "",
+        public static void Warning(string msg, [CallerMemberName] string memberName = "",
             [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
         {
             Log(LogLevel.LogWarning, msg, memberName, filePath, lineNumber);

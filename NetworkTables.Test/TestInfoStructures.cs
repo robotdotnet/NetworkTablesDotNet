@@ -19,7 +19,7 @@ namespace NetworkTablesCore.Test
             string remoteName = "remoteName";
             int remotePort = 1234;
             int lastUpdate = 50;
-            uint protocolVersion = 3;
+            int protocolVersion = 3;
             ConnectionInfo info = new ConnectionInfo(remoteId, remoteName, remotePort, lastUpdate, protocolVersion);
 
             Assert.That(info.RemoteId, Is.EqualTo(remoteId));

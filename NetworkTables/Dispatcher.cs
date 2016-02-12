@@ -6,13 +6,48 @@ using System.Threading;
 using System.Threading.Tasks;
 using NetworkTables.TcpSockets;
 using static NetworkTables.Logger;
+using NetworkTables;
+using NetworkTables.Extensions;
 
 namespace NetworkTables
 {
     internal class DispatcherBase : IDisposable
     {
+        public const double MinimumUpdateTime = 0.1;//100ms
+        public const double MaximumUpdateTime = 1.0;//1 second
+
+        //Member Variables
+        private Storage m_storage;
+        private Notifier m_notifier;
+
+        private bool m_server = false;
+
+        private string m_persistFilename;
+        private Thread m_dispatchThread;
+        private Thread m_clientServerThread;
+
+        private INetworkAcceptor m_serverAccepter;
+
+        private readonly object m_userMutex = new object();
+        private List<NetworkConnection> m_connections = new List<NetworkConnection>();
+        private string m_identity = "";
+
+        private bool m_active;
+        private uint m_updateRate;
+
+        private DateTime m_lastFlush;
+        private bool m_doFlush = false;
+
+        private AutoResetEvent m_reconnectCv = new AutoResetEvent(false);
+        private uint m_reconnectProtoRev = 0x0300;
+        private bool m_doReconnect = true;
+
+        public bool Active => m_active;
+
+        //Disposable
         public void Dispose()
         {
+            Logger.Instance.SetLogger(null);
             Stop();
         }
 
@@ -27,22 +62,25 @@ namespace NetworkTables
             m_persistFilename = persistentFilename;
             m_serverAccepter = acceptor;
 
+            //Load persistent file, and ignore erros but pass along warnings.
             if (!string.IsNullOrEmpty(persistentFilename))
             {
                 bool first = true;
-                m_storage.LoadPersistent(persistentFilename, (i, s) =>
+                m_storage.LoadPersistent(persistentFilename, (line, msg) =>
                 {
                     if (first)
                     {
                         first = false;
-                        Waring($"When reading initial persistent values from \" {persistentFilename} \":");
+                        Warning($"When reading initial persistent values from \" {persistentFilename} \":");
                     }
-                    Waring($"{persistentFilename} : {i} : {s}");
+                    Warning($"{persistentFilename} : {line} : {msg}");
                 });
             }
 
+            //Bind SetOutgoing
             m_storage.SetOutgoing(QueueOutgoing, m_server);
 
+            //Start our threads
             m_dispatchThread = new Thread(DispatchThreadMain);
             m_dispatchThread.IsBackground = true;
             m_dispatchThread.Name = "Dispatch Thread";
@@ -63,8 +101,10 @@ namespace NetworkTables
             }
             m_server = false;
 
+            //Bind SetOutgoing
             m_storage.SetOutgoing(QueueOutgoing, m_server);
 
+            //Start our threads
             m_dispatchThread = new Thread(DispatchThreadMain);
             m_dispatchThread.IsBackground = true;
             m_dispatchThread.Name = "Dispatch Thread";
@@ -83,22 +123,34 @@ namespace NetworkTables
         {
             m_active = false;
 
-
+            // Wake up dispatch thread with a flush
             m_flushCv.Set();
 
+            //Wake up client thread with a reconnected
             ClientReconnect();
 
+            //Wake up server thread by a socket shutdown
             m_serverAccepter?.Shutdown();
 
+            //Join our dispatch thread.
             bool shutdown = m_dispatchThread.Join(TimeSpan.FromSeconds(1));
-
+            //If it fails to join, abort the thread
             if (!shutdown) m_dispatchThread.Abort();
-
+            //Join our Client Server Thread
             shutdown = m_clientServerThread.Join(TimeSpan.FromSeconds(1));
-
+            //If it fails to join, abort the thread.
             if (!shutdown) m_clientServerThread.Abort();
 
-            foreach (var networkConnection in m_connections)
+            List<NetworkConnection> conns = new List<NetworkConnection>();
+            lock (m_userMutex)
+            {
+                var tmp = m_connections;
+                m_connections = conns;
+                conns = tmp;
+            }
+
+            //Dispose and close all connections
+            foreach (var networkConnection in conns)
             {
                 networkConnection.Dispose();
             }
@@ -109,10 +161,11 @@ namespace NetworkTables
 
         public void SetUpdateRate(double interval)
         {
-            if (interval < 0.1)
-                interval = 0.1;
-            else if (interval > 1.0)
-                interval = 1.0;
+            //Don't allow update rates faster the 100ms or slower then 1 second
+            if (interval < MinimumUpdateTime)
+                interval = MinimumUpdateTime;
+            else if (interval > MaximumUpdateTime)
+                interval = MaximumUpdateTime;
             m_updateRate = (uint)(interval * 1000);
         }
 
@@ -169,7 +222,7 @@ namespace NetworkTables
             }
         }
 
-        public bool Active() => m_active;
+        
 
         protected DispatcherBase(Storage storage, Notifier notifier)
         {
@@ -179,13 +232,13 @@ namespace NetworkTables
             m_updateRate = 100;
         }
 
-        private static readonly TimeSpan saveDeltaTime = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan m_saveDeltaTime = TimeSpan.FromSeconds(1);
 
         private void DispatchThreadMain()
         {
             var timeoutTime = DateTime.UtcNow;
 
-            var nextSaveTime = timeoutTime + saveDeltaTime;
+            var nextSaveTime = timeoutTime + m_saveDeltaTime;
 
             int count = 0;
 
@@ -195,26 +248,29 @@ namespace NetworkTables
                 Monitor.Enter(m_flushMutex, ref lockEntered);
                 while (m_active)
                 {
+                    //Handle loop taking too long
                     var start = DateTime.UtcNow;
                     if (start > timeoutTime)
                         timeoutTime = start;
-
+                    //Wait for periodic or when flushed
                     timeoutTime += TimeSpan.FromMilliseconds(m_updateRate);
-                    Monitor.Exit(m_flushMutex);
-                    lockEntered = false;
-                    m_flushCv.WaitOne(TimeSpan.FromMilliseconds(m_updateRate));
-                    Monitor.Enter(m_flushMutex, ref lockEntered);
+                    TimeSpan waitTime = start - timeoutTime;
+                    m_flushCv.WaitTimeout(m_flushMutex, ref lockEntered, waitTime, () =>
+                    {
+                        return !m_active || m_doFlush;
+                    });
                     m_doFlush = false;
-                    if (!m_active) break;
+                    if (!m_active) break; //in case we were woken up to terminate
 
                     if (m_server && !string.IsNullOrEmpty(m_persistFilename) && start > nextSaveTime)
                     {
-                        nextSaveTime += saveDeltaTime;
-                        if (start > nextSaveTime) nextSaveTime = start + saveDeltaTime;
+                        nextSaveTime += m_saveDeltaTime;
+                        //Handle loop taking too long
+                        if (start > nextSaveTime) nextSaveTime = start + m_saveDeltaTime;
                         string err = m_storage.SavePersistent(m_persistFilename, true);
                         if (err != null)
                         {
-                            Waring($"periodic persistent save: {err}");
+                            Warning($"periodic persistent save: {err}");
                         }
                     }
 
@@ -230,13 +286,17 @@ namespace NetworkTables
 
                         foreach (var conn in m_connections)
                         {
+                            //Post outgoing messages if connection is active
+                            //only send keep-alives on client
                             if (conn.GetState() == NetworkConnection.State.kActive)
                                 conn.PostOutgoing(!m_server);
 
+                            //if client, reconnect if connection died
                             if (!m_server && conn.GetState() == NetworkConnection.State.kDead)
                                 reconnect = true;
                         }
 
+                        //reconnect if we disconnected and a reconnect is not in progress
                         if (reconnect && !m_doReconnect)
                         {
                             m_doReconnect = true;
@@ -297,14 +357,18 @@ namespace NetworkTables
 
         private void ClientThreadMain(object o)
         {
+            //If we were passed object, something bad has broken
+            //Fail fast
             Func<INetworkStream> connect = o as Func<INetworkStream>;
             if (connect == null)
             {
+                //TODO: Switch to fail fast
                 throw new Exception("Client not passed a correct variable");
             }
 
             while (m_active)
             {
+                //Sleep between retries
                 Thread.Sleep(TimeSpan.FromMilliseconds(500));
 
                 Debug("client trying to connect");
@@ -318,7 +382,7 @@ namespace NetworkTables
                     Monitor.Enter(m_userMutex, ref lockEntered);
                     var conn = new NetworkConnection(stream, m_notifier, ClientHandshake, m_storage.GetEntryType);
                     conn.SetProcessIncoming(m_storage.ProcessIncoming);
-                    foreach(var s in m_connections)
+                    foreach(var s in m_connections)//Disconnect any current
                     {
                         s.Dispose();
                     }
@@ -335,7 +399,10 @@ namespace NetworkTables
 
                     Monitor.Exit(m_userMutex);
                     lockEntered = false;
-                    m_reconnectCv.WaitOne();
+                    m_reconnectCv.Wait(m_userMutex, ref lockEntered, () =>
+                    {
+                        return !m_active || m_doReconnect;
+                    });
                 }
                 finally
                 {
@@ -527,53 +594,36 @@ namespace NetworkTables
                 }
             }
         }
-
-        private Storage m_storage;
-        private Notifier m_notifier;
-
-        private bool m_server = false;
-
-        private string m_persistFilename;
-        private Thread m_dispatchThread;
-        private Thread m_clientServerThread;
-
-        private INetworkAcceptor m_serverAccepter;
-
-        private readonly object m_userMutex = new object();
-        private List<NetworkConnection> m_connections = new List<NetworkConnection>();
-        private string m_identity = "";
-
-        private bool m_active;
-        private uint m_updateRate;
-
-        private DateTime m_lastFlush;
-        private bool m_doFlush = false;
-
-        private AutoResetEvent m_reconnectCv = new AutoResetEvent(false);
-        private uint m_reconnectProtoRev = 0x0300;
-        private bool m_doReconnect = true;
     }
 
     internal class Dispatcher : DispatcherBase
     {
         private static Dispatcher s_instance;
 
+        /// <summary>
+        /// Gets the local instance of Dispatcher
+        /// </summary>
         public static Dispatcher Instance
         {
             get
             {
-                return s_instance ?? (s_instance = new Dispatcher());
+                if (s_instance == null)
+                {
+                    Dispatcher d = new Dispatcher();
+                    Interlocked.CompareExchange(ref s_instance, d, null);
+                }
+                return s_instance;
             }
         }
 
         public void StartServer(string persistentFilename, string listenAddress, int port)
         {
-            base.StartServer(persistentFilename, new TCPAcceptor(port, listenAddress));
+            StartServer(persistentFilename, new TCPAcceptor(port, listenAddress));
         }
 
         public void StartClient(string serverName, int port)
         {
-            base.StartClient(() => TCPConnector.Connect(serverName, port, 1));
+            StartClient(() => TCPConnector.Connect(serverName, port, 1));
         }
 
         private Dispatcher() : this(Storage.Instance, Notifier.Instance)

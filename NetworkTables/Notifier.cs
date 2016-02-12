@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NetworkTables.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -99,10 +100,7 @@ namespace NetworkTables
                 {
                     while (m_entryNotifications.Count == 0 && m_connNotifications.Count == 0)
                     {
-                        Monitor.Exit(m_mutex);
-                        lockEntered = false;
-                        m_cond.WaitOne();
-                        Monitor.Enter(m_mutex, ref lockEntered);
+                        m_cond.Wait(m_mutex, ref lockEntered);
                         if (!m_active) return;
                     }
 

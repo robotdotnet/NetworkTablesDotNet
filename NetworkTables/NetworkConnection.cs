@@ -132,13 +132,13 @@ namespace NetworkTables
             List<Message> temp = new List<Message>();
             m_outgoing.Enqueue(temp);
 
-            bool writeJoined = m_writeThread.Join(TimeSpan.FromSeconds(1));
+            bool writeJoined = m_writeThread.Join(TimeSpan.FromMilliseconds(200));
             if (!writeJoined)
             {
                 m_writeThread.Abort();
             }
 
-            bool readJoined = m_readThread.Join(TimeSpan.FromSeconds(1));
+            bool readJoined = m_readThread.Join(TimeSpan.FromMilliseconds(200));
             if (!readJoined)
             {
                 m_readThread.Abort();
@@ -149,7 +149,7 @@ namespace NetworkTables
 
         public ConnectionInfo GetConnectionInfo()
         {
-            return new ConnectionInfo(RemoteId(), m_stream.GetPeerIP(), m_stream.GetPeerPort(), (int)m_lastUpdate, m_protoRev);
+            return new ConnectionInfo(RemoteId(), m_stream.GetPeerIP(), m_stream.GetPeerPort(), (long)m_lastUpdate, (int)m_protoRev);
         }
 
         public bool Active()
