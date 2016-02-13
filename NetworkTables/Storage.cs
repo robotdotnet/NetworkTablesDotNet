@@ -14,7 +14,7 @@ namespace NetworkTables
 
     internal class Storage
     {
-        private class StoragePair : IComparable<StoragePair>
+        internal class StoragePair : IComparable<StoragePair>
         {
             public string First { get; }
             public Value Second { get; }
@@ -41,7 +41,10 @@ namespace NetworkTables
             }
         }
 
-        private Storage() : this(Notifier.Instance)
+        internal Dictionary<string, Entry> Entries => m_entries;
+        internal List<Entry> IdMap => m_idMap;  
+
+        internal Storage() : this(Notifier.Instance)
         {
 
         }
@@ -51,7 +54,7 @@ namespace NetworkTables
             m_notifier = notifier;
         }
 
-        private class Entry
+        internal class Entry
         {
             public Entry(string name)
             {
