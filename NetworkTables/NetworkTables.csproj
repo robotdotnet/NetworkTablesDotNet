@@ -50,7 +50,6 @@
     <Compile Include="Leb128.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Message.cs" />
-    <Compile Include="Native\Exceptions\NtTypeMismatchException.cs" />
     <Compile Include="Native\Exceptions\PersistentException.cs" />
     <Compile Include="Native\Exceptions\TableKeyDifferentTypeException.cs" />
     <Compile Include="Native\Exceptions\TableKeyNotDefinedException.cs" />

@@ -2,7 +2,7 @@
 using NetworkTables;
 using NUnit.Framework;
 
-namespace NetworkTablesCore.Test
+namespace NetworkTables.Test
 {
     public class TestBase
     {

@@ -1,7 +1,7 @@
 ﻿using NetworkTables;
 using NUnit.Framework;
 
-namespace NetworkTablesCore.Test
+namespace NetworkTables.Test
 {
     [SetUpFixture]
     public class TestTearDownFixture

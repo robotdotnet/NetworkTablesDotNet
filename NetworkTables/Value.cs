@@ -1,5 +1,6 @@
 ﻿using System;
 using NetworkTables.Native.Exceptions;
+using System.Collections.Generic;
 
 namespace NetworkTables
 {
@@ -14,7 +15,7 @@ namespace NetworkTables
 
         public NtType Type { get; }
 
-        public object Val { get; }
+        internal object Val { get; }
 
         public ulong LastChange { get; }
 
@@ -36,7 +37,7 @@ namespace NetworkTables
         {
             if (Type != NtType.Boolean)
             {
-                throw new NtTypeMismatchException(NtType.Boolean, Type);
+                throw new TableKeyDifferentTypeException(NtType.Boolean, Type);
             }
             return (bool)Val;
         }
@@ -45,7 +46,7 @@ namespace NetworkTables
         {
             if (Type != NtType.Double)
             {
-                throw new NtTypeMismatchException(NtType.Double, Type);
+                throw new TableKeyDifferentTypeException(NtType.Double, Type);
             }
             return (double)Val;
         }
@@ -54,60 +55,89 @@ namespace NetworkTables
         {
             if (Type != NtType.String)
             {
-                throw new NtTypeMismatchException(NtType.String, Type);
+                throw new TableKeyDifferentTypeException(NtType.String, Type);
             }
             return (string)Val;
         }
+
+        //For reference types (other then strings) return copies;
 
         public byte[] GetRaw()
         {
             if (Type != NtType.Raw)
             {
-                throw new NtTypeMismatchException(NtType.Raw, Type);
+                throw new TableKeyDifferentTypeException(NtType.Raw, Type);
             }
+            byte[] v = (byte[])Val;
 
-            return (byte[])Val;
+            byte[] tmp = new byte[v.Length];
+            Array.Copy(v, tmp, v.Length);
+            return tmp;
         }
 
         public byte[] GetRpc()
         {
             if (Type != NtType.Rpc)
             {
-                throw new NtTypeMismatchException(NtType.Rpc, Type);
+                throw new TableKeyDifferentTypeException(NtType.Rpc, Type);
             }
-            return (byte[])Val;
+            byte[] v = (byte[])Val;
+
+            byte[] tmp = new byte[v.Length];
+            Array.Copy(v, tmp, v.Length);
+            return tmp;
         }
 
         public bool[] GetBooleanArray()
         {
             if (Type != NtType.BooleanArray)
             {
-                throw new NtTypeMismatchException(NtType.BooleanArray, Type);
+                throw new TableKeyDifferentTypeException(NtType.BooleanArray, Type);
             }
-            return (bool[])Val;
+            bool[] v = (bool[])Val;
+
+            bool[] tmp = new bool[v.Length];
+            Array.Copy(v, tmp, v.Length);
+            return tmp;
         }
 
         public double[] GetDoubleArray()
         {
             if (Type != NtType.DoubleArray)
             {
-                throw new NtTypeMismatchException(NtType.DoubleArray, Type);
+                throw new TableKeyDifferentTypeException(NtType.DoubleArray, Type);
             }
-            return (double[])Val;
+            double[] v = (double[])Val;
+
+            double[] tmp = new double[v.Length];
+            Array.Copy(v, tmp, v.Length);
+            return tmp;
         }
 
         public string[] GetStringArray()
         {
             if (Type != NtType.StringArray)
             {
-                throw new NtTypeMismatchException(NtType.StringArray, Type);
+                throw new TableKeyDifferentTypeException(NtType.StringArray, Type);
             }
-            return (string[])Val;
+            string[] v = (string[])Val;
+
+            string[] tmp = new string[v.Length];
+            Array.Copy(v, tmp, v.Length);
+            return tmp;
         }
 
         public override string ToString()
         {
+            if (Val == null) return "Unassigned";
             return Val.ToString();
+        }
+
+        public override bool Equals(object obj)
+        {
+            var v = obj as Value;
+            if (v == null) return false;
+            return this == v;
         }
 
         public static bool operator ==(Value lhs, Value rhs)
@@ -201,6 +231,13 @@ namespace NetworkTables
             if (size > val.Length) return null;
             byte[] tmp = new byte[size];
             Array.Copy(val, tmp, size);
+            return new Value(tmp, true);
+        }
+
+        public static Value MakeRpc(byte[] val)
+        {
+            byte[] tmp = new byte[val.Length];
+            Array.Copy(val, tmp, val.Length);
             return new Value(tmp, true);
         }
 

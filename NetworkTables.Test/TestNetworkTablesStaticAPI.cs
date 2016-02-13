@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using NetworkTables;
 using NUnit.Framework;
 
-namespace NetworkTablesCore.Test
+namespace NetworkTables.Test
 {
     [TestFixture]
     public class TestNetworkTablesStaticApi : TestBase

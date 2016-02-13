@@ -7,7 +7,7 @@ using NetworkTables;
 using NetworkTables.Native;
 using NUnit.Framework;
 
-namespace NetworkTablesCore.Test
+namespace NetworkTables.Test
 {
     [TestFixture]
     public class TestInfoStructures

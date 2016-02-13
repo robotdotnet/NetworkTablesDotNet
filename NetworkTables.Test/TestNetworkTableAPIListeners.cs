@@ -4,7 +4,8 @@ using NetworkTables;
 using NetworkTables.Native;
 using NetworkTables.Tables;
 using NUnit.Framework;
-namespace NetworkTablesCore.Test
+
+namespace NetworkTables.Test
 {
     internal class MockTableListener : ITableListener
     {

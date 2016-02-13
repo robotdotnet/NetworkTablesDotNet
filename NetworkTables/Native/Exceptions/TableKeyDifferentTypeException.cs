@@ -8,6 +8,12 @@ namespace NetworkTables.Native.Exceptions
     /// </summary>
     public class TableKeyDifferentTypeException : InvalidOperationException
     {
+        public string RequestedKey { get; }
+        public NtType RequestedType { get; }
+        public NtType TypeInTable { get; }
+
+        public bool ThrownByValueGet { get; }
+
         /// <summary>
         /// Creates a new <see cref="TableKeyDifferentTypeException"/>.
         /// </summary>
@@ -17,7 +23,19 @@ namespace NetworkTables.Native.Exceptions
         public TableKeyDifferentTypeException(string key, NtType requested, NtType typeInTable)
             : base($"Key: {key}, Requested Type: {requested}, Type in Table: {typeInTable}")
         {
+            RequestedKey = key;
+            RequestedType = requested;
+            TypeInTable = typeInTable;
+            ThrownByValueGet = false;
+        }
 
+        public TableKeyDifferentTypeException(NtType requested, NtType typeInTable)
+            : base($"Requested Type {requested} does not match actual Type {typeInTable}.")
+        {
+            RequestedKey = "";
+            RequestedType = requested;
+            TypeInTable = typeInTable;
+            ThrownByValueGet = true;
         }
     }
 }

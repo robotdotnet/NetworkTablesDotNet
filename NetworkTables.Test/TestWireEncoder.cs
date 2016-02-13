@@ -7,7 +7,7 @@ using NetworkTables.Native;
 using NetworkTables;
 using NUnit.Framework;
 
-namespace NetworkTablesCore.Test
+namespace NetworkTables.Test
 {
     [TestFixture]
     public class TestWireEncoder

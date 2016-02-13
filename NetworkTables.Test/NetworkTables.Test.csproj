@@ -61,6 +61,7 @@
     <Compile Include="TestNetworkTablesStaticAPI.cs" />
     <Compile Include="TestRPC.cs" />
     <Compile Include="TestTearDownFixture.cs" />
+    <Compile Include="TestValue.cs" />
     <Compile Include="TestWireDecoder.cs" />
     <Compile Include="TestWireEncoder.cs" />
   </ItemGroup>

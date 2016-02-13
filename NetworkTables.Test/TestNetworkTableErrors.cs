@@ -4,7 +4,7 @@ using NetworkTables.Native;
 using NetworkTables.Native.Exceptions;
 using NUnit.Framework;
 
-namespace NetworkTablesCore.Test
+namespace NetworkTables.Test
 {
     [TestFixture]
     public class TestNetworkTableErrors : TestBase
