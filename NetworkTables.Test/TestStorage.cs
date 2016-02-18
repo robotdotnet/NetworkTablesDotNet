@@ -338,10 +338,11 @@ namespace NetworkTables.Test
         public void TestStoragePopulateOneSetEntryValueAssignTypeChange()
         {
             //Update with different type reuslts in error and no message
+            SetTestPopulateOne();
             var value = Value.MakeDouble(0.0);
             Assert.That(storage.SetEntryValue("foo", value), Is.False);
             var entry = GetEntry("foo");
-            Assert.That(entry.value, Is.EqualTo(value));
+            Assert.That(entry.value, Is.Not.EqualTo(value));
             Assert.That(outgoing, Is.Empty);
         }
 
