@@ -37,12 +37,17 @@ namespace NetworkTables
         {
             get
             {
-                return s_instance ?? (s_instance = new Storage());
+                if (s_instance == null)
+                {
+                    Storage d = new Storage();
+                    Interlocked.CompareExchange(ref s_instance, d, null);
+                }
+                return s_instance;
             }
         }
 
         internal Dictionary<string, Entry> Entries => m_entries;
-        internal List<Entry> IdMap => m_idMap;  
+        internal List<Entry> IdMap => m_idMap;
 
         internal Storage() : this(Notifier.Instance)
         {
@@ -105,7 +110,7 @@ namespace NetworkTables
             return true;
         }
 
-        private static void SavePersistentImpl(StreamWriter stream, StoragePair[] entries)
+        private static void SavePersistentImpl(StreamWriter stream, List<StoragePair> entries)
         {
             string base64_encoded;
 
@@ -117,9 +122,26 @@ namespace NetworkTables
                 switch (v.Type)
                 {
                     case NtType.Boolean:
-                        stream.Write("boolean");
+                        stream.Write("boolean ");
                         break;
-                    //TODO: The rest of these.
+                    case NtType.Double:
+                        stream.Write("double ");
+                        break;
+                    case NtType.String:
+                        stream.Write("string ");
+                        break;
+                    case NtType.Raw:
+                        stream.Write("raw ");
+                        break;
+                    case NtType.BooleanArray:
+                        stream.Write("array boolean ");
+                        break;
+                    case NtType.DoubleArray:
+                        stream.Write("array double ");
+                        break;
+                    case NtType.StringArray:
+                        stream.Write("array string ");
+                        break;
                     default:
                         continue;
                 }
@@ -136,10 +158,51 @@ namespace NetworkTables
                     case NtType.Double:
                         stream.Write(v.GetDouble());
                         break;
+                    case NtType.String:
+                        WriteString(stream, v.GetString());
+                        break;
+                    case NtType.Raw:
+                        stream.Write(Convert.ToBase64String(v.GetRaw(), Base64FormattingOptions.None));
+                        break;
+                    case NtType.BooleanArray:
+                        bool first = true;
+                        foreach (var b in v.GetBooleanArray())
+                        {
+                            if (!first) stream.Write(",");
+                            first = false;
+                            stream.Write(b ? "true" : "false");
+                        }
+                        break;
+                    case NtType.DoubleArray:
+                        first = true;
+                        foreach (var b in v.GetDoubleArray())
+                        {
+                            if (!first) stream.Write(",");
+                            first = false;
+                            stream.Write(b);
+                        }
+                        break;
+                    case NtType.StringArray:
+                        first = true;
+                        foreach (var b in v.GetStringArray())
+                        {
+                            if (!first) stream.Write(",");
+                            first = false;
+                            WriteString(stream, b);
+                        }
+                        break;
+                    default:
+                        break;
                 }
-
+                //eol
                 stream.Write('\n');
             }
+        }
+
+        private static byte HexDigit(int x)
+        {
+            const byte hexChar = (byte) 'A';
+            return (byte) (x < 10 ? (byte) '0' + x : hexChar + x - 10);
         }
 
         private static void WriteString(StreamWriter os, string str)
@@ -168,12 +231,13 @@ namespace NetworkTables
                             break;
                         }
 
-                        //TODO: figure this out
-
+                        os.Write("\\x");
+                        os.Write(HexDigit((c >> 4) & 0xF));
+                        os.Write(HexDigit((c >> 0) & 0xF));
                         break;
                 }
-                os.Write('"');
             }
+            os.Write('"');
         }
 
         public delegate void QueueOutgoingFunc(Message msg, NetworkConnection only, NetworkConnection except);
@@ -197,7 +261,7 @@ namespace NetworkTables
             lock (m_mutex)
             {
                 if (id >= m_idMap.Count) return NtType.Unassigned;
-                Entry entry = m_idMap[(int)id];
+                Entry entry = m_idMap[(int) id];
                 if (entry == null || entry.value == null) return NtType.Unassigned;
                 return entry.value.Type;
             }
@@ -216,7 +280,7 @@ namespace NetworkTables
                 switch (type)
                 {
                     case kKeepAlive:
-                        break;  // ignore
+                        break; // ignore
                     case kClientHello:
                     case kProtoUnsup:
                     case kServerHelloDone:
@@ -225,157 +289,157 @@ namespace NetworkTables
                         // shouldn't get these, but ignore if we do
                         break;
                     case kEntryAssign:
+                    {
+                        id = msg.Id();
+                        string name = msg.Str();
+                        bool mayNeedUpdate = false;
+                        if (m_server)
                         {
-                            id = msg.Id();
-                            string name = msg.Str();
-                            bool mayNeedUpdate = false;
-                            if (m_server)
+                            if (id == 0xffff)
                             {
-                                if (id == 0xffff)
-                                {
-                                    if (m_entries.ContainsKey(name)) return;
+                                if (m_entries.ContainsKey(name)) return;
 
 
-                                    id = (uint)m_idMap.Count;
-                                    entry = new Entry(name);
-                                    entry.value = msg.Val();
-                                    entry.flags = (EntryFlags)msg.Flags();
-                                    entry.id = id;
-                                    m_entries[name] = entry;
-                                    m_idMap.Add(entry);
+                                id = (uint) m_idMap.Count;
+                                entry = new Entry(name);
+                                entry.value = msg.Val();
+                                entry.flags = (EntryFlags) msg.Flags();
+                                entry.id = id;
+                                m_entries[name] = entry;
+                                m_idMap.Add(entry);
 
-                                    if (entry.IsPersistent()) m_persistentDirty = true;
+                                if (entry.IsPersistent()) m_persistentDirty = true;
 
-                                    m_notifier.NotifyEntry(name, entry.value, NotifyFlags.NotifyNew);
+                                m_notifier.NotifyEntry(name, entry.value, NotifyFlags.NotifyNew);
 
-                                    if (m_queueOutgoing != null)
-                                    {
-                                        var queueOutgoing = m_queueOutgoing;
-                                        var outMsg = Message.EntryAssign(name, id, entry.seqNum.Value(), msg.Val(), (EntryFlags)msg.Flags());
-                                        Monitor.Exit(m_mutex);
-                                        lockEntered = false;
-                                        queueOutgoing(outMsg, null, null);
-                                    }
-
-                                    return;
-                                }
-                                if (id >= m_idMap.Count || m_idMap[(int)id] == null)
-                                {
-                                    Monitor.Exit(m_mutex);
-                                    lockEntered = false;
-                                    Debug("server: received assignment to unknown entry");
-                                    return;
-                                }
-                                entry = m_idMap[(int)id];
-                            }
-                            else
-                            {
-                                if (id == 0xffff)
-                                {
-                                    Monitor.Exit(m_mutex);
-                                    lockEntered = false;
-                                    Debug("client: received entry assignment request?");
-                                    return;
-                                }
-                                if (id >= m_idMap.Count) ResizeIdMap(id + 1);
-                                entry = m_idMap[(int)id];
-                                if (entry == null)
-                                {
-                                    Entry newEntry;
-                                    if (!m_entries.ContainsKey(name))
-                                    {
-                                        //Entry didn't exist at all.
-                                        newEntry = new Entry(name);
-                                        newEntry.value = msg.Val();
-                                        newEntry.flags = (EntryFlags)msg.Flags();
-                                        newEntry.id = id;
-                                        m_idMap[(int)id] = newEntry;
-                                        m_entries[name] = newEntry;
-
-                                        m_notifier.NotifyEntry(name, newEntry.value, NotifyFlags.NotifyNew);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        newEntry = m_entries[name];
-                                    }
-                                    mayNeedUpdate = true;
-                                    entry = newEntry;
-                                    entry.id = id;
-                                    m_idMap[(int)id] = entry;
-
-                                    if ((EntryFlags)msg.Flags() != entry.flags)
-                                    {
-                                        var queueOutgoing = m_queueOutgoing;
-                                        var outmsg = Message.FlagsUpdate(id, entry.flags);
-                                        Monitor.Exit(m_mutex);
-                                        lockEntered = false;
-                                        queueOutgoing(outmsg, null, null);
-                                        Monitor.Enter(m_mutex, ref lockEntered);
-                                    }
-                                }
-                            }
-
-                            seqNum = new SequenceNumber(msg.SeqNumUid());
-                            if (seqNum < entry.seqNum)
-                            {
-                                if (mayNeedUpdate)
+                                if (m_queueOutgoing != null)
                                 {
                                     var queueOutgoing = m_queueOutgoing;
-                                    var outmsg = Message.EntryUpdate(entry.id, entry.seqNum.Value(), entry.value);
+                                    var outMsg = Message.EntryAssign(name, id, entry.seqNum.Value(), msg.Val(), (EntryFlags) msg.Flags());
+                                    Monitor.Exit(m_mutex);
+                                    lockEntered = false;
+                                    queueOutgoing(outMsg, null, null);
+                                }
+
+                                return;
+                            }
+                            if (id >= m_idMap.Count || m_idMap[(int) id] == null)
+                            {
+                                Monitor.Exit(m_mutex);
+                                lockEntered = false;
+                                Debug("server: received assignment to unknown entry");
+                                return;
+                            }
+                            entry = m_idMap[(int) id];
+                        }
+                        else
+                        {
+                            if (id == 0xffff)
+                            {
+                                Monitor.Exit(m_mutex);
+                                lockEntered = false;
+                                Debug("client: received entry assignment request?");
+                                return;
+                            }
+                            if (id >= m_idMap.Count) ResizeIdMap(id + 1);
+                            entry = m_idMap[(int) id];
+                            if (entry == null)
+                            {
+                                Entry newEntry;
+                                if (!m_entries.ContainsKey(name))
+                                {
+                                    //Entry didn't exist at all.
+                                    newEntry = new Entry(name);
+                                    newEntry.value = msg.Val();
+                                    newEntry.flags = (EntryFlags) msg.Flags();
+                                    newEntry.id = id;
+                                    m_idMap[(int) id] = newEntry;
+                                    m_entries[name] = newEntry;
+
+                                    m_notifier.NotifyEntry(name, newEntry.value, NotifyFlags.NotifyNew);
+                                    return;
+                                }
+                                else
+                                {
+                                    newEntry = m_entries[name];
+                                }
+                                mayNeedUpdate = true;
+                                entry = newEntry;
+                                entry.id = id;
+                                m_idMap[(int) id] = entry;
+
+                                if ((EntryFlags) msg.Flags() != entry.flags)
+                                {
+                                    var queueOutgoing = m_queueOutgoing;
+                                    var outmsg = Message.FlagsUpdate(id, entry.flags);
                                     Monitor.Exit(m_mutex);
                                     lockEntered = false;
                                     queueOutgoing(outmsg, null, null);
+                                    Monitor.Enter(m_mutex, ref lockEntered);
                                 }
-                                return;
                             }
-                            //Sanity check. Name should match id
-                            if (msg.Str() != entry.name)
+                        }
+
+                        seqNum = new SequenceNumber(msg.SeqNumUid());
+                        if (seqNum < entry.seqNum)
+                        {
+                            if (mayNeedUpdate)
                             {
+                                var queueOutgoing = m_queueOutgoing;
+                                var outmsg = Message.EntryUpdate(entry.id, entry.seqNum.Value(), entry.value);
                                 Monitor.Exit(m_mutex);
                                 lockEntered = false;
-                                Debug("entry assignment for same id with different name?");
-                                return;
+                                queueOutgoing(outmsg, null, null);
                             }
+                            return;
+                        }
+                        //Sanity check. Name should match id
+                        if (msg.Str() != entry.name)
+                        {
+                            Monitor.Exit(m_mutex);
+                            lockEntered = false;
+                            Debug("entry assignment for same id with different name?");
+                            return;
+                        }
 
-                            NotifyFlags notifyFlags = NotifyFlags.NotifyUpdate;
+                        NotifyFlags notifyFlags = NotifyFlags.NotifyUpdate;
 
-                            if (!mayNeedUpdate && conn.ProtoRev >= 0x0300)
-                            {
-                                if ((entry.flags & EntryFlags.Persistent) != ((EntryFlags)msg.Flags() & EntryFlags.Persistent))
-                                {
-                                    m_persistentDirty = true;
-                                }
-                                if (entry.flags != (EntryFlags)msg.Flags())
-                                {
-                                    notifyFlags |= NotifyFlags.NotifyFlagsChanged;
-                                }
-                                entry.flags = (EntryFlags)msg.Flags();
-                            }
-
-                            if (entry.IsPersistent() && entry.value != msg.Val())
+                        if (!mayNeedUpdate && conn.ProtoRev >= 0x0300)
+                        {
+                            if ((entry.flags & EntryFlags.Persistent) != ((EntryFlags) msg.Flags() & EntryFlags.Persistent))
                             {
                                 m_persistentDirty = true;
                             }
-
-                            entry.value = msg.Val();
-                            entry.seqNum = seqNum;
-
-                            m_notifier.NotifyEntry(name, entry.value, notifyFlags);
-
-                            if (m_server && m_queueOutgoing != null)
+                            if (entry.flags != (EntryFlags) msg.Flags())
                             {
-                                var queueOutgoing = m_queueOutgoing;
-                                var outmsg = Message.EntryAssign(entry.name, id, msg.SeqNumUid(), msg.Val(), entry.flags);
-                                Monitor.Exit(m_mutex);
-                                lockEntered = false;
-                                queueOutgoing(outmsg, null, conn);
+                                notifyFlags |= NotifyFlags.NotifyFlagsChanged;
                             }
-                            break;
+                            entry.flags = (EntryFlags) msg.Flags();
                         }
+
+                        if (entry.IsPersistent() && entry.value != msg.Val())
+                        {
+                            m_persistentDirty = true;
+                        }
+
+                        entry.value = msg.Val();
+                        entry.seqNum = seqNum;
+
+                        m_notifier.NotifyEntry(name, entry.value, notifyFlags);
+
+                        if (m_server && m_queueOutgoing != null)
+                        {
+                            var queueOutgoing = m_queueOutgoing;
+                            var outmsg = Message.EntryAssign(entry.name, id, msg.SeqNumUid(), msg.Val(), entry.flags);
+                            Monitor.Exit(m_mutex);
+                            lockEntered = false;
+                            queueOutgoing(outmsg, null, conn);
+                        }
+                        break;
+                    }
                     case Message.MsgType.kEntryUpdate:
                         id = msg.Id();
-                        if (id >= m_idMap.Count || m_idMap[(int)id] == null)
+                        if (id >= m_idMap.Count || m_idMap[(int) id] == null)
                         {
                             Monitor.Exit(m_mutex);
                             lockEntered = false;
@@ -383,7 +447,7 @@ namespace NetworkTables
                             return;
                         }
 
-                        entry = m_idMap[(int)id];
+                        entry = m_idMap[(int) id];
 
                         seqNum = new SequenceNumber(msg.SeqNumUid());
 
@@ -404,93 +468,92 @@ namespace NetworkTables
                         }
                         break;
                     case kFlagsUpdate:
+                    {
+                        id = msg.Id();
+                        if (id >= m_idMap.Count || m_idMap[(int) id] == null)
                         {
-                            id = msg.Id();
-                            if (id >= m_idMap.Count || m_idMap[(int)id] == null)
-                            {
-                                Monitor.Exit(m_mutex);
-                                lockEntered = false;
-                                Debug("reeived flags update to unknown entry");
-                                return;
-                            }
-
-                            entry = m_idMap[(int)id];
-
-                            if (entry.flags == (EntryFlags)msg.Flags()) return;
-
-                            if ((entry.flags & EntryFlags.Persistent) !=
-                                ((EntryFlags)msg.Flags() & EntryFlags.Persistent))
-                                m_persistentDirty = true;
-
-                            entry.flags = (EntryFlags)msg.Flags();
-
-                            m_notifier.NotifyEntry(entry.name, entry.value, NotifyFlags.NotifyFlagsChanged);
-
-                            if (m_server && m_queueOutgoing != null)
-                            {
-                                var queueOutgoing = m_queueOutgoing;
-                                Monitor.Exit(m_mutex);
-                                lockEntered = false;
-                                queueOutgoing(msg, null, conn);
-                            }
-                            break;
+                            Monitor.Exit(m_mutex);
+                            lockEntered = false;
+                            Debug("reeived flags update to unknown entry");
+                            return;
                         }
-                    case kEntryDelete:
-                        {
-                            id = msg.Id();
-                            if (id >= m_idMap.Count || m_idMap[(int)id] == null)
-                            {
-                                Monitor.Exit(m_mutex);
-                                lockEntered = false;
-                                Debug("received delete to unknown entry");
-                                return;
-                            }
 
+                        entry = m_idMap[(int) id];
 
-                            entry = m_idMap[(int)id];
+                        if (entry.flags == (EntryFlags) msg.Flags()) return;
 
-                            if (entry.IsPersistent()) m_persistentDirty = true;
-
-                            m_idMap[(int)id] = null;
-
-                            if (m_entries.TryGetValue(entry.name, out entry))
-                            {
-                                m_entries.Remove(entry.name);
-
-                                m_notifier.NotifyEntry(entry.name, entry.value, NotifyFlags.NotifyDelete);
-                            }
-
-                            if (m_server && m_queueOutgoing != null)
-                            {
-                                var queueOutgoing = m_queueOutgoing;
-                                Monitor.Exit(m_mutex);
-                                lockEntered = false;
-                                queueOutgoing(msg, null, conn);
-                            }
-                            break;
-                        }
-                    case Message.MsgType.kClearEntries:
-                        {
-                            m_idMap.Clear();
-
+                        if ((entry.flags & EntryFlags.Persistent) != ((EntryFlags) msg.Flags() & EntryFlags.Persistent))
                             m_persistentDirty = true;
 
-                            foreach(var e in m_entries)
-                            {
-                                m_notifier.NotifyEntry(e.Key, e.Value.value, NotifyFlags.NotifyDelete);
-                            }
+                        entry.flags = (EntryFlags) msg.Flags();
 
-                            m_entries.Clear();
+                        m_notifier.NotifyEntry(entry.name, entry.value, NotifyFlags.NotifyFlagsChanged);
 
-                            if (m_server && m_queueOutgoing != null)
-                            {
-                                var queueOutgoing = m_queueOutgoing;
-                                Monitor.Exit(m_mutex);
-                                lockEntered = false;
-                                queueOutgoing(msg, null, conn);
-                            }
-                            break;
+                        if (m_server && m_queueOutgoing != null)
+                        {
+                            var queueOutgoing = m_queueOutgoing;
+                            Monitor.Exit(m_mutex);
+                            lockEntered = false;
+                            queueOutgoing(msg, null, conn);
                         }
+                        break;
+                    }
+                    case kEntryDelete:
+                    {
+                        id = msg.Id();
+                        if (id >= m_idMap.Count || m_idMap[(int) id] == null)
+                        {
+                            Monitor.Exit(m_mutex);
+                            lockEntered = false;
+                            Debug("received delete to unknown entry");
+                            return;
+                        }
+
+
+                        entry = m_idMap[(int) id];
+
+                        if (entry.IsPersistent()) m_persistentDirty = true;
+
+                        m_idMap[(int) id] = null;
+
+                        if (m_entries.TryGetValue(entry.name, out entry))
+                        {
+                            m_entries.Remove(entry.name);
+
+                            m_notifier.NotifyEntry(entry.name, entry.value, NotifyFlags.NotifyDelete);
+                        }
+
+                        if (m_server && m_queueOutgoing != null)
+                        {
+                            var queueOutgoing = m_queueOutgoing;
+                            Monitor.Exit(m_mutex);
+                            lockEntered = false;
+                            queueOutgoing(msg, null, conn);
+                        }
+                        break;
+                    }
+                    case Message.MsgType.kClearEntries:
+                    {
+                        m_idMap.Clear();
+
+                        m_persistentDirty = true;
+
+                        foreach (var e in m_entries)
+                        {
+                            m_notifier.NotifyEntry(e.Key, e.Value.value, NotifyFlags.NotifyDelete);
+                        }
+
+                        m_entries.Clear();
+
+                        if (m_server && m_queueOutgoing != null)
+                        {
+                            var queueOutgoing = m_queueOutgoing;
+                            Monitor.Exit(m_mutex);
+                            lockEntered = false;
+                            queueOutgoing(msg, null, conn);
+                        }
+                        break;
+                    }
                     default:
                         break;
                 }
@@ -521,8 +584,8 @@ namespace NetworkTables
             if (newSize > currentSize)
             {
                 if (newSize > m_idMap.Capacity)
-                    m_idMap.Capacity = (int)newSize;
-                m_idMap.AddRange(Enumerable.Repeat<Entry>(null, (int)newSize - currentSize));
+                    m_idMap.Capacity = (int) newSize;
+                m_idMap.AddRange(Enumerable.Repeat<Entry>(null, (int) newSize - currentSize));
             }
         }
 
@@ -567,7 +630,7 @@ namespace NetworkTables
                     {
                         entry = new Entry(name);
                         entry.value = msg.Val();
-                        entry.flags = (EntryFlags)msg.Flags();
+                        entry.flags = (EntryFlags) msg.Flags();
                         entry.seqNum = seqNum;
                         m_notifier.NotifyEntry(name, entry.value, NotifyFlags.NotifyNew);
                         m_entries.Add(name, entry);
@@ -586,12 +649,11 @@ namespace NetworkTables
 
                             if (conn.ProtoRev >= 0x0300)
                             {
-                                if (entry.flags != (EntryFlags)msg.Flags()) notifyFlags |= NotifyFlags.NotifyFlagsChanged;
-                                entry.flags = (EntryFlags)msg.Flags();
+                                if (entry.flags != (EntryFlags) msg.Flags()) notifyFlags |= NotifyFlags.NotifyFlagsChanged;
+                                entry.flags = (EntryFlags) msg.Flags();
                             }
 
                             m_notifier.NotifyEntry(name, entry.value, notifyFlags);
-
                         }
                     }
 
@@ -658,7 +720,7 @@ namespace NetworkTables
 
                 if (m_server && entry.id == 0xffff)
                 {
-                    uint id = (uint)m_idMap.Count;
+                    uint id = (uint) m_idMap.Count;
                     entry.id = id;
                     m_idMap.Add(entry);
                 }
@@ -726,7 +788,7 @@ namespace NetworkTables
                 if (m_server && entry.id == 0xffff)
                 {
                     int id = m_idMap.Count;
-                    entry.id = (uint)id;
+                    entry.id = (uint) id;
                     m_idMap.Add(entry);
                 }
 
@@ -818,7 +880,7 @@ namespace NetworkTables
                 if (m_entries.TryGetValue(name, out entry))
                 {
                     //Grabbed
-                    return (EntryFlags)entry.flags;
+                    return (EntryFlags) entry.flags;
                 }
                 else
                 {
@@ -841,7 +903,7 @@ namespace NetworkTables
 
                 m_entries.Remove(name);
 
-                if (id < m_idMap.Count) m_idMap[(int)id] = null;
+                if (id < m_idMap.Count) m_idMap[(int) id] = null;
                 if (entry.value == null) return;
 
                 m_notifier.NotifyEntry(name, entry.value, (NotifyFlags.NotifyDelete | NotifyFlags.NotifyLocal));
@@ -905,7 +967,7 @@ namespace NetworkTables
                     var value = entry.value;
                     if (value == null) continue;
                     if (types != 0 && (types & value.Type) == 0) continue;
-                    EntryInfo info = new EntryInfo(i.Key, value.Type, entry.flags, (uint)value.LastChange);
+                    EntryInfo info = new EntryInfo(i.Key, value.Type, entry.flags, (uint) value.LastChange);
                     infos.Add(info);
                 }
                 return infos;
@@ -926,7 +988,6 @@ namespace NetworkTables
 
         public string SavePersistent(string filename, bool periodic)
         {
-            /*
             string fn = filename;
             string tmp = filename;
 
@@ -934,34 +995,53 @@ namespace NetworkTables
             string bak = filename;
             bak += ".bak";
 
+            //Get entries before creating files
             List<StoragePair> entries = new List<StoragePair>();
             if (!GetPersistentEntries(periodic, entries)) return null;
 
             string err = null;
+
+            //Start writing to a temp file
             try
             {
                 using (StreamWriter writer = new StreamWriter(tmp))
                 {
-                    //Debug
-                    SavePersistentImpl(writer, entries.ToArray());
+                    Debug($"saving persistent file '{filename}'");
+                    SavePersistentImpl(writer, entries);
                     writer.Flush();
                 }
             }
             catch (IOException)
             {
-                err = "could not open file";
+                err = "could not open or save file";
                 goto done;
             }
 
-            File.Delete(bak);
-            File.Move(fn, bak);
+            try
+            {
+                File.Delete(bak);
+                File.Move(fn, bak);
+            }
+            catch (IOException)
+            {
+                //Unable to delete or copy. Ignoring
+            }
+
             try
             {
                 File.Move(tmp, fn);
             }
             catch (IOException)
             {
-                File.Move(bak, fn);
+                //Attempt to restore backup
+                try
+                {
+                    File.Move(bak, fn);
+                }
+                catch (IOException)
+                {
+                    //Do nothing if it fails
+                }
                 err = "could not rename temp file to real file";
                 goto done;
             }
@@ -970,13 +1050,11 @@ namespace NetworkTables
 
             if (err != null && periodic) m_persistentDirty = true;
             return err;
-            */
-            return null;
         }
 
         private static void ReadStringToken(out string first, out string second, string source)
         {
-            if (string.IsNullOrEmpty(source) || source[0] == '"')
+            if (string.IsNullOrEmpty(source) || source[0] != '"')
             {
                 first = "";
                 second = source;
@@ -1057,7 +1135,7 @@ namespace NetworkTables
                             ch <<= 4;
                             ch |= FromXDigit(source[++s]);
                         }
-                        builder.Append((char)ch);
+                        builder.Append((char) ch);
                         break;
                     default:
                         builder.Append(source[s - 1]);
@@ -1081,14 +1159,13 @@ namespace NetworkTables
             {
                 return "could not open file";
             }
-
         }
 
         public void SavePersistent(Stream stream, bool periodic)
         {
             List<StoragePair> entries = new List<StoragePair>();
             if (!GetPersistentEntries(periodic, entries)) return;
-            SavePersistentImpl(new StreamWriter(stream), entries.ToArray());
+            SavePersistentImpl(new StreamWriter(stream), entries);
         }
 
         public bool LoadPersistent(Stream stream, Action<int, string> warn)
@@ -1103,6 +1180,11 @@ namespace NetworkTables
             List<bool> boolArray = new List<bool>();
             List<double> doubleArray = new List<double>();
             List<string> stringArray = new List<string>();
+            bool tmpBoolean = false;
+            double tmpDouble = 0.0;
+            string strTok = null;
+            string[] spl = null;
+            string elemTok = null;
 
             using (StreamReader reader = new StreamReader(stream))
             {
@@ -1132,7 +1214,7 @@ namespace NetworkTables
                     }
 
                     string typeTok;
-                    string[] split = line.Split(new[] { ' ' }, 2);
+                    string[] split = line.Split(new[] {' '}, 2);
                     typeTok = split[0];
                     line = split[1];
                     NtType type = NtType.Unassigned;
@@ -1143,7 +1225,7 @@ namespace NetworkTables
                     else if (typeTok == "array")
                     {
                         string arrayTok;
-                        split = line.Split(new[] { ' ' }, 2);
+                        split = line.Split(new[] {' '}, 2);
                         arrayTok = split[0];
                         line = split[1];
                         if (arrayTok == "boolean") type = NtType.BooleanArray;
@@ -1188,6 +1270,107 @@ namespace NetworkTables
                                 goto nextLine;
                             }
                             break;
+                        case NtType.Double:
+                            str = line;
+                            tmpBoolean = double.TryParse(str, out tmpDouble);
+                            if (!tmpBoolean)
+                            {
+                                warn?.Invoke(lineNum, "invalid double value");
+                                goto nextLine;
+                            }
+                            value = Value.MakeDouble(tmpDouble);
+                            break;
+                        case NtType.String:
+                            ReadStringToken(out strTok, out line, line);
+                            if (string.IsNullOrEmpty(strTok))
+                            {
+                                warn?.Invoke(lineNum, "missing string value");
+                                goto nextLine;
+                            }
+                            if (strTok[strTok.Length - 1] != '"')
+                            {
+                                warn?.Invoke(lineNum, "unterminated string value");
+                                goto nextLine;
+                            }
+                            UnescapeString(strTok, out str);
+                            value = Value.MakeString(str);
+                            break;
+                        case NtType.Raw:
+                            value = Value.MakeRaw(Convert.FromBase64String(line));
+                            break;
+                        case NtType.BooleanArray:
+                            boolArray.Clear();
+                            while (!string.IsNullOrEmpty(line))
+                            {
+                                spl = line.Split(new[] {','}, 2);
+                                line = spl[1];
+                                strTok = spl[0].Trim(' ', '\t');
+                                if (strTok == "true")
+                                    boolArray.Add(true);
+                                else if (strTok == "false")
+                                    boolArray.Add(false);
+                                else
+                                {
+                                    warn?.Invoke(lineNum, "unrecognized boolean value, not 'true' or 'false'");
+                                    goto nextLine;
+                                }
+                            }
+                            value = Value.MakeBooleanArray(boolArray.ToArray());
+                            break;
+                        case NtType.DoubleArray:
+                            doubleArray.Clear();
+                            while (!string.IsNullOrEmpty(line))
+                            {
+                                spl = line.Split(new[] {','}, 2);
+                                if (spl.Length == 1)
+                                {
+                                    line = string.Empty;
+                                }
+                                else
+                                {
+                                    line = spl[1];
+                                }
+                                strTok = spl[0].Trim(' ', '\t');
+                                tmpBoolean = double.TryParse(strTok, out tmpDouble);
+                                if (!tmpBoolean)
+                                {
+                                    warn?.Invoke(lineNum, "invalid double value");
+                                    goto nextLine;
+                                }
+                                doubleArray.Add(tmpDouble);
+                            }
+                            value = Value.MakeDoubleArray(doubleArray.ToArray());
+                            break;
+                        case NtType.StringArray:
+                            stringArray.Clear();
+                            while (!string.IsNullOrEmpty(line))
+                            {
+                                ReadStringToken(out elemTok, out line, line);
+                                if (string.IsNullOrEmpty(elemTok))
+                                {
+                                    warn?.Invoke(lineNum, "missing string value");
+                                    goto nextLine;
+                                }
+                                if (strTok[strTok.Length - 1] != '"')
+                                {
+                                    warn?.Invoke(lineNum, "unterminated string value");
+                                    goto nextLine;
+                                }
+                                UnescapeString(elemTok, out str);
+                                stringArray.Add(str);
+
+                                line = line.TrimStart(' ', '\t');
+                                if (string.IsNullOrEmpty(line)) break;
+                                if (line[0] != ',')
+                                {
+                                    warn?.Invoke(lineNum, "expected comma between strings");
+                                    goto nextLine;
+                                }
+                                line = line.Substring(1).TrimStart(' ', '\t');
+                            }
+
+                            value = Value.MakeStringArray(stringArray.ToArray());
+                            break;
                         default:
                             break;
                     }
@@ -1220,7 +1403,7 @@ namespace NetworkTables
 
                         if (m_server && entry.id != 0xffff)
                         {
-                            uint id = (uint)m_idMap.Count;
+                            uint id = (uint) m_idMap.Count;
                             entry.id = id;
                             m_idMap.Add(entry);
                         }
@@ -1229,8 +1412,7 @@ namespace NetworkTables
                         {
                             if (oldValue != null)
                             {
-                                m_notifier.NotifyEntry(i.First, i.Second,
-                                     (NotifyFlags.NotifyNew | NotifyFlags.NotifyLocal));
+                                m_notifier.NotifyEntry(i.First, i.Second, (NotifyFlags.NotifyNew | NotifyFlags.NotifyLocal));
                             }
                             else if (oldValue != i.Second)
                             {
@@ -1273,7 +1455,5 @@ namespace NetworkTables
             }
             return true;
         }
-
-
     }
 }

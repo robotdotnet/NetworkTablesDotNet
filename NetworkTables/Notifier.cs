@@ -73,7 +73,12 @@ namespace NetworkTables
         {
             get
             {
-                return s_instance ?? (s_instance = new Notifier());
+                if (s_instance == null)
+                {
+                    Notifier d = new Notifier();
+                    Interlocked.CompareExchange(ref s_instance, d, null);
+                }
+                return s_instance;
             }
         }
 

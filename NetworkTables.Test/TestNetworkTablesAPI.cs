@@ -201,7 +201,6 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        [Ignore("Persistent Not Working Yet")]
         public void TestSavePersistent()
         {
             string key1 = "key1";
@@ -230,7 +229,6 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        [Ignore("Persistent Not Working Yet")]
         public void TestLoadPersistent()
         {
             const string key1 = "key1";
@@ -266,7 +264,6 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        [Ignore("Persistent Not Working Yet")]
         public void TestPersistentLoadError()
         {
             const string key1 = "key1";
