@@ -20,7 +20,7 @@ namespace NetworkTables
 
         private struct EntryListener
         {
-            public EntryListener(string prefix_, NtCore.EntryListenerCallback callback_, NotifyFlags flags_)
+            public EntryListener(string prefix_, EntryListenerCallback callback_, NotifyFlags flags_)
             {
                 prefix = prefix_;
                 callback = callback_;
@@ -28,17 +28,17 @@ namespace NetworkTables
             }
 
             public string prefix;
-            public NtCore.EntryListenerCallback callback;
+            public EntryListenerCallback callback;
             public NotifyFlags flags;
         }
 
         private List<EntryListener> m_entryListeners = new List<EntryListener>();
-        private List<NtCore.ConnectionListenerCallback> m_connListeners = new List<NtCore.ConnectionListenerCallback>();
+        private List<ConnectionListenerCallback> m_connListeners = new List<ConnectionListenerCallback>();
 
         private struct EntryNotification
         {
             public EntryNotification(string name_, Value value_, NotifyFlags flags_,
-                NtCore.EntryListenerCallback only_)
+                EntryListenerCallback only_)
             {
                 name = name_;
                 value = value_;
@@ -49,14 +49,14 @@ namespace NetworkTables
             public string name;
             public Value value;
             public NotifyFlags flags;
-            public NtCore.EntryListenerCallback only;
+            public EntryListenerCallback only;
         }
 
         private Queue<EntryNotification> m_entryNotifications = new Queue<EntryNotification>();
 
         private struct ConnectionNotification
         {
-            public ConnectionNotification(bool connected_, ConnectionInfo conn_info_, NtCore.ConnectionListenerCallback only_)
+            public ConnectionNotification(bool connected_, ConnectionInfo conn_info_, ConnectionListenerCallback only_)
             {
                 connected = connected_;
                 conn_info = conn_info_;
@@ -64,7 +64,7 @@ namespace NetworkTables
             }
             public bool connected;
             public ConnectionInfo conn_info;
-            public NtCore.ConnectionListenerCallback only;
+            public ConnectionListenerCallback only;
         }
 
         private Queue<ConnectionNotification> m_connNotifications = new Queue<ConnectionNotification>();
@@ -227,7 +227,7 @@ namespace NetworkTables
             return s_destroyed;
         }
 
-        public int AddEntryListener(string prefix, NtCore.EntryListenerCallback callback, NotifyFlags flags)
+        public int AddEntryListener(string prefix, EntryListenerCallback callback, NotifyFlags flags)
         {
             lock (m_mutex)
             {
@@ -251,7 +251,7 @@ namespace NetworkTables
             }
         }
 
-        public void NotifyEntry(string name, Value value, NotifyFlags flags, NtCore.EntryListenerCallback only = null)
+        public void NotifyEntry(string name, Value value, NotifyFlags flags, EntryListenerCallback only = null)
         {
             if (!m_active) return;
             if ((flags & NotifyFlags.NotifyLocal) != 0 && !m_localNotifiers) return;
@@ -262,7 +262,7 @@ namespace NetworkTables
             m_cond.Set();
         }
 
-        public int AddConnectionListener(NtCore.ConnectionListenerCallback callback)
+        public int AddConnectionListener(ConnectionListenerCallback callback)
         {
             lock (m_mutex)
             {
@@ -284,7 +284,7 @@ namespace NetworkTables
             }
         }
 
-        public void NotifyConnection(bool connected, ConnectionInfo conn_info, NtCore.ConnectionListenerCallback only = null)
+        public void NotifyConnection(bool connected, ConnectionInfo conn_info, ConnectionListenerCallback only = null)
         {
             if (!m_active) return;
             lock (m_mutex)

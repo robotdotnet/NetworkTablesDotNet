@@ -215,7 +215,7 @@ namespace NetworkTables
             return conns;
         }
 
-        public void NotifyConnections(NtCore.ConnectionListenerCallback callback)
+        public void NotifyConnections(ConnectionListenerCallback callback)
         {
             lock(m_userMutex)
             {

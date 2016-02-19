@@ -8,9 +8,9 @@ namespace NetworkTables.Support
 {
     internal static class Timestamp
     {
-        public static ulong Now()
+        public static long Now()
         {
-            return (ulong)DateTime.UtcNow.ToFileTimeUtc();
+            return DateTime.UtcNow.ToFileTimeUtc();
         }
     }
 }

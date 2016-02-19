@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConnectionInfo.cs" />
+    <Compile Include="Delegates.cs" />
     <Compile Include="Dispatcher.cs" />
     <Compile Include="EntryInfo.cs" />
     <Compile Include="Leb128.cs" />
@@ -57,10 +58,11 @@
     <Compile Include="NetworkTable.cs" />
     <Compile Include="Notifier.cs" />
     <Compile Include="NtCore.cs" />
-    <Compile Include="NTType.cs" />
+    <Compile Include="NtType.cs" />
     <Compile Include="Enumerations.cs" />
     <Compile Include="Extensions\AutoResetEventExtensions.cs" />
     <Compile Include="RawMemoryStream.cs" />
+    <Compile Include="RemoteProcedureCall.cs" />
     <Compile Include="RpcServer.cs" />
     <Compile Include="RpcStructs.cs" />
     <Compile Include="SocketInputStream.cs" />

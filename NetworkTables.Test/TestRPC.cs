@@ -18,7 +18,7 @@ namespace NetworkTables.Test
 
         private byte[] Callback1(string names, byte[] paramsStr)
         {
-            var param = NtCore.UnpackRpcValues(paramsStr, NtType.Double);
+            var param = RemoteProcedureCall.UnpackRpcValues(paramsStr, NtType.Double);
 
             if (param.Count == 0)
             {
@@ -28,7 +28,7 @@ namespace NetworkTables.Test
             double val = param[0].GetDouble();
             //Console.WriteLine($"Called with {val}");
 
-            return NtCore.PackRpcValues(Value.MakeDouble(val + 1.2));
+            return RemoteProcedureCall.PackRpcValues(Value.MakeDouble(val + 1.2));
         }
 
         [Test]
@@ -37,16 +37,16 @@ namespace NetworkTables.Test
 
             var def = new RpcDefinition(1, "myfunc1", new List<RpcParamDef> { new RpcParamDef("param1", Value.MakeDouble(0.0)) }, new List<RpcResultsDef> { new RpcResultsDef("result1", NtType.Double) });
 
-            NtCore.CreateRpc("func1", NtCore.PackRpcDefinition(def), Callback1);
+            RemoteProcedureCall.CreateRpc("func1", RemoteProcedureCall.PackRpcDefinition(def), Callback1);
 
             Console.WriteLine("Calling RPC");
 
-            long call1Uid = NtCore.CallRpc("func1", NtCore.PackRpcValues(Value.MakeDouble(2.0)));
+            long call1Uid = RemoteProcedureCall.CallRpc("func1", RemoteProcedureCall.PackRpcValues(Value.MakeDouble(2.0)));
 
             Console.WriteLine("Waiting for RPC Result");
             byte[] result = null;
-            NtCore.GetRpcResult(true, call1Uid, ref result);
-            var call1Result = NtCore.UnpackRpcValues(result, NtType.Double);
+            RemoteProcedureCall.GetRpcResult(true, call1Uid, ref result);
+            var call1Result = RemoteProcedureCall.UnpackRpcValues(result, NtType.Double);
             Assert.AreNotEqual(0, call1Result.Count, "RPC Result empty");
 
             Console.WriteLine(call1Result[0].ToString());
@@ -58,7 +58,7 @@ namespace NetworkTables.Test
 
             var def = new RpcDefinition(1, "myfunc1", new List<RpcParamDef> { new RpcParamDef("param1", Value.MakeDouble(0.0)) }, new List<RpcResultsDef> { new RpcResultsDef("result1", NtType.Double) });
 
-            NtCore.CreateRpc("func1", NtCore.PackRpcDefinition(def), Callback1);
+            RemoteProcedureCall.CreateRpc("func1", RemoteProcedureCall.PackRpcDefinition(def), Callback1);
 
 
 
@@ -67,9 +67,9 @@ namespace NetworkTables.Test
             byte[] call1Result = null;
             for (int i = 0; i < 10000; ++i)
             {
-                long call1Uid = NtCore.CallRpc("func1", NtCore.PackRpcValues(Value.MakeDouble(i)));
-                NtCore.GetRpcResult(true, call1Uid, ref call1Result);
-                var res = NtCore.UnpackRpcValues(call1Result, NtType.Double);
+                long call1Uid = RemoteProcedureCall.CallRpc("func1", RemoteProcedureCall.PackRpcValues(Value.MakeDouble(i)));
+                RemoteProcedureCall.GetRpcResult(true, call1Uid, ref call1Result);
+                var res = RemoteProcedureCall.UnpackRpcValues(call1Result, NtType.Double);
                 Assert.AreNotEqual(0, res.Count, "RPC Result empty");
             }
             sw.Stop();
@@ -95,7 +95,7 @@ namespace NetworkTables.Test
 
         private byte[] Callback2(string names, byte[] paramsStr)
         {
-            var param = NtCore.UnpackRpcValues(paramsStr, NtType.Boolean, NtType.BooleanArray, NtType.Double, NtType.DoubleArray, NtType.Raw, NtType.String, NtType.StringArray);
+            var param = RemoteProcedureCall.UnpackRpcValues(paramsStr, NtType.Boolean, NtType.BooleanArray, NtType.Double, NtType.DoubleArray, NtType.Raw, NtType.String, NtType.StringArray);
 
             if (param.Count == 0)
             {
@@ -103,7 +103,7 @@ namespace NetworkTables.Test
                 return new byte[] { 0 };
             }
 
-            return NtCore.PackRpcValues(Value.MakeBoolean(true), Value.MakeBooleanArray(new[] { true, false }), Value.MakeDouble(2.2), Value.MakeDoubleArray(new[] { 2.8, 6.876 }),
+            return RemoteProcedureCall.PackRpcValues(Value.MakeBoolean(true), Value.MakeBooleanArray(new[] { true, false }), Value.MakeDouble(2.2), Value.MakeDoubleArray(new[] { 2.8, 6.876 }),
                 Value.MakeRaw(new byte[] { 52, 0, 89, 0, 0, 98 }), Value.MakeString("NewString"), Value.MakeStringArray(new[] { "String1", "String2" }));
         }
 
@@ -131,17 +131,17 @@ namespace NetworkTables.Test
                 new RpcResultsDef("result7", NtType.StringArray),
             });
 
-            NtCore.CreateRpc("func1", NtCore.PackRpcDefinition(def), Callback2);
+            RemoteProcedureCall.CreateRpc("func1", RemoteProcedureCall.PackRpcDefinition(def), Callback2);
 
             Console.WriteLine("Calling RPC");
 
-            long call1Uid = NtCore.CallRpc("func1", NtCore.PackRpcValues(Value.MakeBoolean(true), Value.MakeBooleanArray(new[] { true, false }), Value.MakeDouble(2.2), Value.MakeDoubleArray(new[] { 2.8, 6.87 }),
+            long call1Uid = RemoteProcedureCall.CallRpc("func1", RemoteProcedureCall.PackRpcValues(Value.MakeBoolean(true), Value.MakeBooleanArray(new[] { true, false }), Value.MakeDouble(2.2), Value.MakeDoubleArray(new[] { 2.8, 6.87 }),
                 Value.MakeRaw(new byte[] { 52, 0, 89, 0, 0, 98 }), Value.MakeString("NewString"), Value.MakeStringArray(new[] { "String1", "String2" })));
 
             Console.WriteLine("Waiting for RPC Result");
             byte[] result = null;
-            NtCore.GetRpcResult(true, call1Uid, ref result);
-            var call1Result = NtCore.UnpackRpcValues(result, NtType.Boolean, NtType.BooleanArray, NtType.Double, NtType.DoubleArray, NtType.Raw, NtType.String, NtType.StringArray);
+            RemoteProcedureCall.GetRpcResult(true, call1Uid, ref result);
+            var call1Result = RemoteProcedureCall.UnpackRpcValues(result, NtType.Boolean, NtType.BooleanArray, NtType.Double, NtType.DoubleArray, NtType.Raw, NtType.String, NtType.StringArray);
             Assert.AreNotEqual(0, call1Result.Count, "RPC Result empty");
 
             Console.WriteLine(call1Result[0].ToString());

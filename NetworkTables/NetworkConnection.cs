@@ -383,7 +383,7 @@ namespace NetworkTables
                     break;
                 }
                 //Debug
-                m_lastUpdate = Timestamp.Now();
+                m_lastUpdate = (ulong)Timestamp.Now();
                 m_processIncoming(msg, this);
             }
 

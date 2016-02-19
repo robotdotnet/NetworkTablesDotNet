@@ -85,7 +85,7 @@ namespace NetworkTables
 
             internal SequenceNumber seqNum;
 
-            internal NtCore.RpcCallback rpcCallback;
+            internal RpcCallback rpcCallback;
             internal uint rpcCallUid;
 
         }
@@ -998,7 +998,7 @@ namespace NetworkTables
             }
         }
 
-        public void NotifyEntries(string prefix, NtCore.EntryListenerCallback only = null)
+        public void NotifyEntries(string prefix, EntryListenerCallback only = null)
         {
             lock (m_mutex)
             {
@@ -1490,7 +1490,7 @@ namespace NetworkTables
             return true;
         }
 
-        public void CreateRpc(string name, byte[] def, NtCore.RpcCallback callback)
+        public void CreateRpc(string name, byte[] def, RpcCallback callback)
         {
             if (string.IsNullOrEmpty(name) || def == null || def.Length == 0 || callback == null) return;
             bool lockEntered = false;
