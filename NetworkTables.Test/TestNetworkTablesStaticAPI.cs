@@ -128,5 +128,16 @@ namespace NetworkTables.Test
             NetworkTable.SetPersistentFilename(NetworkTable.DefaultPersistentFileName);
             Assert.That(NetworkTable.PersistentFilename, Is.EqualTo(NetworkTable.DefaultPersistentFileName));
         }
+
+        [Test]
+        public void TestLeadingSlash()
+        {
+            NetworkTable.GlobalDeleteAll();
+            var nt = NetworkTable.GetTable("leadingslash");
+            var nt2 = NetworkTable.GetTable("/leadingslash");
+            Assert.That(nt.ContainsKey("testkey"), Is.False);
+            nt2.PutNumber("testkey", 5);
+            Assert.That(nt.ContainsKey("testkey"), Is.True);
+        }
     }
 }

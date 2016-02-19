@@ -132,15 +132,20 @@ namespace NetworkTables
             //Wake up server thread by a socket shutdown
             m_serverAccepter?.Shutdown();
 
-            //Join our dispatch thread.
-            bool shutdown = m_dispatchThread.Join(TimeSpan.FromSeconds(1));
-            //If it fails to join, abort the thread
-            if (!shutdown) m_dispatchThread.Abort();
-            //Join our Client Server Thread
-            shutdown = m_clientServerThread.Join(TimeSpan.FromSeconds(1));
-            //If it fails to join, abort the thread.
-            if (!shutdown) m_clientServerThread.Abort();
-
+            if (m_dispatchThread != null)
+            {
+                //Join our dispatch thread.
+                bool shutdown = m_dispatchThread.Join(TimeSpan.FromSeconds(1));
+                //If it fails to join, abort the thread
+                if (!shutdown) m_dispatchThread.Abort();
+            }
+            if (m_clientServerThread != null)
+            {
+                //Join our Client Server Thread
+                bool shutdown = m_clientServerThread.Join(TimeSpan.FromSeconds(1));
+                //If it fails to join, abort the thread.
+                if (!shutdown) m_clientServerThread.Abort();
+            }
             List<NetworkConnection> conns = new List<NetworkConnection>();
             lock (m_userMutex)
             {

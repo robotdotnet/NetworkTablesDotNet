@@ -199,10 +199,10 @@ namespace NetworkTables
             }
         }
 
-        private static byte HexDigit(int x)
+        private static char HexDigit(int x)
         {
             const byte hexChar = (byte) 'A';
-            return (byte) (x < 10 ? (byte) '0' + x : hexChar + x - 10);
+            return (char) (x < 10 ? (byte) '0' + x : hexChar + x - 10);
         }
 
         private static void WriteString(StreamWriter os, string str)
@@ -224,8 +224,11 @@ namespace NetworkTables
                     case '"':
                         os.Write("\\\"");
                         break;
+                    case '\0':
+                        os.Write("\\x00");
+                        break;
                     default:
-                        if (str.IsNormalized())
+                        if (!char.IsControl(c))
                         {
                             os.Write(c);
                             break;
@@ -868,7 +871,7 @@ namespace NetworkTables
             }
             finally
             {
-                if (lockEntered) Monitor.Exit(lockEntered);
+                if (lockEntered) Monitor.Exit(m_mutex);
             }
         }
 
@@ -957,6 +960,7 @@ namespace NetworkTables
 
         public List<EntryInfo> GetEntryInfo(string prefix, NtType types)
         {
+            if (prefix == null) prefix = String.Empty;
             lock (m_mutex)
             {
                 List<EntryInfo> infos = new List<EntryInfo>();
@@ -1165,7 +1169,9 @@ namespace NetworkTables
         {
             List<StoragePair> entries = new List<StoragePair>();
             if (!GetPersistentEntries(periodic, entries)) return;
-            SavePersistentImpl(new StreamWriter(stream), entries);
+            StreamWriter w = new StreamWriter(stream);
+            SavePersistentImpl(w, entries);
+            w.Flush();
         }
 
         public bool LoadPersistent(Stream stream, Action<int, string> warn)
@@ -1303,7 +1309,14 @@ namespace NetworkTables
                             while (!string.IsNullOrEmpty(line))
                             {
                                 spl = line.Split(new[] {','}, 2);
-                                line = spl[1];
+                                if (spl.Length < 2)
+                                {
+                                    line = string.Empty;
+                                }
+                                else
+                                {
+                                    line = spl[1];
+                                }
                                 strTok = spl[0].Trim(' ', '\t');
                                 if (strTok == "true")
                                     boolArray.Add(true);
@@ -1401,7 +1414,7 @@ namespace NetworkTables
                         bool wasPersist = entry.IsPersistent();
                         if (!wasPersist) entry.flags |= EntryFlags.Persistent;
 
-                        if (m_server && entry.id != 0xffff)
+                        if (m_server && entry.id == 0xffff)
                         {
                             uint id = (uint) m_idMap.Count;
                             entry.id = id;
