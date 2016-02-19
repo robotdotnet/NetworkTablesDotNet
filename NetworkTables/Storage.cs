@@ -5,8 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NetworkTables.Extensions;
 using static NetworkTables.Message.MsgType;
 using static NetworkTables.Logger;
+using static NetworkTables.RpcServer;
 
 namespace NetworkTables
 {
@@ -48,15 +50,17 @@ namespace NetworkTables
 
         internal Dictionary<string, Entry> Entries => m_entries;
         internal List<Entry> IdMap => m_idMap;
+        
 
-        internal Storage() : this(Notifier.Instance)
+        internal Storage() : this(Notifier.Instance, RpcServer.Instance)
         {
 
         }
 
-        private Storage(Notifier notifier)
+        private Storage(Notifier notifier, RpcServer rpcServer)
         {
             m_notifier = notifier;
+            m_rpcServer = rpcServer;
         }
 
         internal class Entry
@@ -68,6 +72,8 @@ namespace NetworkTables
                 id = 0xffff;
                 value = null;
                 seqNum = new SequenceNumber();
+                rpcCallback = null;
+                rpcCallUid = 0;
             }
 
             internal bool IsPersistent() => (flags & EntryFlags.Persistent) != 0;
@@ -79,10 +85,17 @@ namespace NetworkTables
 
             internal SequenceNumber seqNum;
 
+            internal NtCore.RpcCallback rpcCallback;
+            internal uint rpcCallUid;
+
         }
 
         private Dictionary<string, Entry> m_entries = new Dictionary<string, Entry>();
         private List<Entry> m_idMap = new List<Entry>();
+        internal Dictionary<RpcPair, byte[]> m_rpcResults = new Dictionary<RpcPair, byte[]>();
+
+        private bool m_terminating = false;
+        private AutoResetEvent m_rpcResultsCond = new AutoResetEvent(false);
 
         private readonly object m_mutex = new object();
 
@@ -92,6 +105,8 @@ namespace NetworkTables
         bool m_persistentDirty = false;
 
         Notifier m_notifier;
+        private RpcServer m_rpcServer;
+
 
         private bool GetPersistentEntries(bool periodic, List<StoragePair> entries)
         {
@@ -1467,6 +1482,195 @@ namespace NetworkTables
                 }
             }
             return true;
+        }
+
+        public void CreateRpc(string name, byte[] def, NtCore.RpcCallback callback)
+        {
+            if (string.IsNullOrEmpty(name) || def == null || def.Length == 0 || callback == null) return;
+            bool lockEntered = false;
+            try
+            {
+                Monitor.Enter(m_mutex, ref lockEntered);
+                if (!m_server) return;
+
+                Entry entry = null;
+                if (!m_entries.TryGetValue(name, out entry))
+                {
+                    entry = new Entry(name);
+                    m_entries.Add(name, entry);
+                }
+
+                var oldValue = entry.value;
+                var value = Value.MakeRpc(def);
+                entry.value = value;
+                entry.rpcCallback = callback;
+                m_rpcServer.Start();
+
+                if (oldValue != null && oldValue == value) return;
+
+                if (entry.id == 0xffff)
+                {
+                    int id = m_idMap.Count;
+                    entry.id = (uint) id;
+                    m_idMap.Add(entry);
+                }
+
+                if (m_queueOutgoing == null) return;
+                var queueOutgoing = m_queueOutgoing;
+                if (oldValue == null || oldValue.Type != value.Type)
+                {
+                    ++entry.seqNum;
+                    var msg = Message.EntryAssign(name, entry.id, entry.seqNum.Value(), value, entry.flags);
+                    Monitor.Exit(m_mutex);
+                    lockEntered = false;
+                    queueOutgoing(msg, null, null);
+                }
+                else
+                {
+                    ++entry.seqNum;
+                    var msg = Message.EntryUpdate(entry.id, entry.seqNum.Value(), value);
+                    Monitor.Exit(m_mutex);
+                    lockEntered = false;
+                    queueOutgoing(msg, null, null);
+                }
+
+            }
+            finally
+            {
+                if (lockEntered) Monitor.Exit(m_mutex);
+            }
+        }
+
+        public void CreatePolledRpc(string name, byte[] def)
+        {
+            if (string.IsNullOrEmpty(name) || def == null || def.Length == 0) return;
+            bool lockEntered = false;
+            try
+            {
+                Monitor.Enter(m_mutex, ref lockEntered);
+                if (!m_server) return;
+
+                Entry entry = null;
+                if (!m_entries.TryGetValue(name, out entry))
+                {
+                    entry = new Entry(name);
+                    m_entries.Add(name, entry);
+                }
+
+                var oldValue = entry.value;
+                var value = Value.MakeRpc(def);
+                entry.value = value;
+                entry.rpcCallback = null;
+
+                if (oldValue != null && oldValue == value) return;
+
+                if (entry.id == 0xffff)
+                {
+                    int id = m_idMap.Count;
+                    entry.id = (uint)id;
+                    m_idMap.Add(entry);
+                }
+
+                if (m_queueOutgoing == null) return;
+                var queueOutgoing = m_queueOutgoing;
+                if (oldValue == null || oldValue.Type != value.Type)
+                {
+                    ++entry.seqNum;
+                    var msg = Message.EntryAssign(name, entry.id, entry.seqNum.Value(), value, entry.flags);
+                    Monitor.Exit(m_mutex);
+                    lockEntered = false;
+                    queueOutgoing(msg, null, null);
+                }
+                else
+                {
+                    ++entry.seqNum;
+                    var msg = Message.EntryUpdate(entry.id, entry.seqNum.Value(), value);
+                    Monitor.Exit(m_mutex);
+                    lockEntered = false;
+                    queueOutgoing(msg, null, null);
+                }
+            }
+            finally
+            {
+                if (lockEntered) Monitor.Exit(m_mutex);
+            }
+        }
+
+        public long CallRpc(string name, byte[] param)
+        {
+            if (string.IsNullOrEmpty(name)) return 0;
+            bool lockEntered = false;
+            try
+            {
+                Monitor.Enter(m_mutex, ref lockEntered);
+                Entry entry = null;
+                if (!m_entries.TryGetValue(name, out entry))
+                {
+                    return 0;
+                }
+                if (!entry.value.IsRpc()) return 0;
+
+                ++entry.rpcCallUid;
+
+                if (entry.rpcCallUid > 0xffff) entry.rpcCallUid = 0;
+                uint combinedUid = (entry.id << 16) | entry.rpcCallUid;
+                var msg = Message.ExecuteRpc(entry.id, entry.rpcCallUid, param);
+                if (m_server)
+                {
+                    var rpcCallback = entry.rpcCallback;
+                    Monitor.Exit(m_mutex);
+                    lockEntered = false;
+                    m_rpcServer.ProcessRpc(name, msg, rpcCallback, 0xffff, message =>
+                    {
+                        lock (m_mutex)
+                        {
+                            m_rpcResults.Add(new RpcPair(msg.Id(), msg.SeqNumUid()), msg.Val().GetRpc());
+                            m_rpcResultsCond.Set();
+                        }
+                    });
+                }
+                else
+                {
+                    var queueOutgoing = m_queueOutgoing;
+                    Monitor.Exit(m_mutex);
+                    lockEntered = false;
+                    queueOutgoing(msg, null, null);
+                }
+                return combinedUid;
+
+            }
+            finally
+            {
+                if (lockEntered) Monitor.Exit(m_mutex);
+            }
+        }
+
+        public bool GetRpcResult(bool blocking, long callUid, ref byte[] result)
+        {
+            bool lockEntered = false;
+            try
+            {
+                Monitor.Enter(m_mutex, ref lockEntered);
+                byte[] str = null;
+                for (;;)
+                {
+                    var pair = new RpcPair((uint) callUid >> 16, (uint) callUid & 0xffff);
+                    if (!m_rpcResults.TryGetValue(pair, out str))
+                    {
+                        if (!blocking || m_terminating) return false;
+                        m_rpcResultsCond.Wait(m_mutex, ref lockEntered);
+                        if (m_terminating) return false;
+                        continue;
+                    }
+                    result = new byte[str.Length];
+                    Array.Copy(str, result, result.Length);
+                    return true;
+                }
+            }
+            finally
+            {
+                if (lockEntered) Monitor.Exit(m_mutex);
+            }
         }
     }
 }
