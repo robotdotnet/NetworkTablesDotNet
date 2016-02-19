@@ -9,13 +9,32 @@ using NUnit.Framework;
 
 namespace NetworkTables.Test
 {
-    [TestFixture]
-    public class TestNetworkTablesApi : TestBase
+    [TestFixture(true)]
+    [TestFixture(false)]
+    public class TestNetworkTablesApi
     {
-        [TestFixtureSetUp]
-        public void FixtureSetup()
-        {
+        private bool m_server = false;
 
+        public TestNetworkTablesApi(bool server)
+        {
+            NetworkTable.SetIPAddress("localhost");
+            NetworkTable.SetPort(10000);
+            if (server)
+            {
+                NetworkTable.SetServerMode();
+            }
+            else
+            {
+                NetworkTable.SetClientMode();
+            }
+            m_server = server;
+            NetworkTable.Initialize();
+        }
+
+        [TestFixtureTearDown]
+        public void FixtureTearDown()
+        {
+            NetworkTable.Shutdown();
         }
 
         private NetworkTable m_table;
@@ -36,7 +55,7 @@ namespace NetworkTables.Test
         [Test]
         public void TestIsServer()
         {
-            Assert.That(m_table.IsServer);
+            Assert.That(m_table.IsServer, Is.EqualTo(m_server));
         } 
 
         [Test]

@@ -4,6 +4,7 @@ using NUnit.Framework;
 
 namespace NetworkTables.Test
 {
+    /*
     public class TestBase
     {
         public static bool s_started = false;
@@ -22,4 +23,5 @@ namespace NetworkTables.Test
             }
         }
     }
+    */
 }

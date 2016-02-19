@@ -10,7 +10,7 @@ using NUnit.Framework;
 namespace NetworkTables.Test
 {
     [TestFixture]
-    public class TestNetworkTablesStaticApi : TestBase
+    public class TestNetworkTablesStaticApi
     {
         [TestFixtureSetUp]
         public void FixtureSetup()
@@ -22,11 +22,7 @@ namespace NetworkTables.Test
         public void FixtureTeardown()
         {
             NetworkTable.Shutdown();
-            NetworkTable.SetIPAddress("127.0.0.1");
             NetworkTable.SetPersistentFilename(NetworkTable.DefaultPersistentFileName);
-            NetworkTable.SetPort(10000);
-            NetworkTable.SetServerMode();
-            NetworkTable.Initialize();
         }
 
         [SetUp]

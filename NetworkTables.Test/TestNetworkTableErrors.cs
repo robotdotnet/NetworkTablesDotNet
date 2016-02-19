@@ -6,9 +6,32 @@ using NUnit.Framework;
 
 namespace NetworkTables.Test
 {
-    [TestFixture]
-    public class TestNetworkTableErrors : TestBase
+    [TestFixture(true)]
+    [TestFixture(false)]
+    public class TestNetworkTableErrors
     {
+        public TestNetworkTableErrors(bool server)
+        {
+            NetworkTable.SetIPAddress("localhost");
+            NetworkTable.SetPort(10000);
+            if (server)
+            {
+                NetworkTable.SetServerMode();
+            }
+            else
+            {
+                NetworkTable.SetClientMode();
+            }
+
+            NetworkTable.Initialize();
+        }
+
+        [TestFixtureTearDown]
+        public void FixtureTearDown()
+        {
+            NetworkTable.Shutdown();
+        }
+
         private NetworkTable m_nt;
 
         [SetUp]

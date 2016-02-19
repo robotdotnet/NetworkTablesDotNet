@@ -95,9 +95,19 @@ namespace NetworkTables
             Storage.Instance.CreateRpc(name, def, callback);
         }
 
+        public static void CreateRpc(string name, RpcDefinition def, RpcCallback callback)
+        {
+            Storage.Instance.CreateRpc(name, PackRpcDefinition(def), callback);
+        }
+
         public static void CreatePolledRpc(string name, byte[] def)
         {
             Storage.Instance.CreatePolledRpc(name, def);
+        }
+
+        public static void CreatePolledRpc(string name, RpcDefinition def)
+        {
+            Storage.Instance.CreatePolledRpc(name, PackRpcDefinition(def));
         }
 
         public static bool PollRpc(bool blocking, ref RpcCallInfo callInfo)
@@ -266,7 +276,7 @@ namespace NetworkTables
 
         public static void StopRpcServer()
         {
-            //Noop
+            RpcServer.Instance.Stop();
         }
 
         public static void StopNotifier()
@@ -307,112 +317,5 @@ namespace NetworkTables
             logger.SetLogger(func);
             logger.SetMinLevel(minLevel);
         }
-        /*
-        public static NtType GetType(string name)
-        {
-            var v = GetEntryValue(name);
-            if (v == null) return NtType.Unassigned;
-            return v.Type;
-        }
-
-        public static bool ContainsKey(string name)
-        {
-            return GetType(name) != NtType.Unassigned;
-        }
-
-        public static EntryInfo[] GetEntries(string prefix, NtType types)
-        {
-            var arr = GetEntryInfo(prefix, types);
-            return arr.ToArray();
-        }
-
-        public static bool SetEntryDouble(string name, double value, bool force)
-        {
-            if (force)
-            {
-                SetEntryTypeValue(name, Value.MakeDouble(value));
-                return true;
-            }
-            else return SetEntryValue(name, Value.MakeDouble(value));
-        }
-
-        public static bool SetEntryBoolean(string name, bool value, bool force)
-        {
-            if (force)
-            {
-                SetEntryTypeValue(name, Value.MakeBoolean(value));
-                return true;
-            }
-            else return SetEntryValue(name, Value.MakeBoolean(value));
-        }
-
-        public static bool SetEntryString(string name, string value, bool force)
-        {
-            if (force)
-            {
-                SetEntryTypeValue(name, Value.MakeString(value));
-                return true;
-            }
-            else return SetEntryValue(name, Value.MakeString(value));
-        }
-
-        public static bool SetEntryRaw(string name, byte[] value, bool force)
-        {
-            if (force)
-            {
-                SetEntryTypeValue(name, Value.MakeRaw(value));
-                return true;
-            }
-            else return SetEntryValue(name, Value.MakeRaw(value));
-        }
-
-        public static bool SetEntryBooleanArray(string name, bool[] value, bool force)
-        {
-            if (force)
-            {
-                SetEntryTypeValue(name, Value.MakeBooleanArray(value));
-                return true;
-            }
-            else return SetEntryValue(name, Value.MakeBooleanArray(value));
-        }
-
-        public static bool SetEntryDoubleArray(string name, double[] value, bool force)
-        {
-            if (force)
-            {
-                SetEntryTypeValue(name, Value.MakeDoubleArray(value));
-                return true;
-            }
-            else return SetEntryValue(name, Value.MakeDoubleArray(value));
-        }
-
-        public static bool SetStringArray(string name, string[] value, bool force)
-        {
-            if (force)
-            {
-                SetEntryTypeValue(name, Value.MakeStringArray(value));
-                return true;
-            }
-            else return SetEntryValue(name, Value.MakeStringArray(value));
-        }
-
-        public static bool GetEntryBoolean(string name, ref ulong lastChange, ref bool value)
-        {
-            var v = GetEntryValue(name);
-            if (v == null || !v.IsBoolean()) return false;
-            value = v.GetBoolean();
-            lastChange = v.LastChange;
-            return true;
-        }
-
-        public static bool GetEntryDouble(string name, ref ulong lastChange, ref double value)
-        {
-            var v = GetEntryValue(name);
-            if (v == null || !v.IsDouble()) return false;
-            value = v.GetDouble();
-            lastChange = v.LastChange;
-            return true;
-        }
-        */
     }
 }

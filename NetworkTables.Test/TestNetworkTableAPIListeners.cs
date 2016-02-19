@@ -41,9 +41,32 @@ namespace NetworkTables.Test
 
 
 
-    [TestFixture]
-    public class TestNetworkTableApiListeners : TestBase
+    [TestFixture(true)]
+    [TestFixture(false)]
+    public class TestNetworkTableApiListeners
     {
+        public TestNetworkTableApiListeners(bool server)
+        {
+            NetworkTable.SetIPAddress("localhost");
+            NetworkTable.SetPort(10000);
+            if (server)
+            {
+                NetworkTable.SetServerMode();
+            }
+            else
+            {
+                NetworkTable.SetClientMode();
+            }
+            
+            NetworkTable.Initialize();
+        }
+
+        [TestFixtureTearDown]
+        public void FixtureTearDown()
+        {
+            NetworkTable.Shutdown();
+        }
+
         private NetworkTable m_table;
 
         [SetUp]

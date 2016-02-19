@@ -16,7 +16,6 @@ namespace NetworkTables
 
         private int m_allocated;
         private IInputStream m_is;
-        //private int m_count;
 
         public string Error { get; internal set; }
 

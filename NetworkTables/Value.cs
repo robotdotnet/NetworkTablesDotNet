@@ -226,6 +226,11 @@ namespace NetworkTables
             return new Value(tmp);
         }
 
+        public static Value MakeRaw(List<byte> val)
+        {
+            return new Value(val.ToArray());
+        }
+
         public static Value MakeRpc(byte[] val, int size)
         {
             if (size > val.Length) return null;
@@ -239,6 +244,11 @@ namespace NetworkTables
             byte[] tmp = new byte[val.Length];
             Array.Copy(val, tmp, val.Length);
             return new Value(tmp, true);
+        }
+
+        public static Value MakeRpc(List<byte> val)
+        {
+            return new Value(val.ToArray(), true);
         }
 
         public static Value MakeBooleanArray(params bool[] val)
@@ -260,6 +270,21 @@ namespace NetworkTables
             string[] tmp = new string[val.Length];
             Array.Copy(val, tmp, val.Length);
             return new Value(tmp);
+        }
+
+        public static Value MakeBooleanArray(List<bool> val)
+        {
+            return new Value(val.ToArray());
+        }
+
+        public static Value MakeDoubleArray(List<double> val)
+        {
+            return new Value(val.ToArray());
+        }
+
+        public static Value MakeStringArray(List<string> val)
+        {
+            return new Value(val.ToArray());
         }
 
         internal static Value MakeEmpty()

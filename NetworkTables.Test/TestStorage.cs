@@ -11,7 +11,7 @@ namespace NetworkTables.Test
 {
     [TestFixture(true)]
     [TestFixture(false)]
-    public class TestStorage
+    public partial class TestStorage
     {
         Entry tmpEntry;
 

@@ -276,6 +276,197 @@ namespace NetworkTables.Test
             Assert.That(v.GetStringArray(), Is.EquivalentTo(raw));
         }
 
+
+        [Test]
+        public void TestRawList()
+        {
+            List<byte> raw = new List<byte> { 5, 19, 28 };
+
+            var v = Value.MakeRaw(raw);
+            Assert.That(v.IsRaw(), Is.True);
+            Assert.That(v.Type, Is.EqualTo(NtType.Raw));
+            Assert.That(ReferenceEquals(v.GetRaw(), raw), Is.False);
+            Assert.That(v.GetRaw(), Is.EquivalentTo(raw));
+
+            //Modify raw, and make sure copies of the array are created
+            raw[1] = (byte)'a';
+            Assert.That(v.GetRaw(), Is.Not.EquivalentTo(raw));
+            raw[1] = 19;
+
+            var vR = v.GetRaw();
+            vR[1] = (byte)'b';
+
+            Assert.That(v.GetRaw(), Is.EquivalentTo(raw));
+
+            //Assign with same size
+            raw = new List<byte> { 0, 28, 53 };
+            v = Value.MakeRaw(raw);
+            Assert.That(v.Type, Is.EqualTo(NtType.Raw));
+            Assert.That(ReferenceEquals(v.GetRaw(), raw), Is.False);
+            Assert.That(v.GetRaw(), Is.EquivalentTo(raw));
+
+
+            //Assign with different size
+            raw = new List<byte>(Encoding.UTF8.GetBytes("goodbye"));
+
+            v = Value.MakeRaw(raw);
+            Assert.That(v.Type, Is.EqualTo(NtType.Raw));
+            Assert.That(ReferenceEquals(v.GetRaw(), raw), Is.False);
+            Assert.That(v.GetRaw(), Is.EquivalentTo(raw));
+        }
+
+        [Test]
+        public void TestRpcList()
+        {
+            List<byte> raw = new List<byte> { 5, 19, 28 };
+
+            var v = Value.MakeRpc(raw);
+            Assert.That(v.IsRpc(), Is.True);
+            Assert.That(v.Type, Is.EqualTo(NtType.Rpc));
+            Assert.That(ReferenceEquals(v.GetRpc(), raw), Is.False);
+            Assert.That(v.GetRpc(), Is.EquivalentTo(raw));
+
+            //Modify raw, and make sure copies of the array are created
+            raw[1] = (byte)'a';
+            Assert.That(v.GetRpc(), Is.Not.EquivalentTo(raw));
+            raw[1] = 19;
+
+            var vR = v.GetRpc();
+            vR[1] = (byte)'b';
+
+            Assert.That(v.GetRpc(), Is.EquivalentTo(raw));
+
+            //Assign with same size
+            raw = new List<byte> { 0, 28, 53 };
+            v = Value.MakeRpc(raw);
+            Assert.That(v.Type, Is.EqualTo(NtType.Rpc));
+            Assert.That(ReferenceEquals(v.GetRpc(), raw), Is.False);
+            Assert.That(v.GetRpc(), Is.EquivalentTo(raw));
+
+
+            //Assign with different size
+            raw = new List<byte>(Encoding.UTF8.GetBytes("goodbye"));
+
+            v = Value.MakeRpc(raw);
+            Assert.That(v.Type, Is.EqualTo(NtType.Rpc));
+            Assert.That(ReferenceEquals(v.GetRpc(), raw), Is.False);
+            Assert.That(v.GetRpc(), Is.EquivalentTo(raw));
+        }
+
+        [Test]
+        public void TestBoolArrayList()
+        {
+            List<bool> raw = new List<bool> { true, false, true };
+
+            var v = Value.MakeBooleanArray(raw);
+            Assert.That(v.IsBooleanArray(), Is.True);
+            Assert.That(v.Type, Is.EqualTo(NtType.BooleanArray));
+            Assert.That(ReferenceEquals(v.GetBooleanArray(), raw), Is.False);
+            Assert.That(v.GetBooleanArray(), Is.EquivalentTo(raw));
+
+            //Modify raw, and make sure copies of the array are created
+            raw[1] = true;
+            Assert.That(v.GetBooleanArray(), Is.Not.EquivalentTo(raw));
+            raw[1] = false;
+
+            var vR = v.GetBooleanArray();
+            vR[1] = true;
+
+            Assert.That(v.GetBooleanArray(), Is.EquivalentTo(raw));
+
+            //Assign with same size
+            raw = new List<bool> { false, true, false };
+            v = Value.MakeBooleanArray(raw);
+            Assert.That(v.Type, Is.EqualTo(NtType.BooleanArray));
+            Assert.That(ReferenceEquals(v.GetBooleanArray(), raw), Is.False);
+            Assert.That(v.GetBooleanArray(), Is.EquivalentTo(raw));
+
+
+            //Assign with different size
+            raw = new List<bool> { false, true };
+
+            v = Value.MakeBooleanArray(raw);
+            Assert.That(v.Type, Is.EqualTo(NtType.BooleanArray));
+            Assert.That(ReferenceEquals(v.GetBooleanArray(), raw), Is.False);
+            Assert.That(v.GetBooleanArray(), Is.EquivalentTo(raw));
+        }
+
+        [Test]
+        public void TestDoubleArrayList()
+        {
+            List<double> raw = new List<double> { 0.5, 0.25, 0.5 };
+
+            var v = Value.MakeDoubleArray(raw);
+            Assert.That(v.IsDoubleArray(), Is.True);
+            Assert.That(v.Type, Is.EqualTo(NtType.DoubleArray));
+            Assert.That(ReferenceEquals(v.GetDoubleArray(), raw), Is.False);
+            Assert.That(v.GetDoubleArray(), Is.EquivalentTo(raw));
+
+            //Modify raw, and make sure copies of the array are created
+            raw[1] = 0.65;
+            Assert.That(v.GetDoubleArray(), Is.Not.EquivalentTo(raw));
+            raw[1] = 0.25;
+
+            var vR = v.GetDoubleArray();
+            vR[1] = 0.85;
+
+            Assert.That(v.GetDoubleArray(), Is.EquivalentTo(raw));
+
+            //Assign with same size
+            raw = new List<double> { 0.25, 0.5, 0.25 };
+            v = Value.MakeDoubleArray(raw);
+            Assert.That(v.Type, Is.EqualTo(NtType.DoubleArray));
+            Assert.That(ReferenceEquals(v.GetDoubleArray(), raw), Is.False);
+            Assert.That(v.GetDoubleArray(), Is.EquivalentTo(raw));
+
+
+            //Assign with different size
+            raw = new List<double> { 0.5, 0.25 };
+
+            v = Value.MakeDoubleArray(raw);
+            Assert.That(v.Type, Is.EqualTo(NtType.DoubleArray));
+            Assert.That(ReferenceEquals(v.GetDoubleArray(), raw), Is.False);
+            Assert.That(v.GetDoubleArray(), Is.EquivalentTo(raw));
+        }
+
+        [Test]
+        public void TestStringArrayList()
+        {
+            List<string> raw = new List<string> { "hello", "goodbye", "string" };
+
+            var v = Value.MakeStringArray(raw);
+            Assert.That(v.IsStringArray(), Is.True);
+            Assert.That(v.Type, Is.EqualTo(NtType.StringArray));
+            Assert.That(ReferenceEquals(v.GetStringArray(), raw), Is.False);
+            Assert.That(v.GetStringArray(), Is.EquivalentTo(raw));
+
+            //Modify raw, and make sure copies of the array are created
+            raw[1] = "falsehood";
+            Assert.That(v.GetStringArray(), Is.Not.EquivalentTo(raw));
+            raw[1] = "goodbye";
+
+            var vR = v.GetStringArray();
+            vR[1] = "foobar";
+
+            Assert.That(v.GetStringArray(), Is.EquivalentTo(raw));
+
+            //Assign with same size
+            raw = new List<string> { "s1", "str2", "string3" };
+            v = Value.MakeStringArray(raw);
+            Assert.That(v.Type, Is.EqualTo(NtType.StringArray));
+            Assert.That(ReferenceEquals(v.GetStringArray(), raw), Is.False);
+            Assert.That(v.GetStringArray(), Is.EquivalentTo(raw));
+
+
+            //Assign with different size
+            raw = new List<string> { "short", "er" };
+
+            v = Value.MakeStringArray(raw);
+            Assert.That(v.Type, Is.EqualTo(NtType.StringArray));
+            Assert.That(ReferenceEquals(v.GetStringArray(), raw), Is.False);
+            Assert.That(v.GetStringArray(), Is.EquivalentTo(raw));
+        }
+
         [Test]
         public void TestValueAssertions()
         {
