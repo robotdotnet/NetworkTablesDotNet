@@ -442,6 +442,7 @@ namespace NetworkTables.Test
             Assert.That(e.GetValueSize(v_double), Is.EqualTo(8));
             Assert.That(e.GetValueSize(v_string), Is.EqualTo(6));
             Assert.That(e.GetValueSize(v_raw), Is.EqualTo(6));
+            Assert.That(e.GetValueSize(v_rpc), Is.EqualTo(6));
 
             Assert.That(e.GetValueSize(v_boolArray), Is.EqualTo(1 + 3));
             Assert.That(e.GetValueSize(v_boolArrayBig), Is.EqualTo(1 + 255));

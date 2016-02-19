@@ -125,7 +125,7 @@ namespace NetworkTables
                     return GetRawSize((byte[])value.Val);
                 case NtType.Rpc:
                     if (m_protoRev < 0x0300u) return 0;
-                    return GetStringSize((string)value.Val);
+                    return GetRawSize((byte[])value.Val);
                 case NtType.String:
                     return GetStringSize((string)value.Val);
                 case NtType.BooleanArray:
