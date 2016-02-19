@@ -94,7 +94,6 @@ namespace NetworkTables.Test
 
         internal void TestSetPersistent()
         {
-            byte[] b = new byte[] { 0, 3, 5, (byte)'\n' };
             string s = "\0\x03\x05\n";
 
             SetTestEmpty();
@@ -1042,6 +1041,30 @@ namespace NetworkTables.Test
             }
             Assert.That(Entries, Has.Count.EqualTo(21));
             Assert.That(outgoing, Has.Count.EqualTo(21));
+
+            string s = "\0\x03\x05\n";
+
+            Assert.That(Value.MakeBoolean(true) == storage.GetEntryValue("boolean/true"));
+            Assert.That(Value.MakeBoolean(false) == storage.GetEntryValue("boolean/false"));
+            Assert.That(Value.MakeDouble(-1.5) == storage.GetEntryValue("double/neg"));
+            Assert.That(Value.MakeDouble(0.0) == storage.GetEntryValue("double/zero"));
+            Assert.That(Value.MakeDouble(1.3e8) == storage.GetEntryValue("double/big"));
+            Assert.That(Value.MakeString("") == storage.GetEntryValue("string/empty"));
+            Assert.That(Value.MakeString("hello") == storage.GetEntryValue("string/normal"));
+            Assert.That(Value.MakeString(s) == storage.GetEntryValue("string/special"));
+            Assert.That(Value.MakeRaw() == storage.GetEntryValue("raw/empty"));
+            Assert.That(Value.MakeRaw(Encoding.UTF8.GetBytes("hello")) == storage.GetEntryValue("raw/normal"));
+            Assert.That(Value.MakeRaw(Encoding.UTF8.GetBytes(s)) == storage.GetEntryValue("raw/special"));
+            Assert.That(Value.MakeBooleanArray() == storage.GetEntryValue("booleanarr/empty"));
+            Assert.That(Value.MakeBooleanArray(true) == storage.GetEntryValue("booleanarr/one"));
+            Assert.That(Value.MakeBooleanArray(true, false) == storage.GetEntryValue("booleanarr/two"));
+            Assert.That(Value.MakeDoubleArray() == storage.GetEntryValue("doublearr/empty"));
+            Assert.That(Value.MakeDoubleArray(0.5) == storage.GetEntryValue("doublearr/one"));
+            Assert.That(Value.MakeDoubleArray(0.5, -0.25) == storage.GetEntryValue("doublearr/two"));
+            Assert.That(Value.MakeStringArray() == storage.GetEntryValue("stringarr/empty"));
+            Assert.That(Value.MakeStringArray("hello") == storage.GetEntryValue("stringarr/one"));
+            Assert.That(Value.MakeStringArray("hello", "world\n") == storage.GetEntryValue("stringarr/two"));
+            Assert.That(Value.MakeBoolean(true) == storage.GetEntryValue(s));
         }
 
         [Test]

@@ -82,7 +82,7 @@ namespace NetworkTables
                 case NtType.Raw:
                     if (m_protoRev < 0x0300u)
                     {
-                        Error = "Raw type not supported in protocol < 3.0";
+                        Error = "raw type not supported in protocol < 3.0";
                         return;
                     }
                     m_buffer.Add(0x03);
@@ -99,14 +99,13 @@ namespace NetworkTables
                 case NtType.Rpc:
                     if (m_protoRev < 0x0300u)
                     {
-                        Error = "Rpc type not supported in protocol < 3.0";
+                        Error = "RPC type not supported in protocol < 3.0";
                         return;
                     }
                     m_buffer.Add(0x20);
                     break;
                 default:
-                    Error = "Unrecognized Type";
-                    Console.WriteLine("Unrecognized Type");
+                    Error = "unrecognized Type";
                     return;
             }
             Error = null;
@@ -252,12 +251,28 @@ namespace NetworkTables
             if (m_protoRev < 0x0300u)
             {
                 if (len > 0xffff) len = 0xffff;
-                Write16((ushort)len);
+                
+                Write16((ushort) len);
+                byte[] b = Encoding.UTF8.GetBytes(str);
+                byte[] bytes = null;
+                if (b.Length > len)
+                {
+                    bytes = new byte[len];
+                    Array.Copy(b, bytes, len);
+                }
+                else
+                {
+                    bytes = b;
+                }
+                m_buffer.AddRange(bytes);
+            }
+            else
+            {
+                WriteUleb128((ulong) len);
+                m_buffer.AddRange(Encoding.UTF8.GetBytes(str));
             }
 
-            WriteUleb128((ulong)len);
-
-            m_buffer.AddRange(Encoding.UTF8.GetBytes(str));
+            
         }
     }
 }

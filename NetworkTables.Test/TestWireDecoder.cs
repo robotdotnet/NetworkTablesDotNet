@@ -28,6 +28,8 @@ namespace NetworkTables.Test
 
         private readonly string s_long;
         private readonly string s_big;
+
+        private readonly string s_big2;
         
         public TestWireDecoder()
         {
@@ -55,7 +57,33 @@ namespace NetworkTables.Test
             builder.Append('x');
             builder.Append('x');
             s_big = builder.ToString();
-            
+
+            builder.Clear();
+            for (int i = 0; i < 65534; i++)
+            {
+                builder.Append('*');
+            }
+            builder.Append('x');
+            s_big2 = builder.ToString();
+
+        }
+
+        [Test]
+        public void TestConstruct()
+        {
+            RawMemoryStream stream = new RawMemoryStream(new byte[0], 0);
+            WireDecoder d = new WireDecoder(stream, 0x0300);
+            Assert.That(d.Error, Is.Null);
+            Assert.That(d.ProtoRev, Is.EqualTo(0x0300));
+        }
+
+        [Test]
+        public void TestSetProtoRev()
+        {
+            RawMemoryStream stream = new RawMemoryStream(new byte[0], 0);
+            WireDecoder d = new WireDecoder(stream, 0x0300);
+            d.SetProtoRev(0x0200);
+            Assert.That(d.ProtoRev, Is.EqualTo(0x0200));
         }
 
         [Test]
@@ -225,7 +253,7 @@ namespace NetworkTables.Test
         {
             byte[] rawData = { 0x30 };
             RawMemoryStream stream = new RawMemoryStream(rawData, rawData.Length);
-            WireDecoder d = new WireDecoder(stream, 0x0300);
+            WireDecoder d = new WireDecoder(stream, 0x0200);
             NtType val = 0;
 
             Assert.That(!d.ReadType(ref val));
@@ -238,7 +266,7 @@ namespace NetworkTables.Test
         {
             byte[] rawData = { 0x30 };
             RawMemoryStream stream = new RawMemoryStream(rawData, rawData.Length);
-            WireDecoder d = new WireDecoder(stream, 0x0300);
+            WireDecoder d = new WireDecoder(stream, 0x0200);
             NtType val = 0;
 
             Assert.That(!d.ReadType(ref val));
@@ -249,7 +277,227 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestBooleanValue()
+        public void TestBooleanValue2()
+        {
+            byte[] rawData = new byte[] { 0x01, 0x00 };
+            RawMemoryStream stream = new RawMemoryStream(rawData, rawData.Length);
+            WireDecoder d = new WireDecoder(stream, 0x0200);
+            var val = d.ReadValue(NtType.Boolean);
+            Assert.That(val.Type, Is.EqualTo(NtType.Boolean));
+            Assert.That(val.Val, Is.EqualTo(v_boolean.Val));
+
+            var vFalse = Value.MakeBoolean(false);
+            val = d.ReadValue(NtType.Boolean);
+            Assert.That(val.Type, Is.EqualTo(NtType.Boolean));
+            Assert.That(val.Val, Is.EqualTo(vFalse.Val));
+
+            Assert.That(d.ReadValue(NtType.Boolean), Is.Null);
+            Assert.That(d.Error, Is.Null);
+        }
+
+        [Test]
+        public void TestDoubleValue2()
+        {
+            byte[] rawData = new byte[]
+            {
+                0x3f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x3f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+            };
+            RawMemoryStream stream = new RawMemoryStream(rawData, rawData.Length);
+            WireDecoder d = new WireDecoder(stream, 0x0200);
+            var val = d.ReadValue(NtType.Double);
+            Assert.That(val.Type, Is.EqualTo(NtType.Double));
+            Assert.That(val.Val, Is.EqualTo(v_double.Val));
+
+            val = d.ReadValue(NtType.Double);
+            Assert.That(val.Type, Is.EqualTo(NtType.Double));
+            Assert.That(val.Val, Is.EqualTo(v_double.Val));
+
+            Assert.That(d.ReadValue(NtType.Double), Is.Null);
+            Assert.That(d.Error, Is.Null);
+        }
+
+        [Test]
+        public void TestStringValue2()
+        {
+            byte[] rawData = new byte[]
+            {
+                0x00, 0x05, (byte)'h', (byte)'e', (byte)'l', (byte)'l', (byte)'o',
+                0x00, 0x03, (byte)'b', (byte)'y', (byte)'e', 0x55,
+            };
+            RawMemoryStream stream = new RawMemoryStream(rawData, rawData.Length);
+            WireDecoder d = new WireDecoder(stream, 0x0200);
+            var val = d.ReadValue(NtType.String);
+            Assert.That(val.Type, Is.EqualTo(NtType.String));
+            Assert.That(val.Val, Is.EqualTo(v_string.Val));
+
+            var vFalse = Value.MakeString("bye");
+            val = d.ReadValue(NtType.String);
+            Assert.That(val.Type, Is.EqualTo(NtType.String));
+            Assert.That(val.Val, Is.EqualTo(vFalse.Val));
+
+            byte b = 0;
+            Assert.That(d.Read8(ref b));
+            Assert.That(b, Is.EqualTo(0x55));
+
+            Assert.That(d.ReadValue(NtType.String), Is.Null);
+            Assert.That(d.Error, Is.Null);
+        }
+
+        [Test]
+        public void TestReadBooleanArray2()
+        {
+            byte[] b = { 0x03, 0x00, 0x01, 0x00, 0x02, 0x01, 0x00, 0xff };
+            RawMemoryStream stream = new RawMemoryStream(b, b.Length);
+            WireDecoder d = new WireDecoder(stream, 0x0200);
+
+            var val = d.ReadValue(NtType.BooleanArray);
+            Assert.That(val.Type, Is.EqualTo(NtType.BooleanArray));
+            Assert.That(val.Val, Is.EqualTo(v_boolArray.Val));
+
+            var boolArray2 = Value.MakeBooleanArray(true, false);
+            val = d.ReadValue(NtType.BooleanArray);
+            Assert.That(val.Type, Is.EqualTo(NtType.BooleanArray));
+            Assert.That(val.Val, Is.EqualTo(boolArray2.Val));
+
+            Assert.That(d.ReadValue(NtType.BooleanArray), Is.Null);
+            Assert.That(d.Error, Is.Null);
+        }
+
+        [Test]
+        public void ReadBooleanArrayBig2()
+        {
+            List<byte> s = new List<byte>();
+            s.Add(0xff);
+            for (int i = 0; i < 255; i++)
+            {
+                s.Add(0x00);
+            }
+            RawMemoryStream stream = new RawMemoryStream(s.ToArray(), s.Count);
+            WireDecoder d = new WireDecoder(stream, 0x0200);
+
+            var val = d.ReadValue(NtType.BooleanArray);
+            Assert.That(val.Type, Is.EqualTo(NtType.BooleanArray));
+            Assert.That(val.Val, Is.EqualTo(v_boolArrayBig.Val));
+
+            Assert.That(d.ReadValue(NtType.BooleanArray), Is.Null);
+            Assert.That(d.Error, Is.Null);
+        }
+
+
+
+        [Test]
+        public void TestReadDoubleArray2()
+        {
+            byte[] b =
+            {
+                0x02, 0x3f, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x3f, 0xd0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x55
+            };
+            RawMemoryStream stream = new RawMemoryStream(b, b.Length);
+            WireDecoder d = new WireDecoder(stream, 0x0200);
+
+            var val = d.ReadValue(NtType.DoubleArray);
+            Assert.That(val.Type, Is.EqualTo(NtType.DoubleArray));
+            Assert.That(val.Val, Is.EqualTo(v_doubleArray.Val));
+
+            byte by = 0;
+            Assert.That(d.Read8(ref by));
+            Assert.That(by, Is.EqualTo(0x55));
+
+            Assert.That(d.ReadValue(NtType.DoubleArray), Is.Null);
+            Assert.That(d.Error, Is.Null);
+        }
+
+        [Test]
+        public void ReadDoubleArrayBig2()
+        {
+            List<byte> s = new List<byte>();
+            s.Add(0xff);
+            for (int i = 0; i < 255 * 8; i++)
+            {
+                s.Add(0x00);
+            }
+            RawMemoryStream stream = new RawMemoryStream(s.ToArray(), s.Count);
+            WireDecoder d = new WireDecoder(stream, 0x0200);
+
+            var val = d.ReadValue(NtType.DoubleArray);
+            Assert.That(val.Type, Is.EqualTo(NtType.DoubleArray));
+            Assert.That(val.Val, Is.EqualTo(v_doubleArrayBig.Val));
+
+            Assert.That(d.ReadValue(NtType.DoubleArray), Is.Null);
+            Assert.That(d.Error, Is.Null);
+        }
+
+        [Test]
+        public void TestReadStringArray2()
+        {
+            List<byte> b = new List<byte>()
+            {
+                0x02,
+                0x00,
+                0x05
+            };
+            b.AddRange(Encoding.UTF8.GetBytes("hello"));
+            b.Add(0x00);
+            b.Add(0x07);
+            b.AddRange(Encoding.UTF8.GetBytes("goodbye"));
+            b.Add(0x55);
+            RawMemoryStream stream = new RawMemoryStream(b.ToArray(), b.Count);
+            WireDecoder d = new WireDecoder(stream, 0x0200);
+
+            var val = d.ReadValue(NtType.StringArray);
+            Assert.That(val.Type, Is.EqualTo(NtType.StringArray));
+            Assert.That(val.Val, Is.EqualTo(v_stringArray.Val));
+
+            byte by = 0;
+            Assert.That(d.Read8(ref by));
+            Assert.That(by, Is.EqualTo(0x55));
+
+            Assert.That(d.ReadValue(NtType.StringArray), Is.Null);
+            Assert.That(d.Error, Is.Null);
+        }
+
+        [Test]
+        public void ReadStringArrayBig2()
+        {
+            List<byte> s = new List<byte>();
+            s.Add(0xff);
+            for (int i = 0; i < 255; i++)
+            {
+                s.Add(0x00);
+                s.Add(0x01);
+                s.Add((byte)'h');
+            }
+            RawMemoryStream stream = new RawMemoryStream(s.ToArray(), s.Count);
+            WireDecoder d = new WireDecoder(stream, 0x0200);
+
+            var val = d.ReadValue(NtType.StringArray);
+            Assert.That(val.Type, Is.EqualTo(NtType.StringArray));
+            Assert.That(val.Val, Is.EqualTo(v_stringArrayBig.Val));
+
+            Assert.That(d.ReadValue(NtType.StringArray), Is.Null);
+            Assert.That(d.Error, Is.Null);
+        }
+
+        [Test]
+        public void TestReadValueError2()
+        {
+            RawMemoryStream stream = new RawMemoryStream(new byte[0], 0);
+            WireDecoder d = new WireDecoder(stream, 0x0200);
+            Assert.That(d.ReadValue(NtType.Unassigned), Is.Null);
+            Assert.That(d.Error, Is.Not.Null);
+
+            d.Reset();
+            Assert.That(d.ReadValue(NtType.Raw), Is.Null);
+            Assert.That(d.Error, Is.Not.Null);
+
+            Assert.That(d.ReadValue(NtType.Rpc), Is.Null);
+            Assert.That(d.Error, Is.Not.Null);
+        }
+
+        [Test]
+        public void TestBooleanValue3()
         {
             byte[] rawData = new byte[] { 0x01, 0x00 };
             RawMemoryStream stream = new RawMemoryStream(rawData, rawData.Length);
@@ -268,7 +516,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestDoubleValue()
+        public void TestDoubleValue3()
         {
             byte[] rawData = new byte[]
             {
@@ -290,7 +538,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestStringValue()
+        public void TestStringValue3()
         {
             byte[] rawData = new byte[]
             {
@@ -317,7 +565,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestRawValue()
+        public void TestRawValue3()
         {
             byte[] rawData = new byte[]
             {
@@ -344,7 +592,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestReadBooleanArray()
+        public void TestReadBooleanArray3()
         {
             byte[] b = { 0x03, 0x00, 0x01, 0x00, 0x02, 0x01, 0x00, 0xff };
             RawMemoryStream stream = new RawMemoryStream(b, b.Length);
@@ -364,7 +612,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void ReadBooleanArrayBig()
+        public void ReadBooleanArrayBig3()
         {
             List<byte> s = new List<byte>();
             s.Add(0xff);
@@ -386,7 +634,7 @@ namespace NetworkTables.Test
 
 
         [Test]
-        public void TestReadDoubleArray()
+        public void TestReadDoubleArray3()
         {
             byte[] b =
             {
@@ -409,7 +657,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void ReadDoubleArrayBig()
+        public void ReadDoubleArrayBig3()
         {
             List<byte> s = new List<byte>();
             s.Add(0xff);
@@ -429,7 +677,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestReadStringArray()
+        public void TestReadStringArray3()
         {
             List<byte> b = new List<byte>()
             {
@@ -456,7 +704,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void ReadStringArrayBig()
+        public void ReadStringArrayBig3()
         {
             List<byte> s = new List<byte>();
             s.Add(0xff);
@@ -477,7 +725,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void ReadValueError()
+        public void TestReadValueError3()
         {
             RawMemoryStream stream = new RawMemoryStream(new byte[0], 0);
             WireDecoder d = new WireDecoder(stream, 0x0300);
@@ -486,7 +734,43 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestReadString()
+        public void TestReadString2()
+        {
+            byte[] sNormalBytes = Encoding.UTF8.GetBytes(s_normal);
+            byte[] sLongBytes = Encoding.UTF8.GetBytes(s_long);
+            byte[] sBigBytes = Encoding.UTF8.GetBytes(s_big2);
+            List<byte> s = new List<byte>();
+            s.AddRange(new byte[] { 0x00, 0x05 });
+            s.AddRange(sNormalBytes);
+            s.AddRange(new byte[] { 0x00, 0x80 });
+            s.AddRange(sLongBytes);
+            s.AddRange(new byte[] { 0xff, 0xff });
+            s.AddRange(sBigBytes);
+            s.Add(0x55);
+
+            RawMemoryStream stream = new RawMemoryStream(s.ToArray(), s.Count);
+            WireDecoder d = new WireDecoder(stream, 0x0200);
+
+            string outs = null;
+            Assert.That(d.ReadString(ref outs));
+            Assert.That(outs, Is.EquivalentTo(s_normal));
+
+            Assert.That(d.ReadString(ref outs));
+            Assert.That(outs, Is.EquivalentTo(s_long));
+
+            Assert.That(d.ReadString(ref outs));
+            Assert.That(outs, Is.EquivalentTo(s_big2));
+
+            byte b = 0;
+            Assert.That(d.Read8(ref b));
+            Assert.That(b, Is.EqualTo(0x55));
+
+            Assert.That(d.ReadString(ref outs), Is.False);
+            Assert.That(d.Error, Is.Null);
+        }
+
+        [Test]
+        public void TestReadString3()
         {
             byte[] sNormalBytes = Encoding.UTF8.GetBytes(s_normal);
             byte[] sLongBytes = Encoding.UTF8.GetBytes(s_long);

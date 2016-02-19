@@ -38,6 +38,22 @@ namespace NetworkTables.Test
         }
 
         [Test]
+        public void TestConstruct()
+        {
+            WireEncoder d = new WireEncoder(0x0300);
+            Assert.That(d.Error, Is.Null);
+            Assert.That(d.ProtoRev, Is.EqualTo(0x0300));
+        }
+
+        [Test]
+        public void TestSetProtoRev()
+        {
+            WireEncoder d = new WireEncoder(0x0300);
+            d.SetProtoRev(0x0200);
+            Assert.That(d.ProtoRev, Is.EqualTo(0x0200));
+        }
+
+        [Test]
         public void TestWireEncoderWrite16()
         {
             int off = BUFSIZE - 2;
@@ -162,9 +178,20 @@ namespace NetworkTables.Test
         [Test]
         public void TestWriteTypeError()
         {
-            WireEncoder e = new WireEncoder(0x0300);
+            WireEncoder e = new WireEncoder(0x0200);
             e.WriteType(NtType.Unassigned);
-            Assert.That(e.Error, Is.EqualTo("Unrecognized Type"));
+            Assert.That(e.Size(), Is.EqualTo(0));
+            Assert.That(e.Error, Is.EqualTo("unrecognized Type"));
+
+            e.Reset();
+            e.WriteType(NtType.Raw);
+            Assert.That(e.Size(), Is.EqualTo(0));
+            Assert.That(e.Error, Is.EqualTo("raw type not supported in protocol < 3.0"));
+
+            e.Reset();
+            e.WriteType(NtType.Rpc);
+            Assert.That(e.Size(), Is.EqualTo(0));
+            Assert.That(e.Error, Is.EqualTo("RPC type not supported in protocol < 3.0"));
         }
 
         [Test]
@@ -230,7 +257,171 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestGetValueSize()
+        public void TestGetValueSize2()
+        {
+            WireEncoder e = new WireEncoder(0x0200);
+            Assert.That(e.GetValueSize(null), Is.EqualTo(0));
+            Assert.That(e.GetValueSize(v_empty), Is.EqualTo(0));
+            Assert.That(e.GetValueSize(v_boolean), Is.EqualTo(1));
+            Assert.That(e.GetValueSize(v_double), Is.EqualTo(8));
+            Assert.That(e.GetValueSize(v_string), Is.EqualTo(7));
+            Assert.That(e.GetValueSize(v_raw), Is.EqualTo(0));
+
+            Assert.That(e.GetValueSize(v_boolArray), Is.EqualTo(1 + 3));
+            Assert.That(e.GetValueSize(v_boolArrayBig), Is.EqualTo(1 + 255));
+            Assert.That(e.GetValueSize(v_doubleArray), Is.EqualTo(1 + 2 * 8));
+            Assert.That(e.GetValueSize(v_doubleArrayBig), Is.EqualTo(1 + 255 * 8));
+            Assert.That(e.GetValueSize(v_stringArray), Is.EqualTo(1 + 7 + 9));
+            Assert.That(e.GetValueSize(v_stringArrayBig), Is.EqualTo(1 + 255 * 3));
+        }
+
+        [Test]
+        public void TestWriteBooleanValue2()
+        {
+            WireEncoder e = new WireEncoder(0x0200);
+            e.WriteValue(v_boolean);
+            var v_false = Value.MakeBoolean(false);
+            e.WriteValue(v_false);
+            Assert.That(e.Error, Is.Null);
+            Assert.That(e.Buffer.Length, Is.EqualTo(2));
+            Assert.That(e.Buffer, Is.EquivalentTo(new byte[] { 0x01, 0x00 }));
+        }
+
+        [Test]
+        public void TestWriteDoubleValue2()
+        {
+            WireEncoder e = new WireEncoder(0x0200);
+            e.WriteValue(v_double);
+            Assert.That(e.Error, Is.Null);
+            Assert.That(e.Buffer.Length, Is.EqualTo(8));
+            Assert.That(e.Buffer, Is.EquivalentTo(new byte[] { 0x3f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }));
+        }
+
+        [Test]
+        public void TestWriteStringValue2()
+        {
+            WireEncoder e = new WireEncoder(0x0200);
+            e.WriteValue(v_string);
+            Assert.That(e.Error, Is.Null);
+            Assert.That(e.Buffer.Length, Is.EqualTo(7));
+            Assert.That(e.Buffer, Is.EquivalentTo(new byte[] { 0x00, 0x05, (byte)'h', (byte)'e', (byte)'l', (byte)'l', (byte)'o' }));
+        }
+
+        [Test]
+        public void TestWriteBooleanArrayValue2()
+        {
+            WireEncoder e = new WireEncoder(0x0200);
+            e.WriteValue(v_boolArray);
+            Assert.That(e.Error, Is.Null);
+            Assert.That(e.Buffer.Length, Is.EqualTo(1 + 3));
+            Assert.That(e.Buffer, Is.EquivalentTo(new byte[] { 0x03, 0x00, 0x01, 0x00 }));
+
+            e.Reset();
+            e.WriteValue(v_boolArrayBig);
+            Assert.That(e.Error, Is.Null);
+            Assert.That(e.Buffer.Length, Is.EqualTo(1 + 255));
+            Assert.That(new[] { e.Buffer[0], e.Buffer[1] }, Is.EquivalentTo(new byte[] { 0xff, 0x00 }));
+        }
+
+        [Test]
+        public void TestWriteDoubleArrayValue2()
+        {
+            WireEncoder e = new WireEncoder(0x0200);
+            e.WriteValue(v_doubleArray);
+            Assert.That(e.Error, Is.Null);
+            Assert.That(e.Buffer.Length, Is.EqualTo(1 + 2 * 8));
+            Assert.That(e.Buffer, Is.EquivalentTo(new byte[]
+            {
+                0x02, 0x3f, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x3f, 0xd0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+            }));
+
+            e.Reset();
+            e.WriteValue(v_doubleArrayBig);
+            Assert.That(e.Error, Is.Null);
+            Assert.That(e.Buffer.Length, Is.EqualTo(1 + 255 * 8));
+            Assert.That(new[] { e.Buffer[0], e.Buffer[1] }, Is.EquivalentTo(new byte[] { 0xff, 0x00 }));
+        }
+
+        [Test]
+        public void TestWriteStringArrayValue2()
+        {
+            WireEncoder e = new WireEncoder(0x0200);
+            e.WriteValue(v_stringArray);
+            Assert.That(e.Error, Is.Null);
+            Assert.That(e.Buffer.Length, Is.EqualTo(1 + 7 + 9));
+            Assert.That(e.Buffer, Is.EquivalentTo(new byte[]
+            {
+                0x02, 0x00, 0x05, (byte)'h', (byte)'e', (byte)'l', (byte)'l', (byte)'o',
+                0x00, 0x07, (byte)'g', (byte)'o', (byte)'o', (byte)'d', (byte)'b', (byte)'y', (byte)'e'
+            }));
+
+            e.Reset();
+            e.WriteValue(v_stringArrayBig);
+            Assert.That(e.Error, Is.Null);
+            Assert.That(e.Buffer.Length, Is.EqualTo(1 + 255 * 3));
+            Assert.That(new[] { e.Buffer[0], e.Buffer[1], e.Buffer[2] }, Is.EquivalentTo(new byte[] { 0xff, 0x00, 0x01 }));
+        }
+
+        [Test]
+        public void TestGetStringSize2()
+        {
+            WireEncoder e = new WireEncoder(0x0200);
+            Assert.That(e.GetStringSize(s_normal), Is.EqualTo(7));
+            Assert.That(e.GetStringSize(s_long), Is.EqualTo(130));
+            Assert.That(e.GetStringSize(s_big), Is.EqualTo(65537));
+        }
+
+        [Test]
+        public void TestWriteString2()
+        {
+            WireEncoder e = new WireEncoder(0x0200);
+            e.WriteString(s_normal);
+            Assert.That(e.Error, Is.Null);
+            Assert.That(e.Buffer.Length, Is.EqualTo(7));
+            Assert.That(e.Buffer, Is.EquivalentTo(new byte[] { 0x00, 0x05, (byte)'h', (byte)'e', (byte)'l', (byte)'l', (byte)'o' }));
+
+            e.Reset();
+            e.WriteString(s_long);
+            Assert.That(e.Error, Is.Null);
+            Assert.That(e.Buffer.Length, Is.EqualTo(130));
+            byte[] arr = new[] { e.Buffer[0], e.Buffer[1], e.Buffer[2], e.Buffer[3] };
+            Assert.That(arr, Is.EquivalentTo(new byte[] { 0x00, 0x80, (byte)'*', (byte)'*' }));
+            Assert.That(e.Buffer[128], Is.EqualTo((byte)'*'));
+            Assert.That(e.Buffer[129], Is.EqualTo((byte)'x'));
+
+            e.Reset();
+            e.WriteString(s_big);
+            Assert.That(e.Error, Is.Null);
+            Assert.That(e.Buffer.Length, Is.EqualTo(65537));
+            arr = new[] { e.Buffer[0], e.Buffer[1], e.Buffer[2], e.Buffer[3] };
+            Assert.That(arr, Is.EquivalentTo(new byte[] { 0xff, 0xff, (byte)'*', (byte)'*' }));
+            Assert.That(e.Buffer[65535], Is.EqualTo((byte)'*'));
+            Assert.That(e.Buffer[65536], Is.EqualTo((byte)'x'));
+        }
+
+        [Test]
+        public void TestWriteValueError2()
+        {
+            WireEncoder e = new WireEncoder(0x0200);
+            e.WriteValue(v_empty);
+            Assert.That(e.Buffer.Length, Is.EqualTo(0));
+            Assert.That(e.Error, Is.Not.Null);
+        }
+
+        [Test]
+        public void TestWriteValueNull2()
+        {
+            WireEncoder e = new WireEncoder(0x0200);
+            e.WriteValue(null);
+            Assert.That(e.Buffer.Length, Is.EqualTo(0));
+            Assert.That(e.Error, Is.Not.Null);
+        }
+
+
+
+        [Test]
+        public void TestGetValueSize3()
         {
             WireEncoder e = new WireEncoder(0x0300);
             Assert.That(e.GetValueSize(null), Is.EqualTo(0));
@@ -249,7 +440,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestWriteBooleanValue()
+        public void TestWriteBooleanValue3()
         {
             WireEncoder e = new WireEncoder(0x0300);
             e.WriteValue(v_boolean);
@@ -261,7 +452,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestWriteDoubleValue()
+        public void TestWriteDoubleValue3()
         {
             WireEncoder e = new WireEncoder(0x0300);
             e.WriteValue(v_double);
@@ -271,7 +462,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestWriteStringValue()
+        public void TestWriteStringValue3()
         {
             WireEncoder e = new WireEncoder(0x0300);
             e.WriteValue(v_string);
@@ -281,7 +472,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestWriteRawArray()
+        public void TestWriteRawArray3()
         {
             WireEncoder e = new WireEncoder(0x0300);
             e.WriteValue(v_raw);
@@ -291,7 +482,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestWriteBooleanArrayValue()
+        public void TestWriteBooleanArrayValue3()
         {
             WireEncoder e = new WireEncoder(0x0300);
             e.WriteValue(v_boolArray);
@@ -307,7 +498,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestWriteDoubleArrayValue()
+        public void TestWriteDoubleArrayValue3()
         {
             WireEncoder e = new WireEncoder(0x0300);
             e.WriteValue(v_doubleArray);
@@ -327,12 +518,12 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestWriteStringArrayValue()
+        public void TestWriteStringArrayValue3()
         {
             WireEncoder e = new WireEncoder(0x0300);
             e.WriteValue(v_stringArray);
             Assert.That(e.Error, Is.Null);
-            Assert.That(e.Buffer.Length, Is.EqualTo(1 + +6 + 8));
+            Assert.That(e.Buffer.Length, Is.EqualTo(1 + 6 + 8));
             Assert.That(e.Buffer, Is.EquivalentTo(new byte[]
             {
                 0x02, 0x05, (byte)'h', (byte)'e', (byte)'l', (byte)'l', (byte)'o',
@@ -347,7 +538,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestGetStringSize()
+        public void TestGetStringSize3()
         {
             WireEncoder e = new WireEncoder(0x0300);
             Assert.That(e.GetStringSize(s_normal), Is.EqualTo(6));
@@ -356,7 +547,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestWriteString()
+        public void TestWriteString3()
         {
             WireEncoder e = new WireEncoder(0x0300);
             e.WriteString(s_normal);
@@ -386,7 +577,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestWriteValueError()
+        public void TestWriteValueError3()
         {
             WireEncoder e = new WireEncoder(0x0300);
             e.WriteValue(v_empty);
@@ -395,7 +586,7 @@ namespace NetworkTables.Test
         }
 
         [Test]
-        public void TestWriteValueNull()
+        public void TestWriteValueNull3()
         {
             WireEncoder e = new WireEncoder(0x0300);
             e.WriteValue(null);
