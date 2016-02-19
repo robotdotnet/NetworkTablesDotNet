@@ -43,7 +43,7 @@ namespace NetworkTables
             m_func(level, file, line, msg);
         }
 
-        private LogLevel m_minLevel = LogLevel.LogInfo;
+        private LogLevel m_minLevel = 0;
 
         public bool HasLogger()
         {

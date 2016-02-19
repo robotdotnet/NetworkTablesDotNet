@@ -401,9 +401,6 @@ namespace NetworkTables
                     conn.Start();
 
                     m_doReconnect = false;
-
-                    Monitor.Exit(m_userMutex);
-                    lockEntered = false;
                     m_reconnectCv.Wait(m_userMutex, ref lockEntered, () =>
                     {
                         return !m_active || m_doReconnect;
@@ -531,6 +528,8 @@ namespace NetworkTables
             }
 
             m_storage.GetInitialAssignments(conn, outgoing);
+
+            outgoing.Add(Message.ServerHelloDone());
 
             Debug("server: sending initial assignments");
             sendMsgs(outgoing.ToArray());
