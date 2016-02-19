@@ -685,6 +685,34 @@ namespace NetworkTables.Test
         }
 
         [Test]
+        public void TestReadDoubleArrayError3()
+        {
+            byte[] b =
+            {
+                0x02, 
+            };
+            RawMemoryStream stream = new RawMemoryStream(b, b.Length);
+            WireDecoder d = new WireDecoder(stream, 0x0300);
+
+            var val = d.ReadValue(NtType.DoubleArray);
+            Assert.That(val, Is.Null);
+        }
+
+        [Test]
+        public void TestReadStringArrayError3()
+        {
+            byte[] b =
+            {
+                0x02,
+            };
+            RawMemoryStream stream = new RawMemoryStream(b, b.Length);
+            WireDecoder d = new WireDecoder(stream, 0x0300);
+
+            var val = d.ReadValue(NtType.StringArray);
+            Assert.That(val, Is.Null);
+        }
+
+        [Test]
         public void ReadDoubleArrayBig3()
         {
             List<byte> s = new List<byte>();
@@ -762,6 +790,15 @@ namespace NetworkTables.Test
         }
 
         [Test]
+        public void TestReadStringError2()
+        {
+            RawMemoryStream stream = new RawMemoryStream(new byte[] { 0x00, 0x05 }, 2);
+            WireDecoder d = new WireDecoder(stream, 0x0200);
+            string str = "";
+            Assert.That(d.ReadString(ref str), Is.False);
+        }
+
+        [Test]
         public void TestReadString2()
         {
             byte[] sNormalBytes = Encoding.UTF8.GetBytes(s_normal);
@@ -795,6 +832,24 @@ namespace NetworkTables.Test
 
             Assert.That(d.ReadString(ref outs), Is.False);
             Assert.That(d.Error, Is.Null);
+        }
+
+        [Test]
+        public void TestReadStringError3()
+        {
+            RawMemoryStream stream = new RawMemoryStream(new byte[] { 0x05 }, 1);
+            WireDecoder d = new WireDecoder(stream, 0x0300);
+            string str = "";
+            Assert.That(d.ReadString(ref str), Is.False);
+        }
+
+        [Test]
+        public void TestReadRawError3()
+        {
+            RawMemoryStream stream = new RawMemoryStream(new byte[] { 0x05 }, 1);
+            WireDecoder d = new WireDecoder(stream, 0x0300);
+            byte[] str = null;
+            Assert.That(d.ReadRaw(ref str), Is.False);
         }
 
         [Test]

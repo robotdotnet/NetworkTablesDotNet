@@ -34,6 +34,9 @@ namespace NetworkTables.Test
         [Test]
         public void TestEqualsNull()
         {
+            Value v = new Value();
+            object o = null;
+            Assert.That(v.Equals(o), Is.False);
             Assert.That(new Value(), Is.Not.EqualTo(null));
         }
 
@@ -349,6 +352,13 @@ namespace NetworkTables.Test
             Assert.That(ex.ThrownByValueGet, Is.True);
             Assert.That(ex.TypeInTable, Is.EqualTo(NtType.Unassigned));
             Assert.That(ex.RequestedType, Is.EqualTo(NtType.StringArray));
+        }
+
+        [Test]
+        public void TestMakeRawInvalidSize()
+        {
+            byte[] b = new byte[2];
+            Assert.That(Value.MakeRpc(b, 10), Is.Null);
         }
 
         [Test]

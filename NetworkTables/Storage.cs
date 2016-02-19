@@ -243,7 +243,7 @@ namespace NetworkTables
                         os.Write("\\x00");
                         break;
                     default:
-                        if (!char.IsControl(c))
+                        if (IsPrintable(c))
                         {
                             os.Write(c);
                             break;
@@ -256,6 +256,11 @@ namespace NetworkTables
                 }
             }
             os.Write('"');
+        }
+
+        private static bool IsPrintable(char c)
+        {
+            return c > 0x1f && c < 127;
         }
 
         public delegate void QueueOutgoingFunc(Message msg, NetworkConnection only, NetworkConnection except);
@@ -1089,6 +1094,7 @@ namespace NetworkTables
                     break;
                 }
             }
+
             first = source.Substring(0, pos);
             second = source.Substring(pos);
             return;
@@ -1134,7 +1140,7 @@ namespace NetworkTables
                 {
                     case '\\':
                     case '"':
-                        builder.Append(source[s - 1]);
+                        builder.Append(source[s]);
                         break;
                     case 't':
                         builder.Append('\t');
