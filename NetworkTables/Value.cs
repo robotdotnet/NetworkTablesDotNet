@@ -234,7 +234,7 @@ namespace NetworkTables
             return new Value(tmp, true);
         }
 
-        public static Value MakeRpc(byte[] val)
+        public static Value MakeRpc(params byte[] val)
         {
             byte[] tmp = new byte[val.Length];
             Array.Copy(val, tmp, val.Length);
@@ -265,12 +265,6 @@ namespace NetworkTables
         internal static Value MakeEmpty()
         {
             return new Value();
-        }
-
-        private Value(string val, bool rpc)
-        {
-            Type = NtType.Rpc;
-            Val = val;
         }
 
         private Value(string val)

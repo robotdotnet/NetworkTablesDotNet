@@ -12,6 +12,32 @@ namespace NetworkTables.Test
     public class TestValue
     {
         [Test]
+        public void TestToStringUnassigned()
+        {
+            Value v = new Value();
+            Assert.That(v.ToString(), Is.EqualTo("Unassigned"));
+        }
+
+        [Test]
+        public void TestToString()
+        {
+            Value v = Value.MakeBoolean(true);
+            Assert.That(v.ToString(), Is.EqualTo("True"));
+        }
+
+        [Test]
+        public void TestEqualsDifferentObject()
+        {
+            Assert.That(new Value(), Is.Not.EqualTo("randomstring"));
+        }
+
+        [Test]
+        public void TestEqualsNull()
+        {
+            Assert.That(new Value(), Is.Not.EqualTo(null));
+        }
+
+        [Test]
         public void TestConstructEmpty()
         {
             Value v = new Value();
@@ -22,6 +48,7 @@ namespace NetworkTables.Test
         public void TestBoolean()
         {
             var v = Value.MakeBoolean(false);
+            Assert.That(v.IsBoolean(), Is.True);
             Assert.That(v.Type, Is.EqualTo(NtType.Boolean));
             Assert.That(v.GetBoolean(), Is.False);
 
@@ -34,6 +61,7 @@ namespace NetworkTables.Test
         public void TestDouble()
         {
             var v = Value.MakeDouble(0.5);
+            Assert.That(v.IsDouble(), Is.True);
             Assert.That(v.Type, Is.EqualTo(NtType.Double));
             Assert.That(v.GetDouble(), Is.EqualTo(0.5));
 
@@ -46,6 +74,7 @@ namespace NetworkTables.Test
         public void TestString()
         {
             var v = Value.MakeString("hello");
+            Assert.That(v.IsString(), Is.True);
             Assert.That(v.Type, Is.EqualTo(NtType.String));
             Assert.That(v.GetString(), Is.EqualTo("hello"));
 
@@ -60,6 +89,7 @@ namespace NetworkTables.Test
             byte[] raw = new byte[] { 5, 19, 28 };
 
             var v = Value.MakeRaw(raw);
+            Assert.That(v.IsRaw(), Is.True);
             Assert.That(v.Type, Is.EqualTo(NtType.Raw));
             Assert.That(ReferenceEquals(v.GetRaw(), raw), Is.False);
             Assert.That(v.GetRaw(), Is.EquivalentTo(raw));
@@ -97,6 +127,7 @@ namespace NetworkTables.Test
             byte[] raw = new byte[] { 5, 19, 28 };
 
             var v = Value.MakeRpc(raw);
+            Assert.That(v.IsRpc(), Is.True);
             Assert.That(v.Type, Is.EqualTo(NtType.Rpc));
             Assert.That(ReferenceEquals(v.GetRpc(), raw), Is.False);
             Assert.That(v.GetRpc(), Is.EquivalentTo(raw));
@@ -134,6 +165,7 @@ namespace NetworkTables.Test
             bool[] raw = new bool[] { true, false, true };
 
             var v = Value.MakeBooleanArray(raw);
+            Assert.That(v.IsBooleanArray(), Is.True);
             Assert.That(v.Type, Is.EqualTo(NtType.BooleanArray));
             Assert.That(ReferenceEquals(v.GetBooleanArray(), raw), Is.False);
             Assert.That(v.GetBooleanArray(), Is.EquivalentTo(raw));
@@ -171,6 +203,7 @@ namespace NetworkTables.Test
             double[] raw = new double[] { 0.5, 0.25, 0.5 };
 
             var v = Value.MakeDoubleArray(raw);
+            Assert.That(v.IsDoubleArray(), Is.True);
             Assert.That(v.Type, Is.EqualTo(NtType.DoubleArray));
             Assert.That(ReferenceEquals(v.GetDoubleArray(), raw), Is.False);
             Assert.That(v.GetDoubleArray(), Is.EquivalentTo(raw));
@@ -208,6 +241,7 @@ namespace NetworkTables.Test
             string[] raw = new string[] { "hello", "goodbye", "string" };
 
             var v = Value.MakeStringArray(raw);
+            Assert.That(v.IsStringArray(), Is.True);
             Assert.That(v.Type, Is.EqualTo(NtType.StringArray));
             Assert.That(ReferenceEquals(v.GetStringArray(), raw), Is.False);
             Assert.That(v.GetStringArray(), Is.EquivalentTo(raw));

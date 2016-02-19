@@ -214,6 +214,7 @@ namespace NetworkTables.Test
         Value v_double = Value.MakeDouble(1.0);
         Value v_string = Value.MakeString("hello");
         Value v_raw = Value.MakeRaw((byte)'h', (byte)'e', (byte)'l', (byte)'l', (byte)'o');
+        Value v_rpc = Value.MakeRpc((byte)'h', (byte)'e', (byte)'l', (byte)'l', (byte)'o');
         Value v_boolArray = Value.MakeBooleanArray(false, true, false);
         Value v_boolArrayBig = Value.MakeBooleanArray(new bool[256]);
         Value v_doubleArray = Value.MakeDoubleArray(0.5, 0.25);
@@ -266,6 +267,7 @@ namespace NetworkTables.Test
             Assert.That(e.GetValueSize(v_double), Is.EqualTo(8));
             Assert.That(e.GetValueSize(v_string), Is.EqualTo(7));
             Assert.That(e.GetValueSize(v_raw), Is.EqualTo(0));
+            Assert.That(e.GetValueSize(v_rpc), Is.EqualTo(0));
 
             Assert.That(e.GetValueSize(v_boolArray), Is.EqualTo(1 + 3));
             Assert.That(e.GetValueSize(v_boolArrayBig), Is.EqualTo(1 + 255));
@@ -407,6 +409,16 @@ namespace NetworkTables.Test
             e.WriteValue(v_empty);
             Assert.That(e.Buffer.Length, Is.EqualTo(0));
             Assert.That(e.Error, Is.Not.Null);
+
+            e.Reset();
+            e.WriteValue(v_raw);
+            Assert.That(e.Size(), Is.EqualTo(0));
+            Assert.That(e.Error, Is.Not.Null);
+
+            e.Reset();
+            e.WriteValue(v_rpc);
+            Assert.That(e.Size(), Is.EqualTo(0));
+            Assert.That(e.Error, Is.Not.Null);
         }
 
         [Test]
@@ -476,6 +488,16 @@ namespace NetworkTables.Test
         {
             WireEncoder e = new WireEncoder(0x0300);
             e.WriteValue(v_raw);
+            Assert.That(e.Error, Is.Null);
+            Assert.That(e.Buffer.Length, Is.EqualTo(6));
+            Assert.That(e.Buffer, Is.EquivalentTo(new byte[] { 0x05, (byte)'h', (byte)'e', (byte)'l', (byte)'l', (byte)'o' }));
+        }
+
+        [Test]
+        public void TestWriteRpcArray3()
+        {
+            WireEncoder e = new WireEncoder(0x0300);
+            e.WriteValue(v_rpc);
             Assert.That(e.Error, Is.Null);
             Assert.That(e.Buffer.Length, Is.EqualTo(6));
             Assert.That(e.Buffer, Is.EquivalentTo(new byte[] { 0x05, (byte)'h', (byte)'e', (byte)'l', (byte)'l', (byte)'o' }));

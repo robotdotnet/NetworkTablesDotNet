@@ -15,6 +15,7 @@ namespace NetworkTables.Test
         readonly Value v_double = Value.MakeDouble(1.0);
         readonly Value v_string = Value.MakeString("hello");
         readonly Value v_raw = Value.MakeRaw((byte)'h', (byte)'e', (byte)'l', (byte)'l', (byte)'o');
+        readonly Value v_rpc = Value.MakeRpc((byte)'h', (byte)'e', (byte)'l', (byte)'l', (byte)'o');
         readonly Value v_boolArray = Value.MakeBooleanArray(false, true, false);
         readonly Value v_boolArrayBig = Value.MakeBooleanArray(new bool[255]);
         readonly Value v_doubleArray = Value.MakeDoubleArray(0.5, 0.25);
@@ -588,6 +589,33 @@ namespace NetworkTables.Test
             Assert.That(b, Is.EqualTo(0x55));
 
             Assert.That(d.ReadValue(NtType.Raw), Is.Null);
+            Assert.That(d.Error, Is.Null);
+        }
+
+        [Test]
+        public void TestRpcValue3()
+        {
+            byte[] rawData = new byte[]
+            {
+                0x05, (byte)'h', (byte)'e', (byte)'l', (byte)'l', (byte)'o',
+                0x03, (byte)'b', (byte)'y', (byte)'e', 0x55,
+            };
+            RawMemoryStream stream = new RawMemoryStream(rawData, rawData.Length);
+            WireDecoder d = new WireDecoder(stream, 0x0300);
+            var val = d.ReadValue(NtType.Rpc);
+            Assert.That(val.Type, Is.EqualTo(NtType.Rpc));
+            Assert.That(val.Val, Is.EqualTo(v_rpc.Val));
+
+            var vFalse = Value.MakeRaw((byte)'b', (byte)'y', (byte)'e');
+            val = d.ReadValue(NtType.Rpc);
+            Assert.That(val.Type, Is.EqualTo(NtType.Rpc));
+            Assert.That(val.Val, Is.EqualTo(vFalse.Val));
+
+            byte b = 0;
+            Assert.That(d.Read8(ref b));
+            Assert.That(b, Is.EqualTo(0x55));
+
+            Assert.That(d.ReadValue(NtType.Rpc), Is.Null);
             Assert.That(d.Error, Is.Null);
         }
 
