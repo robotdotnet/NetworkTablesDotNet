@@ -68,7 +68,6 @@
     <Compile Include="SocketInputStream.cs" />
     <Compile Include="SequenceNumber.cs" />
     <Compile Include="Storage.cs" />
-    <Compile Include="Support\NTConcurrentQueue.cs" />
     <Compile Include="Support\Timestamp.cs" />
     <Compile Include="Tables\IRemote.cs" />
     <Compile Include="Tables\IRemoteConnectionListener.cs" />

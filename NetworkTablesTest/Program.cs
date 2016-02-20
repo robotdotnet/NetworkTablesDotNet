@@ -60,9 +60,12 @@ namespace NetworkTablesTest
 
             var t = NetworkTable.GetTable("test");
 
-            //t.PutNumber("Key1", 5.89);
+            t.PutNumber("Key1", 5.98);
+            t.SetPersistent("Key1");
 
             //t.PutNumber("ke2", 675);
+
+            Thread.Sleep(Timeout.Infinite);
 
             int count = 0;
 

@@ -47,7 +47,7 @@ namespace NetworkTables
 
         private Notifier m_notifier;
 
-        private NTConcurrentQueue<List<Message>> m_outgoing = new NTConcurrentQueue<List<Message>>();
+        private BlockingCollection<List<Message>> m_outgoing = new BlockingCollection<List<Message>>();
 
         private HandshakeFunc m_handshake;
 
@@ -111,7 +111,7 @@ namespace NetworkTables
             m_state = State.kInit;
             List<Message> temp = new List<Message>();
             // clear queue
-            while (!m_outgoing.Empty) m_outgoing.Pop();
+            while (m_outgoing.Count != 0) m_outgoing.Take();
 
             m_writeThread = new Thread(WriteThreadMain);
             m_writeThread.IsBackground = true;
@@ -133,7 +133,7 @@ namespace NetworkTables
             m_stream?.Close();
             List<Message> temp = new List<Message>();
             //Send an empty message to terminate the write thread
-            m_outgoing.Push(temp);
+            m_outgoing.Add(temp);
 
             //Wait for our threads to detach from each.
             if (m_writeThread != null)
@@ -155,7 +155,7 @@ namespace NetworkTables
             }
 
             // clear the queue
-            while (!m_outgoing.Empty) m_outgoing.Pop();
+            while (m_outgoing.Count != 0) m_outgoing.Take();
         }
 
         public ConnectionInfo GetConnectionInfo()
@@ -302,11 +302,11 @@ namespace NetworkTables
                     if (!keepAlive) return;
                     // send keep-alives once a second (if no other messages have been sent)
                     if ((now - m_lastPost) < TimeSpan.FromSeconds(1)) return;
-                    m_outgoing.Push(new List<Message> { Message.KeepAlive() });
+                    m_outgoing.Add(new List<Message> { Message.KeepAlive() });
                 }
                 else
                 {
-                    m_outgoing.Push(new List<Message>(m_pendingOutgoing));
+                    m_outgoing.Add(new List<Message>(m_pendingOutgoing));
                     m_pendingOutgoing.Clear();
                     m_pendingUpdate.Clear();
 
@@ -372,7 +372,7 @@ namespace NetworkTables
                 return msg;
             }, messages =>
             {
-                m_outgoing.Push(messages.ToList());
+                m_outgoing.Add(messages.ToList());
             }))
             {
                 m_state = State.kDead;
@@ -403,7 +403,7 @@ namespace NetworkTables
             if (m_state != State.kDead) m_notifier.NotifyConnection(false, GetConnectionInfo());
             m_state = State.kDead;
             m_active = false;
-            m_outgoing.Push(new List<Message>()); // Also kill write thread
+            m_outgoing.Add(new List<Message>()); // Also kill write thread
         }
 
         private void WriteThreadMain()
@@ -412,8 +412,7 @@ namespace NetworkTables
 
             while (m_active)
             {
-                List<Message> messages;
-                var msgs = m_outgoing.Pop();
+                var msgs = m_outgoing.Take();
                 Debug4("write thread woke up");
                 if (msgs.Count == 0) continue;
                 encoder.SetProtoRev(m_protoRev);
