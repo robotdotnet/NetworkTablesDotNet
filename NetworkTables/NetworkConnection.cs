@@ -7,12 +7,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using NetworkTables.Support;
 using NetworkTables.TcpSockets;
+using static NetworkTables.Logger;
 
 namespace NetworkTables
 {
     internal class NetworkConnection : IDisposable
     {
-
         private struct Pair
         {
             public int First { get; private set; }
@@ -47,7 +47,7 @@ namespace NetworkTables
 
         private Notifier m_notifier;
 
-        private ConcurrentQueue<List<Message>> m_outgoing = new ConcurrentQueue<List<Message>>();
+        private NTConcurrentQueue<List<Message>> m_outgoing = new NTConcurrentQueue<List<Message>>();
 
         private HandshakeFunc m_handshake;
 
@@ -90,6 +90,7 @@ namespace NetworkTables
             m_protoRev = 0x0300;
             m_state = State.kCreated;
 
+            // turns of Nagle, as we bundle packets ourselves
             m_stream.SetNoDelay();
         }
 
@@ -109,7 +110,8 @@ namespace NetworkTables
             m_active = true;
             m_state = State.kInit;
             List<Message> temp = new List<Message>();
-            while (!m_outgoing.IsEmpty) m_outgoing.TryDequeue(out temp);
+            // clear queue
+            while (!m_outgoing.Empty) m_outgoing.Pop();
 
             m_writeThread = new Thread(WriteThreadMain);
             m_writeThread.IsBackground = true;
@@ -127,24 +129,33 @@ namespace NetworkTables
             m_state = State.kDead;
 
             m_active = false;
-
+            //Closing stream to terminate read thread
             m_stream?.Close();
             List<Message> temp = new List<Message>();
-            m_outgoing.Enqueue(temp);
+            //Send an empty message to terminate the write thread
+            m_outgoing.Push(temp);
 
-            bool writeJoined = m_writeThread.Join(TimeSpan.FromMilliseconds(200));
-            if (!writeJoined)
+            //Wait for our threads to detach from each.
+            if (m_writeThread != null)
             {
-                m_writeThread.Abort();
+                bool writeJoined = m_writeThread.Join(TimeSpan.FromMilliseconds(200));
+                if (!writeJoined)
+                {
+                    m_writeThread.Abort();
+                }
             }
 
-            bool readJoined = m_readThread.Join(TimeSpan.FromMilliseconds(200));
-            if (!readJoined)
+            if (m_readThread != null)
             {
-                m_readThread.Abort();
+                bool readJoined = m_readThread.Join(TimeSpan.FromMilliseconds(200));
+                if (!readJoined)
+                {
+                    m_readThread.Abort();
+                }
             }
 
-            while (!m_outgoing.IsEmpty) m_outgoing.TryDequeue(out temp);
+            // clear the queue
+            while (!m_outgoing.Empty) m_outgoing.Pop();
         }
 
         public ConnectionInfo GetConnectionInfo()
@@ -166,13 +177,14 @@ namespace NetworkTables
         {
             lock (m_pendingMutex)
             {
+                //Merge with previouse
                 Message.MsgType type = msg.Type();
-
                 switch (type)
                 {
                     case Message.MsgType.kEntryAssign:
                     case Message.MsgType.kEntryUpdate:
                         {
+                            // don't do this for unassigned id's
                             uint id = msg.Id();
                             if (id == 0xffff)
                             {
@@ -185,17 +197,20 @@ namespace NetworkTables
                                 if (oldmsg != null && oldmsg.Is(Message.MsgType.kEntryAssign) &&
                                     msg.Is(Message.MsgType.kEntryUpdate))
                                 {
+                                    // need to update assignement
                                     m_pendingOutgoing[m_pendingUpdate[(int)id].First] = Message.EntryAssign(oldmsg.Str(), id, msg.SeqNumUid(), msg.Val(),
                                         (EntryFlags)oldmsg.Flags());
 
                                 }
                                 else
                                 {
+                                    // new but remember it
                                     m_pendingOutgoing[m_pendingUpdate[(int)id].First] = msg;
                                 }
                             }
                             else
                             {
+                                // new but don't remember it
                                 int pos = m_pendingOutgoing.Count;
                                 m_pendingOutgoing.Add(msg);
                                 if (id >= m_pendingUpdate.Count) m_pendingUpdate.Add(new Pair());
@@ -285,15 +300,16 @@ namespace NetworkTables
                 if (m_pendingOutgoing.Count == 0)
                 {
                     if (!keepAlive) return;
+                    // send keep-alives once a second (if no other messages have been sent)
                     if ((now - m_lastPost) < TimeSpan.FromSeconds(1)) return;
-                    m_outgoing.Enqueue(new List<Message> {Message.KeepAlive()});
+                    m_outgoing.Push(new List<Message> { Message.KeepAlive() });
                 }
                 else
                 {
-                    m_outgoing.Enqueue(new List<Message>(m_pendingOutgoing));
+                    m_outgoing.Push(new List<Message>(m_pendingOutgoing));
                     m_pendingOutgoing.Clear();
                     m_pendingUpdate.Clear();
-                    
+
                 }
                 m_lastPost = DateTime.UtcNow;
             }
@@ -351,13 +367,12 @@ namespace NetworkTables
                 var msg = Message.Read(decoder, m_getEntryType);
                 if (msg == null && decoder.Error != null)
                 {
-                    //Debug
-                    Console.WriteLine("Error reading in handchake: " + decoder.Error);
+                    Debug($"error reading in handshake: {decoder.Error}");
                 }
                 return msg;
             }, messages =>
             {
-                m_outgoing.Enqueue(messages.ToList());
+                m_outgoing.Push(messages.ToList());
             }))
             {
                 m_state = State.kDead;
@@ -375,22 +390,20 @@ namespace NetworkTables
                 var msg = Message.Read(decoder, m_getEntryType);
                 if (msg == null)
                 {
-                    if (decoder.Error != null) //Debug;
-                    {
-
-                    }
+                    if (decoder.Error != null) Info($"read error: {decoder.Error}");
                     m_stream?.Close();
                     break;
                 }
-                //Debug
+                Debug3($"received type={msg.Type()} with str={msg.Str()} id={msg.Id()} seqNum={msg.SeqNumUid()}");
                 m_lastUpdate = (ulong)Timestamp.Now();
                 m_processIncoming(msg, this);
             }
 
-            //Debug
+            Debug2($"read thread died ({this})");
             if (m_state != State.kDead) m_notifier.NotifyConnection(false, GetConnectionInfo());
+            m_state = State.kDead;
             m_active = false;
-            m_outgoing.Enqueue(new List<Message>()); // Also kill write thread
+            m_outgoing.Push(new List<Message>()); // Also kill write thread
         }
 
         private void WriteThreadMain()
@@ -400,28 +413,27 @@ namespace NetworkTables
             while (m_active)
             {
                 List<Message> messages;
-                bool validQueueData = m_outgoing.TryDequeue(out messages);
-
-                if (!validQueueData) continue;
+                var msgs = m_outgoing.Pop();
+                Debug4("write thread woke up");
+                if (msgs.Count == 0) continue;
                 encoder.SetProtoRev(m_protoRev);
                 encoder.Reset();
-                //Debug
-                foreach (var message in messages)
+                Debug3($"sending {msgs.Count} messages");
+                foreach (var message in msgs)
                 {
                     if (message != null)
                     {
-                        //Debug
+                        Debug3($"sending type={message.Type()} with str={message.Str()} id={message.Id()} seqNum={message.SeqNumUid()}");
                         message.Write(encoder);
                     }
                 }
-
                 NetworkStreamError err = NetworkStreamError.kConnectionClosed;
                 if (m_stream == null) break;
                 if (encoder.Size() == 0) continue;
                 if (m_stream.Send(encoder.Buffer, 0, encoder.Size(), ref err) == 0) break;
-                //Debug
+                Debug4($"sent {encoder.Size()} bytes");
             }
-            //Debug
+            Debug2($"write thread died ({this})");
             if (m_state != State.kDead) m_notifier.NotifyConnection(false, GetConnectionInfo());
             m_state = State.kDead;
             m_active = false;
