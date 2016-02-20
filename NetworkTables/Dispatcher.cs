@@ -563,7 +563,7 @@ namespace NetworkTables
 
                 foreach(var m in incoming)
                 {
-                    m_storage.ProcessIncoming(msg, conn);
+                    m_storage.ProcessIncoming(m, conn);
                 }
             }
 
