@@ -259,7 +259,7 @@ namespace NetworkTables
                         timeoutTime = start;
                     //Wait for periodic or when flushed
                     timeoutTime += TimeSpan.FromMilliseconds(m_updateRate);
-                    TimeSpan waitTime = start - timeoutTime;
+                    TimeSpan waitTime = timeoutTime - start;
                     m_flushCv.WaitTimeout(m_flushMutex, ref lockEntered, waitTime, () =>
                     {
                         return !m_active || m_doFlush;
