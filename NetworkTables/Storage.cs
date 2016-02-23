@@ -50,7 +50,7 @@ namespace NetworkTables
 
         internal Dictionary<string, Entry> Entries => m_entries;
         internal List<Entry> IdMap => m_idMap;
-        
+
 
         internal Storage() : this(Notifier.Instance, RpcServer.Instance)
         {
@@ -216,8 +216,8 @@ namespace NetworkTables
 
         private static char HexDigit(int x)
         {
-            const byte hexChar = (byte) 'A';
-            return (char) (x < 10 ? (byte) '0' + x : hexChar + x - 10);
+            const byte hexChar = (byte)'A';
+            return (char)(x < 10 ? (byte)'0' + x : hexChar + x - 10);
         }
 
         private static void WriteString(StreamWriter os, string str)
@@ -284,13 +284,13 @@ namespace NetworkTables
             lock (m_mutex)
             {
                 if (id >= m_idMap.Count) return NtType.Unassigned;
-                Entry entry = m_idMap[(int) id];
+                Entry entry = m_idMap[(int)id];
                 if (entry == null || entry.value == null) return NtType.Unassigned;
                 return entry.value.Type;
             }
         }
 
-        public void ProcessIncoming(Message msg, NetworkConnection conn)
+        public void ProcessIncoming(Message msg, NetworkConnection conn, WeakReference<NetworkConnection> connWeak)
         {
             bool lockEntered = false;
             try
@@ -312,157 +312,157 @@ namespace NetworkTables
                         // shouldn't get these, but ignore if we do
                         break;
                     case kEntryAssign:
-                    {
-                        id = msg.Id();
-                        string name = msg.Str();
-                        bool mayNeedUpdate = false;
-                        if (m_server)
                         {
-                            if (id == 0xffff)
+                            id = msg.Id();
+                            string name = msg.Str();
+                            bool mayNeedUpdate = false;
+                            if (m_server)
                             {
-                                if (m_entries.ContainsKey(name)) return;
-
-
-                                id = (uint) m_idMap.Count;
-                                entry = new Entry(name);
-                                entry.value = msg.Val();
-                                entry.flags = (EntryFlags) msg.Flags();
-                                entry.id = id;
-                                m_entries[name] = entry;
-                                m_idMap.Add(entry);
-
-                                if (entry.IsPersistent()) m_persistentDirty = true;
-
-                                m_notifier.NotifyEntry(name, entry.value, NotifyFlags.NotifyNew);
-
-                                if (m_queueOutgoing != null)
+                                if (id == 0xffff)
                                 {
-                                    var queueOutgoing = m_queueOutgoing;
-                                    var outMsg = Message.EntryAssign(name, id, entry.seqNum.Value(), msg.Val(), (EntryFlags) msg.Flags());
-                                    Monitor.Exit(m_mutex);
-                                    lockEntered = false;
-                                    queueOutgoing(outMsg, null, null);
-                                }
+                                    if (m_entries.ContainsKey(name)) return;
 
-                                return;
-                            }
-                            if (id >= m_idMap.Count || m_idMap[(int) id] == null)
-                            {
-                                Monitor.Exit(m_mutex);
-                                lockEntered = false;
-                                Debug("server: received assignment to unknown entry");
-                                return;
-                            }
-                            entry = m_idMap[(int) id];
-                        }
-                        else
-                        {
-                            if (id == 0xffff)
-                            {
-                                Monitor.Exit(m_mutex);
-                                lockEntered = false;
-                                Debug("client: received entry assignment request?");
-                                return;
-                            }
-                            if (id >= m_idMap.Count) ResizeIdMap(id + 1);
-                            entry = m_idMap[(int) id];
-                            if (entry == null)
-                            {
-                                Entry newEntry;
-                                if (!m_entries.ContainsKey(name))
-                                {
-                                    //Entry didn't exist at all.
-                                    newEntry = new Entry(name);
-                                    newEntry.value = msg.Val();
-                                    newEntry.flags = (EntryFlags) msg.Flags();
-                                    newEntry.id = id;
-                                    m_idMap[(int) id] = newEntry;
-                                    m_entries[name] = newEntry;
 
-                                    m_notifier.NotifyEntry(name, newEntry.value, NotifyFlags.NotifyNew);
+                                    id = (uint)m_idMap.Count;
+                                    entry = new Entry(name);
+                                    entry.value = msg.Val();
+                                    entry.flags = (EntryFlags)msg.Flags();
+                                    entry.id = id;
+                                    m_entries[name] = entry;
+                                    m_idMap.Add(entry);
+
+                                    if (entry.IsPersistent()) m_persistentDirty = true;
+
+                                    m_notifier.NotifyEntry(name, entry.value, NotifyFlags.NotifyNew);
+
+                                    if (m_queueOutgoing != null)
+                                    {
+                                        var queueOutgoing = m_queueOutgoing;
+                                        var outMsg = Message.EntryAssign(name, id, entry.seqNum.Value(), msg.Val(), (EntryFlags)msg.Flags());
+                                        Monitor.Exit(m_mutex);
+                                        lockEntered = false;
+                                        queueOutgoing(outMsg, null, null);
+                                    }
+
                                     return;
                                 }
-                                else
+                                if (id >= m_idMap.Count || m_idMap[(int)id] == null)
                                 {
-                                    newEntry = m_entries[name];
+                                    Monitor.Exit(m_mutex);
+                                    lockEntered = false;
+                                    Debug("server: received assignment to unknown entry");
+                                    return;
                                 }
-                                mayNeedUpdate = true;
-                                entry = newEntry;
-                                entry.id = id;
-                                m_idMap[(int) id] = entry;
+                                entry = m_idMap[(int)id];
+                            }
+                            else
+                            {
+                                if (id == 0xffff)
+                                {
+                                    Monitor.Exit(m_mutex);
+                                    lockEntered = false;
+                                    Debug("client: received entry assignment request?");
+                                    return;
+                                }
+                                if (id >= m_idMap.Count) ResizeIdMap(id + 1);
+                                entry = m_idMap[(int)id];
+                                if (entry == null)
+                                {
+                                    Entry newEntry;
+                                    if (!m_entries.ContainsKey(name))
+                                    {
+                                        //Entry didn't exist at all.
+                                        newEntry = new Entry(name);
+                                        newEntry.value = msg.Val();
+                                        newEntry.flags = (EntryFlags)msg.Flags();
+                                        newEntry.id = id;
+                                        m_idMap[(int)id] = newEntry;
+                                        m_entries[name] = newEntry;
 
-                                if ((EntryFlags) msg.Flags() != entry.flags)
+                                        m_notifier.NotifyEntry(name, newEntry.value, NotifyFlags.NotifyNew);
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        newEntry = m_entries[name];
+                                    }
+                                    mayNeedUpdate = true;
+                                    entry = newEntry;
+                                    entry.id = id;
+                                    m_idMap[(int)id] = entry;
+
+                                    if ((EntryFlags)msg.Flags() != entry.flags)
+                                    {
+                                        var queueOutgoing = m_queueOutgoing;
+                                        var outmsg = Message.FlagsUpdate(id, entry.flags);
+                                        Monitor.Exit(m_mutex);
+                                        lockEntered = false;
+                                        queueOutgoing(outmsg, null, null);
+                                        Monitor.Enter(m_mutex, ref lockEntered);
+                                    }
+                                }
+                            }
+
+                            seqNum = new SequenceNumber(msg.SeqNumUid());
+                            if (seqNum < entry.seqNum)
+                            {
+                                if (mayNeedUpdate)
                                 {
                                     var queueOutgoing = m_queueOutgoing;
-                                    var outmsg = Message.FlagsUpdate(id, entry.flags);
+                                    var outmsg = Message.EntryUpdate(entry.id, entry.seqNum.Value(), entry.value);
                                     Monitor.Exit(m_mutex);
                                     lockEntered = false;
                                     queueOutgoing(outmsg, null, null);
-                                    Monitor.Enter(m_mutex, ref lockEntered);
                                 }
+                                return;
                             }
-                        }
-
-                        seqNum = new SequenceNumber(msg.SeqNumUid());
-                        if (seqNum < entry.seqNum)
-                        {
-                            if (mayNeedUpdate)
+                            //Sanity check. Name should match id
+                            if (msg.Str() != entry.name)
                             {
-                                var queueOutgoing = m_queueOutgoing;
-                                var outmsg = Message.EntryUpdate(entry.id, entry.seqNum.Value(), entry.value);
                                 Monitor.Exit(m_mutex);
                                 lockEntered = false;
-                                queueOutgoing(outmsg, null, null);
+                                Debug("entry assignment for same id with different name?");
+                                return;
                             }
-                            return;
-                        }
-                        //Sanity check. Name should match id
-                        if (msg.Str() != entry.name)
-                        {
-                            Monitor.Exit(m_mutex);
-                            lockEntered = false;
-                            Debug("entry assignment for same id with different name?");
-                            return;
-                        }
 
-                        NotifyFlags notifyFlags = NotifyFlags.NotifyUpdate;
+                            NotifyFlags notifyFlags = NotifyFlags.NotifyUpdate;
 
-                        if (!mayNeedUpdate && conn.ProtoRev >= 0x0300)
-                        {
-                            if ((entry.flags & EntryFlags.Persistent) != ((EntryFlags) msg.Flags() & EntryFlags.Persistent))
+                            if (!mayNeedUpdate && conn.ProtoRev >= 0x0300)
+                            {
+                                if ((entry.flags & EntryFlags.Persistent) != ((EntryFlags)msg.Flags() & EntryFlags.Persistent))
+                                {
+                                    m_persistentDirty = true;
+                                }
+                                if (entry.flags != (EntryFlags)msg.Flags())
+                                {
+                                    notifyFlags |= NotifyFlags.NotifyFlagsChanged;
+                                }
+                                entry.flags = (EntryFlags)msg.Flags();
+                            }
+
+                            if (entry.IsPersistent() && entry.value != msg.Val())
                             {
                                 m_persistentDirty = true;
                             }
-                            if (entry.flags != (EntryFlags) msg.Flags())
+
+                            entry.value = msg.Val();
+                            entry.seqNum = seqNum;
+
+                            m_notifier.NotifyEntry(name, entry.value, notifyFlags);
+
+                            if (m_server && m_queueOutgoing != null)
                             {
-                                notifyFlags |= NotifyFlags.NotifyFlagsChanged;
+                                var queueOutgoing = m_queueOutgoing;
+                                var outmsg = Message.EntryAssign(entry.name, id, msg.SeqNumUid(), msg.Val(), entry.flags);
+                                Monitor.Exit(m_mutex);
+                                lockEntered = false;
+                                queueOutgoing(outmsg, null, conn);
                             }
-                            entry.flags = (EntryFlags) msg.Flags();
+                            break;
                         }
-
-                        if (entry.IsPersistent() && entry.value != msg.Val())
-                        {
-                            m_persistentDirty = true;
-                        }
-
-                        entry.value = msg.Val();
-                        entry.seqNum = seqNum;
-
-                        m_notifier.NotifyEntry(name, entry.value, notifyFlags);
-
-                        if (m_server && m_queueOutgoing != null)
-                        {
-                            var queueOutgoing = m_queueOutgoing;
-                            var outmsg = Message.EntryAssign(entry.name, id, msg.SeqNumUid(), msg.Val(), entry.flags);
-                            Monitor.Exit(m_mutex);
-                            lockEntered = false;
-                            queueOutgoing(outmsg, null, conn);
-                        }
-                        break;
-                    }
                     case Message.MsgType.kEntryUpdate:
                         id = msg.Id();
-                        if (id >= m_idMap.Count || m_idMap[(int) id] == null)
+                        if (id >= m_idMap.Count || m_idMap[(int)id] == null)
                         {
                             Monitor.Exit(m_mutex);
                             lockEntered = false;
@@ -470,7 +470,7 @@ namespace NetworkTables
                             return;
                         }
 
-                        entry = m_idMap[(int) id];
+                        entry = m_idMap[(int)id];
 
                         seqNum = new SequenceNumber(msg.SeqNumUid());
 
@@ -491,92 +491,123 @@ namespace NetworkTables
                         }
                         break;
                     case kFlagsUpdate:
-                    {
-                        id = msg.Id();
-                        if (id >= m_idMap.Count || m_idMap[(int) id] == null)
                         {
-                            Monitor.Exit(m_mutex);
-                            lockEntered = false;
-                            Debug("reeived flags update to unknown entry");
-                            return;
+                            id = msg.Id();
+                            if (id >= m_idMap.Count || m_idMap[(int)id] == null)
+                            {
+                                Monitor.Exit(m_mutex);
+                                lockEntered = false;
+                                Debug("reeived flags update to unknown entry");
+                                return;
+                            }
+
+                            entry = m_idMap[(int)id];
+
+                            if (entry.flags == (EntryFlags)msg.Flags()) return;
+
+                            if ((entry.flags & EntryFlags.Persistent) != ((EntryFlags)msg.Flags() & EntryFlags.Persistent))
+                                m_persistentDirty = true;
+
+                            entry.flags = (EntryFlags)msg.Flags();
+
+                            m_notifier.NotifyEntry(entry.name, entry.value, NotifyFlags.NotifyFlagsChanged);
+
+                            if (m_server && m_queueOutgoing != null)
+                            {
+                                var queueOutgoing = m_queueOutgoing;
+                                Monitor.Exit(m_mutex);
+                                lockEntered = false;
+                                queueOutgoing(msg, null, conn);
+                            }
+                            break;
                         }
+                    case kEntryDelete:
+                        {
+                            id = msg.Id();
+                            if (id >= m_idMap.Count || m_idMap[(int)id] == null)
+                            {
+                                Monitor.Exit(m_mutex);
+                                lockEntered = false;
+                                Debug("received delete to unknown entry");
+                                return;
+                            }
 
-                        entry = m_idMap[(int) id];
 
-                        if (entry.flags == (EntryFlags) msg.Flags()) return;
+                            entry = m_idMap[(int)id];
 
-                        if ((entry.flags & EntryFlags.Persistent) != ((EntryFlags) msg.Flags() & EntryFlags.Persistent))
+                            if (entry.IsPersistent()) m_persistentDirty = true;
+
+                            m_idMap[(int)id] = null;
+
+                            if (m_entries.TryGetValue(entry.name, out entry))
+                            {
+                                m_entries.Remove(entry.name);
+
+                                m_notifier.NotifyEntry(entry.name, entry.value, NotifyFlags.NotifyDelete);
+                            }
+
+                            if (m_server && m_queueOutgoing != null)
+                            {
+                                var queueOutgoing = m_queueOutgoing;
+                                Monitor.Exit(m_mutex);
+                                lockEntered = false;
+                                queueOutgoing(msg, null, conn);
+                            }
+                            break;
+                        }
+                    case Message.MsgType.kClearEntries:
+                        {
+                            m_idMap.Clear();
+
                             m_persistentDirty = true;
 
-                        entry.flags = (EntryFlags) msg.Flags();
+                            foreach (var e in m_entries)
+                            {
+                                m_notifier.NotifyEntry(e.Key, e.Value.value, NotifyFlags.NotifyDelete);
+                            }
 
-                        m_notifier.NotifyEntry(entry.name, entry.value, NotifyFlags.NotifyFlagsChanged);
+                            m_entries.Clear();
 
-                        if (m_server && m_queueOutgoing != null)
-                        {
-                            var queueOutgoing = m_queueOutgoing;
-                            Monitor.Exit(m_mutex);
-                            lockEntered = false;
-                            queueOutgoing(msg, null, conn);
+                            if (m_server && m_queueOutgoing != null)
+                            {
+                                var queueOutgoing = m_queueOutgoing;
+                                Monitor.Exit(m_mutex);
+                                lockEntered = false;
+                                queueOutgoing(msg, null, conn);
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    case kEntryDelete:
-                    {
+                    case Message.MsgType.kExecuteRpc:
+                        if (!m_server) return;
                         id = msg.Id();
-                        if (id >= m_idMap.Count || m_idMap[(int) id] == null)
+                        if (id >= m_idMap.Count || m_idMap[(int)id] == null)
                         {
                             Monitor.Exit(m_mutex);
                             lockEntered = false;
-                            Debug("received delete to unknown entry");
+                            Debug("received RPC call to unknown entry");
                             return;
                         }
-
-
                         entry = m_idMap[(int) id];
-
-                        if (entry.IsPersistent()) m_persistentDirty = true;
-
-                        m_idMap[(int) id] = null;
-
-                        if (m_entries.TryGetValue(entry.name, out entry))
+                        if (!entry.value.IsRpc())
                         {
-                            m_entries.Remove(entry.name);
-
-                            m_notifier.NotifyEntry(entry.name, entry.value, NotifyFlags.NotifyDelete);
-                        }
-
-                        if (m_server && m_queueOutgoing != null)
-                        {
-                            var queueOutgoing = m_queueOutgoing;
                             Monitor.Exit(m_mutex);
                             lockEntered = false;
-                            queueOutgoing(msg, null, conn);
+                            Debug("received RPC call to non-RPC entry");
+                            return;
                         }
-                        break;
-                    }
-                    case Message.MsgType.kClearEntries:
-                    {
-                        m_idMap.Clear();
-
-                        m_persistentDirty = true;
-
-                        foreach (var e in m_entries)
+                        m_rpcServer.ProcessRpc(entry.name, msg, entry.rpcCallback, conn.Uid(), message =>
                         {
-                            m_notifier.NotifyEntry(e.Key, e.Value.value, NotifyFlags.NotifyDelete);
-                        }
-
-                        m_entries.Clear();
-
-                        if (m_server && m_queueOutgoing != null)
-                        {
-                            var queueOutgoing = m_queueOutgoing;
-                            Monitor.Exit(m_mutex);
-                            lockEntered = false;
-                            queueOutgoing(msg, null, conn);
-                        }
+                            NetworkConnection c;
+                            connWeak.TryGetTarget(out c);
+                            c?.QueueOutgoing(msg);
+                        });
                         break;
-                    }
+                    case Message.MsgType.kRpcResponse:
+                        if (m_server) return;
+                        if (!msg.Val().IsRpc()) return; //Not an RPC message
+                        m_rpcResults.Add(new RpcPair(msg.Id(), msg.SeqNumUid()), msg.Val().GetRpc());
+                        m_rpcResultsCond.Set();
+                        break;
                     default:
                         break;
                 }
@@ -607,8 +638,8 @@ namespace NetworkTables
             if (newSize > currentSize)
             {
                 if (newSize > m_idMap.Capacity)
-                    m_idMap.Capacity = (int) newSize;
-                m_idMap.AddRange(Enumerable.Repeat<Entry>(null, (int) newSize - currentSize));
+                    m_idMap.Capacity = (int)newSize;
+                m_idMap.AddRange(Enumerable.Repeat<Entry>(null, (int)newSize - currentSize));
             }
         }
 
@@ -653,7 +684,7 @@ namespace NetworkTables
                     {
                         entry = new Entry(name);
                         entry.value = msg.Val();
-                        entry.flags = (EntryFlags) msg.Flags();
+                        entry.flags = (EntryFlags)msg.Flags();
                         entry.seqNum = seqNum;
                         m_notifier.NotifyEntry(name, entry.value, NotifyFlags.NotifyNew);
                         m_entries.Add(name, entry);
@@ -672,8 +703,8 @@ namespace NetworkTables
 
                             if (conn.ProtoRev >= 0x0300)
                             {
-                                if (entry.flags != (EntryFlags) msg.Flags()) notifyFlags |= NotifyFlags.NotifyFlagsChanged;
-                                entry.flags = (EntryFlags) msg.Flags();
+                                if (entry.flags != (EntryFlags)msg.Flags()) notifyFlags |= NotifyFlags.NotifyFlagsChanged;
+                                entry.flags = (EntryFlags)msg.Flags();
                             }
 
                             m_notifier.NotifyEntry(name, entry.value, notifyFlags);
@@ -682,7 +713,7 @@ namespace NetworkTables
 
                     entry.id = id;
                     if (id >= m_idMap.Count) ResizeIdMap(id + 1);
-                    m_idMap[(int) id] = entry;
+                    m_idMap[(int)id] = entry;
                 }
 
                 foreach (var i in m_entries)
@@ -743,7 +774,7 @@ namespace NetworkTables
 
                 if (m_server && entry.id == 0xffff)
                 {
-                    uint id = (uint) m_idMap.Count;
+                    uint id = (uint)m_idMap.Count;
                     entry.id = id;
                     m_idMap.Add(entry);
                 }
@@ -811,7 +842,7 @@ namespace NetworkTables
                 if (m_server && entry.id == 0xffff)
                 {
                     int id = m_idMap.Count;
-                    entry.id = (uint) id;
+                    entry.id = (uint)id;
                     m_idMap.Add(entry);
                 }
 
@@ -903,7 +934,7 @@ namespace NetworkTables
                 if (m_entries.TryGetValue(name, out entry))
                 {
                     //Grabbed
-                    return (EntryFlags) entry.flags;
+                    return (EntryFlags)entry.flags;
                 }
                 else
                 {
@@ -926,7 +957,7 @@ namespace NetworkTables
 
                 m_entries.Remove(name);
 
-                if (id < m_idMap.Count) m_idMap[(int) id] = null;
+                if (id < m_idMap.Count) m_idMap[(int)id] = null;
                 if (entry.value == null) return;
 
                 m_notifier.NotifyEntry(name, entry.value, (NotifyFlags.NotifyDelete | NotifyFlags.NotifyLocal));
@@ -991,7 +1022,7 @@ namespace NetworkTables
                     var value = entry.value;
                     if (value == null) continue;
                     if (types != 0 && (types & value.Type) == 0) continue;
-                    EntryInfo info = new EntryInfo(i.Key, value.Type, entry.flags, (uint) value.LastChange);
+                    EntryInfo info = new EntryInfo(i.Key, value.Type, entry.flags, (uint)value.LastChange);
                     infos.Add(info);
                 }
                 return infos;
@@ -1160,7 +1191,7 @@ namespace NetworkTables
                             ch <<= 4;
                             ch |= FromXDigit(source[++s]);
                         }
-                        builder.Append((char) ch);
+                        builder.Append((char)ch);
                         break;
                     default:
                         builder.Append(source[s - 1]);
@@ -1241,7 +1272,7 @@ namespace NetworkTables
                     }
 
                     string typeTok;
-                    string[] split = line.Split(new[] {' '}, 2);
+                    string[] split = line.Split(new[] { ' ' }, 2);
                     typeTok = split[0];
                     line = split[1];
                     NtType type = NtType.Unassigned;
@@ -1252,7 +1283,7 @@ namespace NetworkTables
                     else if (typeTok == "array")
                     {
                         string arrayTok;
-                        split = line.Split(new[] {' '}, 2);
+                        split = line.Split(new[] { ' ' }, 2);
                         arrayTok = split[0];
                         line = split[1];
                         if (arrayTok == "boolean") type = NtType.BooleanArray;
@@ -1329,7 +1360,7 @@ namespace NetworkTables
                             boolArray.Clear();
                             while (!string.IsNullOrEmpty(line))
                             {
-                                spl = line.Split(new[] {','}, 2);
+                                spl = line.Split(new[] { ',' }, 2);
                                 if (spl.Length < 2)
                                 {
                                     line = string.Empty;
@@ -1355,7 +1386,7 @@ namespace NetworkTables
                             doubleArray.Clear();
                             while (!string.IsNullOrEmpty(line))
                             {
-                                spl = line.Split(new[] {','}, 2);
+                                spl = line.Split(new[] { ',' }, 2);
                                 if (spl.Length == 1)
                                 {
                                     line = string.Empty;
@@ -1437,7 +1468,7 @@ namespace NetworkTables
 
                         if (m_server && entry.id == 0xffff)
                         {
-                            uint id = (uint) m_idMap.Count;
+                            uint id = (uint)m_idMap.Count;
                             entry.id = id;
                             m_idMap.Add(entry);
                         }
@@ -1517,7 +1548,7 @@ namespace NetworkTables
                 if (entry.id == 0xffff)
                 {
                     int id = m_idMap.Count;
-                    entry.id = (uint) id;
+                    entry.id = (uint)id;
                     m_idMap.Add(entry);
                 }
 
@@ -1660,7 +1691,7 @@ namespace NetworkTables
                 byte[] str = null;
                 for (;;)
                 {
-                    var pair = new RpcPair((uint) callUid >> 16, (uint) callUid & 0xffff);
+                    var pair = new RpcPair((uint)callUid >> 16, (uint)callUid & 0xffff);
                     if (!m_rpcResults.TryGetValue(pair, out str))
                     {
                         if (!blocking || m_terminating) return false;

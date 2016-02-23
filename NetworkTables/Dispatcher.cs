@@ -334,7 +334,10 @@ namespace NetworkTables
                 Debug($"server: client connection from {stream.GetPeerIP()} port {stream.GetPeerPort()}");
 
                 var conn = new NetworkConnection(stream, m_notifier, ServerHandshake, m_storage.GetEntryType);
-                conn.SetProcessIncoming(m_storage.ProcessIncoming);
+                conn.SetProcessIncoming(((msg, connection) =>
+                {
+                    m_storage.ProcessIncoming(msg, connection, new WeakReference<NetworkConnection>(conn));
+                }));
 
                 lock (m_userMutex)
                 {
@@ -382,7 +385,10 @@ namespace NetworkTables
                 {
                     Monitor.Enter(m_userMutex, ref lockEntered);
                     var conn = new NetworkConnection(stream, m_notifier, ClientHandshake, m_storage.GetEntryType);
-                    conn.SetProcessIncoming(m_storage.ProcessIncoming);
+                    conn.SetProcessIncoming(((msg, connection) =>
+                    {
+                        m_storage.ProcessIncoming(msg, conn, new WeakReference<NetworkConnection>(conn));
+                    }));
                     foreach (var s in m_connections) //Disconnect any current
                     {
                         s.Dispose();
@@ -558,7 +564,7 @@ namespace NetworkTables
 
                 foreach (var m in incoming)
                 {
-                    m_storage.ProcessIncoming(m, conn);
+                    m_storage.ProcessIncoming(m, conn, new WeakReference<NetworkConnection>(conn));
                 }
             }
 
