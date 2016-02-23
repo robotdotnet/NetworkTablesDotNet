@@ -94,9 +94,12 @@ namespace NetworkTables
             m_stream.SetNoDelay();
         }
 
+        public bool Disposed { get; private set; } = false;
+
         public void Dispose()
         {
             Stop();
+            Disposed = true;
         }
 
         public void SetProcessIncoming(ProcessIncomingFunc func)

@@ -599,7 +599,8 @@ namespace NetworkTables
                         {
                             NetworkConnection c;
                             connWeak.TryGetTarget(out c);
-                            c?.QueueOutgoing(msg);
+                            if (c != null && !c.Disposed)
+                            c.QueueOutgoing(msg);
                         });
                         break;
                     case Message.MsgType.kRpcResponse:
