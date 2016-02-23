@@ -92,7 +92,7 @@ namespace NetworkTables
 
         public static void SetNetworkIdentity(string name)
         {
-            Dispatcher.Instance.SetIdentity(name);
+            Dispatcher.Instance.Identity = name;
         }
 
         public static void StartServer(string persistFilename, string listenAddress, int port)
@@ -127,7 +127,7 @@ namespace NetworkTables
 
         public static void SetUpdateRate(double interval)
         {
-            Dispatcher.Instance.SetUpdateRate(interval);
+            Dispatcher.Instance.UpdateRate = interval;
         }
 
         public static List<ConnectionInfo> GetConnections()

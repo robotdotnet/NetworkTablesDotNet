@@ -1,53 +1,86 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+using NetworkTables.Extensions;
 using NetworkTables.TcpSockets;
 using static NetworkTables.Logger;
-using NetworkTables;
-using NetworkTables.Extensions;
 
 namespace NetworkTables
 {
     internal class DispatcherBase : IDisposable
     {
-        public const double MinimumUpdateTime = 0.1;//100ms
-        public const double MaximumUpdateTime = 1.0;//1 second
+        public const double MinimumUpdateTime = 0.1; //100ms
+        public const double MaximumUpdateTime = 1.0; //1 second
 
-        //Member Variables
-        private Storage m_storage;
-        private Notifier m_notifier;
+        private static readonly TimeSpan s_saveDeltaTime = TimeSpan.FromSeconds(1);
+        private readonly AutoResetEvent m_flushCv = new AutoResetEvent(false);
 
-        private bool m_server = false;
+        private readonly object m_flushMutex = new object();
+        private readonly Notifier m_notifier;
 
-        private string m_persistFilename;
-        private Thread m_dispatchThread;
-        private Thread m_clientServerThread;
+        private readonly AutoResetEvent m_reconnectCv = new AutoResetEvent(false);
 
-        private INetworkAcceptor m_serverAccepter;
+        private readonly Storage m_storage;
 
         private readonly object m_userMutex = new object();
-        private List<NetworkConnection> m_connections = new List<NetworkConnection>();
-        private string m_identity = "";
 
         private bool m_active;
-        private uint m_updateRate;
+        private Thread m_clientServerThread;
+        private List<NetworkConnection> m_connections = new List<NetworkConnection>();
+        private Thread m_dispatchThread;
+        private bool m_doFlush;
+        private bool m_doReconnect = true;
+        private string m_identity = "";
 
         private DateTime m_lastFlush;
-        private bool m_doFlush = false;
 
-        private AutoResetEvent m_reconnectCv = new AutoResetEvent(false);
+        private string m_persistFilename;
         private uint m_reconnectProtoRev = 0x0300;
-        private bool m_doReconnect = true;
+
+        private bool m_server;
+
+        private INetworkAcceptor m_serverAccepter;
+        private uint m_updateRate;
+
+
+        protected DispatcherBase(Storage storage, Notifier notifier)
+        {
+            m_storage = storage;
+            m_notifier = notifier;
+            m_active = false;
+            m_updateRate = 100;
+        }
 
         public bool Active => m_active;
+
+        public double UpdateRate
+        {
+            set
+            {
+                //Don't allow update rates faster the 100ms or slower then 1 second
+                if (value < MinimumUpdateTime)
+                    value = MinimumUpdateTime;
+                else if (value > MaximumUpdateTime)
+                    value = MaximumUpdateTime;
+                m_updateRate = (uint) (value*1000);
+            }
+        }
+
+        public string Identity
+        {
+            set
+            {
+                lock (m_userMutex)
+                {
+                    m_identity = value;
+                }
+            }
+        }
 
         //Disposable
         public void Dispose()
         {
-            Logger.Instance.SetLogger(null);
+            Instance.SetLogger(null);
             Stop();
         }
 
@@ -116,9 +149,6 @@ namespace NetworkTables
             m_clientServerThread.Start(connect);
         }
 
-        private readonly object m_flushMutex = new object();
-        private readonly AutoResetEvent m_flushCv = new AutoResetEvent(false);
-
         public void Stop()
         {
             m_active = false;
@@ -161,25 +191,6 @@ namespace NetworkTables
             }
 
             m_connections.Clear();
-
-        }
-
-        public void SetUpdateRate(double interval)
-        {
-            //Don't allow update rates faster the 100ms or slower then 1 second
-            if (interval < MinimumUpdateTime)
-                interval = MinimumUpdateTime;
-            else if (interval > MaximumUpdateTime)
-                interval = MaximumUpdateTime;
-            m_updateRate = (uint)(interval * 1000);
-        }
-
-        public void SetIdentity(string name)
-        {
-            lock (m_userMutex)
-            {
-                m_identity = name;
-            }
         }
 
         public void Flush()
@@ -187,7 +198,7 @@ namespace NetworkTables
             var now = DateTime.UtcNow;
             lock (m_flushMutex)
             {
-                if ((now - m_lastFlush) < TimeSpan.FromMilliseconds(100))
+                if (now - m_lastFlush < TimeSpan.FromMilliseconds(100))
                 {
                     return;
                 }
@@ -217,9 +228,9 @@ namespace NetworkTables
 
         public void NotifyConnections(ConnectionListenerCallback callback)
         {
-            lock(m_userMutex)
+            lock (m_userMutex)
             {
-                foreach(var conn in m_connections)
+                foreach (var conn in m_connections)
                 {
                     if (conn.GetState() != NetworkConnection.State.kActive) continue;
                     m_notifier.NotifyConnection(true, conn.GetConnectionInfo(), callback);
@@ -227,23 +238,11 @@ namespace NetworkTables
             }
         }
 
-        
-
-        protected DispatcherBase(Storage storage, Notifier notifier)
-        {
-            m_storage = storage;
-            m_notifier = notifier;
-            m_active = false;
-            m_updateRate = 100;
-        }
-
-        private static readonly TimeSpan m_saveDeltaTime = TimeSpan.FromSeconds(1);
-
         private void DispatchThreadMain()
         {
             var timeoutTime = DateTime.UtcNow;
 
-            var nextSaveTime = timeoutTime + m_saveDeltaTime;
+            var nextSaveTime = timeoutTime + s_saveDeltaTime;
 
             int count = 0;
 
@@ -260,18 +259,16 @@ namespace NetworkTables
                     //Wait for periodic or when flushed
                     timeoutTime += TimeSpan.FromMilliseconds(m_updateRate);
                     TimeSpan waitTime = timeoutTime - start;
-                    m_flushCv.WaitTimeout(m_flushMutex, ref lockEntered, waitTime, () =>
-                    {
-                        return !m_active || m_doFlush;
-                    });
+                    m_flushCv.WaitTimeout(m_flushMutex, ref lockEntered, waitTime,
+                        () => { return !m_active || m_doFlush; });
                     m_doFlush = false;
                     if (!m_active) break; //in case we were woken up to terminate
 
                     if (m_server && !string.IsNullOrEmpty(m_persistFilename) && start > nextSaveTime)
                     {
-                        nextSaveTime += m_saveDeltaTime;
+                        nextSaveTime += s_saveDeltaTime;
                         //Handle loop taking too long
-                        if (start > nextSaveTime) nextSaveTime = start + m_saveDeltaTime;
+                        if (start > nextSaveTime) nextSaveTime = start + s_saveDeltaTime;
                         string err = m_storage.SavePersistent(m_persistFilename, true);
                         if (err != null)
                         {
@@ -314,7 +311,6 @@ namespace NetworkTables
             {
                 if (lockEntered) Monitor.Exit(m_flushMutex);
             }
-
         }
 
         private void ServerThreadMain()
@@ -387,7 +383,7 @@ namespace NetworkTables
                     Monitor.Enter(m_userMutex, ref lockEntered);
                     var conn = new NetworkConnection(stream, m_notifier, ClientHandshake, m_storage.GetEntryType);
                     conn.SetProcessIncoming(m_storage.ProcessIncoming);
-                    foreach(var s in m_connections)//Disconnect any current
+                    foreach (var s in m_connections) //Disconnect any current
                     {
                         s.Dispose();
                     }
@@ -401,10 +397,7 @@ namespace NetworkTables
                     conn.Start();
 
                     m_doReconnect = false;
-                    m_reconnectCv.Wait(m_userMutex, ref lockEntered, () =>
-                    {
-                        return !m_active || m_doReconnect;
-                    });
+                    m_reconnectCv.Wait(m_userMutex, ref lockEntered, () => { return !m_active || m_doReconnect; });
                 }
                 finally
                 {
@@ -416,13 +409,13 @@ namespace NetworkTables
         private bool ClientHandshake(NetworkConnection conn, Func<Message> getMsg, Action<Message[]> sendMsgs)
         {
             string selfId;
-            lock(m_userMutex)
+            lock (m_userMutex)
             {
                 selfId = m_identity;
             }
 
             Debug("client: sending hello");
-            sendMsgs(new Message[] { Message.ClientHello(selfId) });
+            sendMsgs(new[] {Message.ClientHello(selfId)});
 
             var msg = getMsg();
             if (msg == null)
@@ -449,7 +442,7 @@ namespace NetworkTables
 
             List<Message> incoming = new List<Message>();
 
-            for(;;)
+            for (;;)
             {
                 if (msg == null)
                 {
@@ -463,7 +456,8 @@ namespace NetworkTables
                 if (!msg.Is(Message.MsgType.kEntryAssign))
                 {
                     //Unexpected
-                    Debug($"client: received message ({msg.Type()}) other then entry assignment during initial handshake");
+                    Debug(
+                        $"client: received message ({msg.Type()}) other then entry assignment during initial handshake");
                     return false;
                 }
 
@@ -508,7 +502,7 @@ namespace NetworkTables
             if (protoRev > 0x0300)
             {
                 Debug("server: client requested proto > 0x0300");
-                sendMsgs(new Message[] { Message.ProtoUnsup() });
+                sendMsgs(new[] {Message.ProtoUnsup()});
                 return false;
             }
 
@@ -552,7 +546,8 @@ namespace NetworkTables
                     if (msg.Is(Message.MsgType.kClientHelloDone)) break;
                     if (!msg.Is(Message.MsgType.kEntryAssign))
                     {
-                        Debug($"server: received message ({msg.Type()}) other than entry assignment during initial handshake");
+                        Debug(
+                            $"server: received message ({msg.Type()}) other than entry assignment during initial handshake");
                         return false;
                     }
 
@@ -561,7 +556,7 @@ namespace NetworkTables
                     msg = getMsg();
                 }
 
-                foreach(var m in incoming)
+                foreach (var m in incoming)
                 {
                     m_storage.ProcessIncoming(m, conn);
                 }
@@ -604,6 +599,15 @@ namespace NetworkTables
     {
         private static Dispatcher s_instance;
 
+        private Dispatcher() : this(Storage.Instance, Notifier.Instance)
+        {
+        }
+
+        private Dispatcher(Storage storage, Notifier notifier)
+            : base(storage, notifier)
+        {
+        }
+
         /// <summary>
         /// Gets the local instance of Dispatcher
         /// </summary>
@@ -629,17 +633,5 @@ namespace NetworkTables
         {
             StartClient(() => TCPConnector.Connect(serverName, port, 1));
         }
-
-        private Dispatcher() : this(Storage.Instance, Notifier.Instance)
-        {
-
-        }
-
-        private Dispatcher(Storage storage, Notifier notifier)
-            : base(storage, notifier)
-        {
-        }
-
-
     }
 }
