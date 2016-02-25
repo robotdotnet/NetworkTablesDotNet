@@ -165,17 +165,13 @@ namespace NetworkTables
             if (m_dispatchThread != null)
             {
                 //Join our dispatch thread.
-                bool shutdown = m_dispatchThread.Join(TimeSpan.FromSeconds(1));
-                //If it fails to join, abort the thread
-                if (!shutdown) m_dispatchThread.Abort();
+                m_dispatchThread.Join();
             }
             if (m_clientServerThread != null)
             {
                 //Join our Client Server Thread
                 //Increased because of timeout
-                bool shutdown = m_clientServerThread.Join(TimeSpan.FromSeconds(2));
-                //If it fails to join, abort the thread.
-                if (!shutdown) m_clientServerThread.Abort();
+                m_clientServerThread.Join();
             }
             List<NetworkConnection> conns = new List<NetworkConnection>();
             lock (m_userMutex)
