@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using static NetworkTables.Logger;
 
 namespace NetworkTables.TcpSockets
 {
-    internal class TCPAcceptor : INetworkAcceptor
+    internal class TCPAcceptor : INetworkAcceptor, IDisposable
     {
-        private TcpListener m_server;
+        private Socket m_server;
+        private IPEndPoint m_ipEp;
         private int m_port;
         private string m_address;
+        private bool m_listening = false;
         private bool m_shutdown = false;
 
         public TCPAcceptor(int port, string address)
@@ -23,8 +21,29 @@ namespace NetworkTables.TcpSockets
             m_address = address;
         }
 
+        public void Dispose()
+        {
+            if (m_server != null)
+            {
+                Shutdown();
+                m_server.Dispose();
+            }
+        }
+
         public int Start()
         {
+            if (m_listening) return 0;
+
+            try
+            {
+                m_server = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            }
+            catch (SocketException)
+            {
+                Error("could not create socket");
+                return -1;
+            }
+            
             IPAddress address = null;
             if (!string.IsNullOrEmpty(m_address))
             {
@@ -34,56 +53,97 @@ namespace NetworkTables.TcpSockets
             {
                 address = IPAddress.Any;
             }
-            m_server = new TcpListener(address, m_port);
+
+            m_server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
+
+            m_ipEp = new IPEndPoint(address, m_port);
+
             try
             {
-                m_server.Start();
+                m_server.Bind(m_ipEp);
             }
             catch (SocketException ex)
             {
-                Error($"Socket Start(): failed {ex.SocketErrorCode}");
+                Error($"Bind() failed: {ex.SocketErrorCode.ToString()}");
                 return ex.NativeErrorCode;
             }
-            
 
+            try
+            {
+                m_server.Listen(5);
+            }
+            catch (SocketException ex)
+            {
+                Error($"Listen() failed: {ex.SocketErrorCode.ToString()}");
+                return ex.NativeErrorCode;
+            }
+            m_listening = true;
             return 0;
         }
 
         public void Shutdown()
         {
-            Console.WriteLine("Stopping");
             m_shutdown = true;
-            m_server?.Stop();
+
+            //Force wakeup with non-blocking connect to ourselves
+            IPAddress address = null;
+            if (!string.IsNullOrEmpty(m_address))
+            {
+                address = IPAddress.Parse(m_address);
+            }
+            else
+            {
+                address = IPAddress.Loopback;
+            }
+
+            Socket connectSocket;
+            try
+            {
+                connectSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            }
+            catch (SocketException)
+            {
+                return;
+            }
+
+            connectSocket.Blocking = false;
+
+            try
+            {
+                connectSocket.Connect(address, m_port);
+                connectSocket.Dispose();
+            }
+            catch (SocketException)
+            {
+            }
+
+            m_listening = false;
+            m_server?.Dispose();
             m_server = null;
         }
 
         public INetworkStream Accept()
         {
-            if (m_server == null)
-            {
-                if (!m_shutdown)
-                {
-                    Error("Accept() failed because of null TcpListener");
-                }
-                return null;
-            }
+            if (!m_listening || m_shutdown) return null;
+
+            Socket socket;
             try
             {
-                Socket sd = m_server.AcceptSocket();
-                if (m_shutdown)
-                {
-                    sd.Close();
-                    return null;
-                }
-                TCPStream stream = new TCPStream(sd);
-                return stream;
+                socket = m_server.Accept();
             }
             catch (SocketException ex)
             {
-                if (!m_shutdown)
-                    Error($"Accept() failed: {ex.SocketErrorCode.ToString()}");
+                if (!m_shutdown) Error($"Accept() failed: {ex.SocketErrorCode}");
                 return null;
             }
+
+            if (m_shutdown)
+            {
+                socket.Dispose();
+                return null;
+            }
+
+            return new TCPStream(socket);
         }
     }
 }

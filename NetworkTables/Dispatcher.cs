@@ -172,13 +172,10 @@ namespace NetworkTables
             if (m_clientServerThread != null)
             {
                 //Join our Client Server Thread
-                bool shutdown = m_clientServerThread.Join(TimeSpan.FromSeconds(3));
+                //Increased because of timeout
+                bool shutdown = m_clientServerThread.Join(TimeSpan.FromSeconds(2));
                 //If it fails to join, abort the thread.
-                if (!shutdown)
-                {
-                    Console.WriteLine("Aborting");
-                    m_clientServerThread.Abort();
-                }
+                if (!shutdown) m_clientServerThread.Abort();
             }
             List<NetworkConnection> conns = new List<NetworkConnection>();
             lock (m_userMutex)
@@ -191,14 +188,10 @@ namespace NetworkTables
             //Dispose and close all connections
             foreach (var networkConnection in conns)
             {
-                Console.WriteLine("Disposing ");
                 networkConnection.Dispose();
             }
 
             m_connections.Clear();
-
-            Console.WriteLine("Waiting");
-            Thread.Sleep(1000);
         }
 
         public void Flush()

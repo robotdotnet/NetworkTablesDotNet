@@ -45,6 +45,71 @@ namespace NetworkTables.TcpSockets
                 }
             }
 
+            Socket socket;
+
+            try
+            {
+                socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            }
+            catch (SocketException)
+            {
+                Error("could not create socket");
+                return null;
+            }
+
+            if (timeout == 0)
+            {
+
+
+                try
+                {
+                    socket.Connect(addr, port);
+                }
+                catch (SocketException ex)
+                {
+                    Error($"Connect() to {server} port {port} failed: {ex.SocketErrorCode}");
+                    socket.Dispose();
+                    return null;
+                }
+                return new TCPStream(socket);
+            }
+
+            //Connect with time limit
+            try
+            {
+                var result = socket.BeginConnect(addr, port, null, null);
+                if (!result.AsyncWaitHandle.WaitOne(timeout))
+                {
+                    try
+                    {
+                        socket.EndConnect(result);
+                    }
+                    catch (SocketException)
+                    {
+                    }
+                    //Timed out
+                    Info($"Connect() to {server} port {port} timed out");
+                    socket.Dispose();
+                    return null;
+                }
+                //Connected
+                if (socket.Connected)
+                {
+                    return new TCPStream(socket);
+                }
+                Error($"Timeout connect to {server} port {port} did not connect properly.");
+                return null;
+            }
+            catch (SocketException ex)
+            {
+                //Failed to connect
+                Error($"Connect() to {server} port {port} error {ex.NativeErrorCode} - {ex.SocketErrorCode.ToString()}");
+                socket.Dispose();
+                return null;
+            }
+
+
+            /*
             //Create our client
             TcpClient client = new TcpClient();
             // No time limit, connect forever.
@@ -65,7 +130,7 @@ namespace NetworkTables.TcpSockets
                 return new TCPStream(client.Client);
             }
 
-            ///Connect with time limit
+            //Connect with time limit
             try
             {
                 var result = client.BeginConnect(addr, port, null, null);
@@ -94,7 +159,7 @@ namespace NetworkTables.TcpSockets
                 client.Close();
                 return null;
             }
-
+            */
         }
     }
 }
