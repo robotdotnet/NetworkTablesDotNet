@@ -36,7 +36,7 @@ namespace NetworkTables.TcpSockets
 
             try
             {
-                m_server = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                m_server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             }
             catch (SocketException)
             {

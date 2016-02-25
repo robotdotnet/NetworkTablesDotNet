@@ -49,7 +49,7 @@ namespace NetworkTables.TcpSockets
 
             try
             {
-                socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             }
             catch (SocketException)
             {
@@ -107,59 +107,6 @@ namespace NetworkTables.TcpSockets
                 socket.Dispose();
                 return null;
             }
-
-
-            /*
-            //Create our client
-            TcpClient client = new TcpClient();
-            // No time limit, connect forever.
-            if (timeout == 0)
-            {
-                try
-                {
-                    //Try to connect to client
-                    client.Connect(addr, port);
-                }
-                catch (SocketException ex)
-                {
-                    Error($"Connect() to {server} port {port} failed: {ex.SocketErrorCode.ToString()}");
-                    client.Close();
-                    return null;
-                }
-                Console.WriteLine("Returning NEw");
-                return new TCPStream(client.Client);
-            }
-
-            //Connect with time limit
-            try
-            {
-                var result = client.BeginConnect(addr, port, null, null);
-                if (!result.AsyncWaitHandle.WaitOne(timeout))
-                {
-                    try
-                    {
-                        client.EndConnect(result);
-                    }
-                    catch (SocketException)
-                    {
-                    }
-                    //Timed out
-                    Info($"Connect() to {server} port {port} timed out");
-                    client.Close();
-                    return null;
-                }
-                //Connected
-                Console.WriteLine("Returning NEw");
-                return new TCPStream(client.Client);
-            }
-            catch (SocketException ex)
-            {
-                //Failed to connect
-                Error($"Connect() to {server} port {port} error {ex.NativeErrorCode} - {ex.SocketErrorCode.ToString()}");
-                client.Close();
-                return null;
-            }
-            */
         }
     }
 }
