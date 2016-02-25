@@ -87,17 +87,14 @@ namespace NetworkTables.TcpSockets
                     catch (SocketException)
                     {
                     }
-                    //Timed out
-                    Info($"Connect() to {server} port {port} timed out");
-                    socket.Dispose();
-                    return null;
                 }
                 //Connected
                 if (socket.Connected)
                 {
                     return new TCPStream(socket);
                 }
-                Error($"Timeout connect to {server} port {port} did not connect properly.");
+                Info($"Connect() to {server} port {port} timed out");
+                socket.Dispose();
                 return null;
             }
             catch (SocketException ex)
