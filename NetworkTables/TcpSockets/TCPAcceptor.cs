@@ -51,6 +51,7 @@ namespace NetworkTables.TcpSockets
 
         public void Shutdown()
         {
+            Console.WriteLine("Stopping");
             m_shutdown = true;
             m_server?.Stop();
             m_server = null;

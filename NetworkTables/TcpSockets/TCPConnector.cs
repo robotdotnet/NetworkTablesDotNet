@@ -15,7 +15,7 @@ namespace NetworkTables.TcpSockets
         {
             try
             {
-                
+
                 var addressEntry = Dns.GetHostEntry(hostName);
                 addr = addressEntry.AddressList;
 
@@ -47,8 +47,8 @@ namespace NetworkTables.TcpSockets
 
             //Create our client
             TcpClient client = new TcpClient();
-            //TODO: Figure this out
-            if (true)
+            // No time limit, connect forever.
+            if (timeout == 0)
             {
                 try
                 {
@@ -61,38 +61,39 @@ namespace NetworkTables.TcpSockets
                     client.Close();
                     return null;
                 }
-
+                Console.WriteLine("Returning NEw");
                 return new TCPStream(client.Client);
-            }            
+            }
 
-            client.Client.Blocking = false;
-
+            ///Connect with time limit
             try
             {
-                client.Connect(addr, port);
-
-                if (true)
+                var result = client.BeginConnect(addr, port, null, null);
+                if (!result.AsyncWaitHandle.WaitOne(timeout))
                 {
-                    //Connected successfully
-                    client.Client.Blocking = true;
-                    return new TCPStream(client.Client);
-                }
-                else
-                {
-                    //Connection timed out.
+                    try
+                    {
+                        client.EndConnect(result);
+                    }
+                    catch (SocketException)
+                    {
+                    }
+                    //Timed out
                     Info($"Connect() to {server} port {port} timed out");
                     client.Close();
                     return null;
                 }
+                //Connected
+                Console.WriteLine("Returning NEw");
+                return new TCPStream(client.Client);
             }
             catch (SocketException ex)
             {
+                //Failed to connect
                 Error($"Connect() to {server} port {port} error {ex.NativeErrorCode} - {ex.SocketErrorCode.ToString()}");
                 client.Close();
                 return null;
             }
-
-
 
         }
     }
