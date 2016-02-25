@@ -48,6 +48,11 @@ namespace NetworkTables.Test
         {
             //Noop
         }
+
+        public void Dispose()
+        {
+            //noop
+        }
     }
 
     public partial class TestStorage

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NetworkTables
 {
-    internal interface IInputStream
+    internal interface IInputStream : IDisposable
     {
         bool Read(byte[] data, int len);
         void Close();
@@ -39,6 +39,11 @@ namespace NetworkTables
         public virtual void Close()
         {
             
+        }
+
+        public void Dispose()
+        {
+            Close();
         }
     }
 }

@@ -120,7 +120,7 @@ namespace NetworkTables.TcpSockets
         public void Close()
         {
             m_socket?.Shutdown(SocketShutdown.Both);
-            m_socket?.Close();
+            m_socket?.Dispose();
             m_socket = null;
         }
 

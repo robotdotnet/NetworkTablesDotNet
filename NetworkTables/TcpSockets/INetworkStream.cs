@@ -13,7 +13,7 @@ namespace NetworkTables.TcpSockets
         kConnectionReset = -1,
         kConnectionTimedOut = -2,
     }
-    internal interface INetworkStream
+    internal interface INetworkStream :  IDisposable
     {
         int Send(byte[] buffer, int pos, int len, ref NetworkStreamError error);
         int Receive(byte[] buffer, int pos, int len, ref NetworkStreamError err, int timeout = 0);

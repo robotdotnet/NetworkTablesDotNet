@@ -400,7 +400,7 @@ namespace NetworkTables
                     conn.Start();
 
                     m_doReconnect = false;
-                    m_reconnectCv.Wait(m_userMutex, ref lockEntered, () => { return !m_active || m_doReconnect; });
+                    m_reconnectCv.Wait(m_userMutex, ref lockEntered, () => !m_active || m_doReconnect);
                 }
                 finally
                 {

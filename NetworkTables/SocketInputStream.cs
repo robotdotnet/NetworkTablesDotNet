@@ -33,6 +33,11 @@ namespace NetworkTables
 
         }
 
+        public void Dispose()
+        {
+            Close();
+        }
+
         public virtual void Close()
         {
             m_stream.Close();
