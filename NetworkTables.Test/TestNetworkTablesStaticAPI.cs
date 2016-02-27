@@ -30,6 +30,10 @@ namespace NetworkTables.Test
         {
             NetworkTable.Shutdown();
             NetworkTable.SetIPAddress("127.0.0.1");
+            NtCore.SetLogger(((level, file, line, msg) =>
+            {
+                Console.WriteLine(msg);
+            }), 0);
         }
 
         [Test]
