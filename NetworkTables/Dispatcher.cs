@@ -80,7 +80,7 @@ namespace NetworkTables
         //Disposable
         public void Dispose()
         {
-            Instance.SetLogger(null);
+            Instance.SetDefaultLogger();
             Stop();
         }
 

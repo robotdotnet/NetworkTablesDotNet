@@ -49,7 +49,7 @@ namespace NetworkTables
 
         public void Dispose()
         {
-            Logger.Instance.SetLogger(null);
+            Logger.Instance.SetDefaultLogger();
             Stop();
             m_terminating = true;
             m_pollCond.Set();

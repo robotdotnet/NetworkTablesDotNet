@@ -22,6 +22,7 @@ namespace NetworkTables.Test
         public void FixtureTeardown()
         {
             NetworkTable.Shutdown();
+            NetworkTable.SetIPAddress("localhost");
             NetworkTable.SetPersistentFilename(NetworkTable.DefaultPersistentFileName);
         }
 
@@ -29,11 +30,7 @@ namespace NetworkTables.Test
         public void Setup()
         {
             NetworkTable.Shutdown();
-            NetworkTable.SetIPAddress("127.0.0.1");
-            NtCore.SetLogger(((level, file, line, msg) =>
-            {
-                Console.WriteLine(msg);
-            }), 0);
+            NetworkTable.SetIPAddress("localhost");
         }
 
         [Test]
