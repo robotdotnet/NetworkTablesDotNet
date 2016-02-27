@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define LOGDEBUG
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -103,35 +104,35 @@ namespace NetworkTables
             Log(LogLevel.LogInfo, msg, memberName, filePath, lineNumber);
         }
 
-        [ConditionalAttribute("DEBUG")]
+        [Conditional("LOGDEBUG")]
         public static void Debug(string msg, [CallerMemberName] string memberName = "",
             [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
         {
             Log(LogLevel.LogDebug, msg, memberName, filePath, lineNumber);
         }
 
-        [ConditionalAttribute("DEBUG")]
+        [ConditionalAttribute("LOGDEBUG")]
         public static void Debug1(string msg, [CallerMemberName] string memberName = "",
             [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
         {
             Log(LogLevel.LogDebug1, msg, memberName, filePath, lineNumber);
         }
 
-        [ConditionalAttribute("DEBUG")]
+        [ConditionalAttribute("LOGDEBUG")]
         public static void Debug2(string msg, [CallerMemberName] string memberName = "",
             [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
         {
             Log(LogLevel.LogDebug2, msg, memberName, filePath, lineNumber);
         }
 
-        [ConditionalAttribute("DEBUG")]
+        [ConditionalAttribute("LOGDEBUG")]
         public static void Debug3(string msg, [CallerMemberName] string memberName = "",
             [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
         {
             Log(LogLevel.LogDebug3, msg, memberName, filePath, lineNumber);
         }
 
-        [ConditionalAttribute("DEBUG")]
+        [ConditionalAttribute("LOGDEBUG")]
         public static void Debug4(string msg, [CallerMemberName] string memberName = "",
             [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
         {
