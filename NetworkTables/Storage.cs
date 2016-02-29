@@ -92,7 +92,7 @@ namespace NetworkTables
 
         private Dictionary<string, Entry> m_entries = new Dictionary<string, Entry>();
         private List<Entry> m_idMap = new List<Entry>();
-        internal Dictionary<RpcPair, IReadOnlyList<byte>> m_rpcResults = new Dictionary<RpcPair, IReadOnlyList<byte>>();
+        internal Dictionary<RpcPair, byte[]> m_rpcResults = new Dictionary<RpcPair, byte[]>();
 
         private bool m_terminating = false;
         private AutoResetEvent m_rpcResultsCond = new AutoResetEvent(false);
@@ -177,8 +177,7 @@ namespace NetworkTables
                         WriteString(stream, v.GetString());
                         break;
                     case NtType.Raw:
-                        //Convet does not mutate, so we can safely cast.
-                        stream.Write(Convert.ToBase64String((byte[])v.GetRaw(), Base64FormattingOptions.None));
+                        stream.Write(Convert.ToBase64String(v.GetRaw(), Base64FormattingOptions.None));
                         break;
                     case NtType.BooleanArray:
                         bool first = true;
@@ -1684,13 +1683,13 @@ namespace NetworkTables
             }
         }
 
-        public bool GetRpcResult(bool blocking, long callUid, ref IReadOnlyList<byte> result)
+        public bool GetRpcResult(bool blocking, long callUid, ref byte[] result)
         {
             bool lockEntered = false;
             try
             {
                 Monitor.Enter(m_mutex, ref lockEntered);
-                IReadOnlyList<byte> str = null;
+                byte[] str = null;
                 for (;;)
                 {
                     var pair = new RpcPair((uint)callUid >> 16, (uint)callUid & 0xffff);
@@ -1701,7 +1700,8 @@ namespace NetworkTables
                         if (m_terminating) return false;
                         continue;
                     }
-                    result = str;
+                    result = new byte[str.Length];
+                    Array.Copy(str, result, result.Length);
                     return true;
                 }
             }

@@ -49,7 +49,7 @@ namespace NetworkTables
         }
 
 
-        public static bool GetRpcResult(bool blocking, long callUid, ref IReadOnlyList<byte> result)
+        public static bool GetRpcResult(bool blocking, long callUid, ref byte[] result)
         {
             return Storage.Instance.GetRpcResult(blocking, callUid, ref result);
         }
@@ -145,9 +145,9 @@ namespace NetworkTables
             return enc.Buffer;
         }
 
-        public static List<Value> UnpackRpcValues(IReadOnlyList<byte> packed, params NtType[] types)
+        public static List<Value> UnpackRpcValues(byte[] packed, params NtType[] types)
         {
-            ReadOnlyRawMemoryStream iStream = new ReadOnlyRawMemoryStream(packed, packed.Count);
+            RawMemoryStream iStream = new RawMemoryStream(packed, packed.Length);
             WireDecoder dec = new WireDecoder(iStream, 0x0300);
             List<Value> vec = new List<Value>();
             foreach (var ntType in types)
@@ -159,9 +159,9 @@ namespace NetworkTables
             return vec;
         }
 
-        public static List<Value> UnpackRpcValues(IReadOnlyList<byte> packed, List<NtType> types)
+        public static List<Value> UnpackRpcValues(byte[] packed, List<NtType> types)
         {
-            ReadOnlyRawMemoryStream iStream = new ReadOnlyRawMemoryStream(packed, packed.Count);
+            RawMemoryStream iStream = new RawMemoryStream(packed, packed.Length);
             WireDecoder dec = new WireDecoder(iStream, 0x0300);
             List<Value> vec = new List<Value>();
             foreach (var ntType in types)
