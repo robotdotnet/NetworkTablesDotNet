@@ -16,7 +16,7 @@ namespace NetworkTables.Test
             NtCore.StopRpcServer();
         }
 
-        private byte[] Callback1(string names, byte[] paramsStr)
+        private byte[] Callback1(string names, IReadOnlyList<byte> paramsStr)
         {
             var param = RemoteProcedureCall.UnpackRpcValues(paramsStr, NtType.Double);
 
@@ -44,7 +44,7 @@ namespace NetworkTables.Test
             long call1Uid = RemoteProcedureCall.CallRpc("func1", RemoteProcedureCall.PackRpcValues(Value.MakeDouble(2.0)));
 
             Console.WriteLine("Waiting for RPC Result");
-            byte[] result = null;
+            IReadOnlyList<byte> result = null;
             RemoteProcedureCall.GetRpcResult(true, call1Uid, ref result);
             var call1Result = RemoteProcedureCall.UnpackRpcValues(result, NtType.Double);
             Assert.AreNotEqual(0, call1Result.Count, "RPC Result empty");
@@ -64,7 +64,7 @@ namespace NetworkTables.Test
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            byte[] call1Result = null;
+            IReadOnlyList<byte> call1Result = null;
             for (int i = 0; i < 10000; ++i)
             {
                 long call1Uid = RemoteProcedureCall.CallRpc("func1", RemoteProcedureCall.PackRpcValues(Value.MakeDouble(i)));
@@ -93,7 +93,7 @@ namespace NetworkTables.Test
 
 
 
-        private byte[] Callback2(string names, byte[] paramsStr)
+        private byte[] Callback2(string names, IReadOnlyList<byte> paramsStr)
         {
             var param = RemoteProcedureCall.UnpackRpcValues(paramsStr, NtType.Boolean, NtType.BooleanArray, NtType.Double, NtType.DoubleArray, NtType.Raw, NtType.String, NtType.StringArray);
 
@@ -139,7 +139,7 @@ namespace NetworkTables.Test
                 Value.MakeRaw(new byte[] { 52, 0, 89, 0, 0, 98 }), Value.MakeString("NewString"), Value.MakeStringArray(new[] { "String1", "String2" })));
 
             Console.WriteLine("Waiting for RPC Result");
-            byte[] result = null;
+            IReadOnlyList<byte> result = null;
             RemoteProcedureCall.GetRpcResult(true, call1Uid, ref result);
             var call1Result = RemoteProcedureCall.UnpackRpcValues(result, NtType.Boolean, NtType.BooleanArray, NtType.Double, NtType.DoubleArray, NtType.Raw, NtType.String, NtType.StringArray);
             Assert.AreNotEqual(0, call1Result.Count, "RPC Result empty");

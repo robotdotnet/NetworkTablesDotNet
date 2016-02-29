@@ -12,5 +12,5 @@ namespace NetworkTables
 
     public delegate void LogFunc(LogLevel level, string file, int line, string msg);
 
-    public delegate byte[] RpcCallback(string name, byte[] param);
+    public delegate byte[] RpcCallback(string name, IReadOnlyList<byte> param);
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using NetworkTables.Native.Exceptions;
+using NetworkTables.Support;
 using System.Collections.Generic;
 
 namespace NetworkTables
@@ -17,7 +18,7 @@ namespace NetworkTables
 
         internal object Val { get; }
 
-        public ulong LastChange { get; }
+        public long LastChange { get; } = Timestamp.Now();
 
         public bool IsBoolean() => Type == NtType.Boolean;
         public bool IsDouble() => Type == NtType.Double;
@@ -60,71 +61,56 @@ namespace NetworkTables
             return (string)Val;
         }
 
-        //For reference types (other then strings) return copies;
+        //For reference types (other then strings) return Read Only Collections
 
-        public byte[] GetRaw()
+        public IReadOnlyList<byte> GetRaw()
         {
             if (Type != NtType.Raw)
             {
                 throw new TableKeyDifferentTypeException(NtType.Raw, Type);
             }
             byte[] v = (byte[])Val;
-
-            byte[] tmp = new byte[v.Length];
-            Array.Copy(v, tmp, v.Length);
-            return tmp;
+            return v;
         }
 
-        public byte[] GetRpc()
+        public IReadOnlyList<byte> GetRpc()
         {
             if (Type != NtType.Rpc)
             {
                 throw new TableKeyDifferentTypeException(NtType.Rpc, Type);
             }
             byte[] v = (byte[])Val;
-
-            byte[] tmp = new byte[v.Length];
-            Array.Copy(v, tmp, v.Length);
-            return tmp;
+            return v;
         }
 
-        public bool[] GetBooleanArray()
+        public IReadOnlyList<bool> GetBooleanArray()
         {
             if (Type != NtType.BooleanArray)
             {
                 throw new TableKeyDifferentTypeException(NtType.BooleanArray, Type);
             }
             bool[] v = (bool[])Val;
-
-            bool[] tmp = new bool[v.Length];
-            Array.Copy(v, tmp, v.Length);
-            return tmp;
+            return v;
         }
 
-        public double[] GetDoubleArray()
+        public IReadOnlyList<double> GetDoubleArray()
         {
             if (Type != NtType.DoubleArray)
             {
                 throw new TableKeyDifferentTypeException(NtType.DoubleArray, Type);
             }
             double[] v = (double[])Val;
-
-            double[] tmp = new double[v.Length];
-            Array.Copy(v, tmp, v.Length);
-            return tmp;
+            return v;
         }
 
-        public string[] GetStringArray()
+        public IReadOnlyList<string> GetStringArray()
         {
             if (Type != NtType.StringArray)
             {
                 throw new TableKeyDifferentTypeException(NtType.StringArray, Type);
             }
             string[] v = (string[])Val;
-
-            string[] tmp = new string[v.Length];
-            Array.Copy(v, tmp, v.Length);
-            return tmp;
+            return v;
         }
 
         public override string ToString()

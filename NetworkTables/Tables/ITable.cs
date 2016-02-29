@@ -243,7 +243,7 @@ namespace NetworkTables.Tables
         /// exist in the table, or if the key is null.</exception>
         /// <exception cref="TableKeyDifferentTypeException">Thrown if the key exists
         /// as a different type in the table.</exception>
-        bool[] GetBooleanArray(string key);
+        IReadOnlyList<bool> GetBooleanArray(string key);
 
         /// <summary>
         /// Returns the value array that the key maps to.
@@ -251,7 +251,7 @@ namespace NetworkTables.Tables
         /// <param name="key">The key name.</param>
         /// <param name="defaultValue">The default value if the key does not exist or is null</param>
         /// <returns>The value array requested, or defaultValue if the key does not exist or is null.</returns>
-        bool[] GetBooleanArray(string key, bool[] defaultValue);
+        IReadOnlyList<bool> GetBooleanArray(string key, bool[] defaultValue);
 
         /// <summary>
         /// Maps the specified key to the specified array of values in the table. 
@@ -273,7 +273,7 @@ namespace NetworkTables.Tables
         /// exist in the table, or if the key is null.</exception>
         /// <exception cref="TableKeyDifferentTypeException">Thrown if the key exists
         /// as a different type in the table.</exception>
-        double[] GetNumberArray(string key);
+        IReadOnlyList<double> GetNumberArray(string key);
 
         /// <summary>
         /// Returns the value array that the key maps to.
@@ -281,7 +281,7 @@ namespace NetworkTables.Tables
         /// <param name="key">The key name.</param>
         /// <param name="defaultValue">The default value if the key does not exist or is null</param>
         /// <returns>The value array requested, or defaultValue if the key does not exist or is null.</returns>
-        double[] GetNumberArray(string key, double[] defaultValue);
+        IReadOnlyList<double> GetNumberArray(string key, double[] defaultValue);
 
         /// <summary>
         /// Maps the specified key to the specified array of values in the table. 
@@ -304,7 +304,7 @@ namespace NetworkTables.Tables
         /// exist in the table, or if the key is null.</exception>
         /// <exception cref="TableKeyDifferentTypeException">Thrown if the key exists
         /// as a different type in the table.</exception>
-        string[] GetStringArray(string key);
+        IReadOnlyList<string> GetStringArray(string key);
 
         /// <summary>
         /// Returns the value array that the key maps to.
@@ -312,7 +312,7 @@ namespace NetworkTables.Tables
         /// <param name="key">The key name.</param>
         /// <param name="defaultValue">The default value if the key does not exist or is null</param>
         /// <returns>The value array requested, or defaultValue if the key does not exist or is null.</returns>
-        string[] GetStringArray(string key, string[] defaultValue);
+        IReadOnlyList<string> GetStringArray(string key, string[] defaultValue);
 
         /// <summary>
         /// Put a raw value (byte array) in the table.
@@ -331,7 +331,7 @@ namespace NetworkTables.Tables
         /// exist in the table, or if the key is null.</exception>
         /// <exception cref="TableKeyDifferentTypeException">Thrown if the key exists
         /// as a different type in the table.</exception>
-        byte[] GetRaw(string key);
+        IReadOnlyList<byte> GetRaw(string key);
 
         /// <summary>
         /// Returns the value array that the key maps to.
@@ -339,7 +339,7 @@ namespace NetworkTables.Tables
         /// <param name="key">The key name.</param>
         /// <param name="defaultValue">The default value if the key does not exist or is null</param>
         /// <returns>The value array requested, or defaultValue if the key does not exist or is null.</returns>
-        byte[] GetRaw(string key, byte[] defaultValue);
+        IReadOnlyList<byte> GetRaw(string key, byte[] defaultValue);
 
 
         /// <summary>

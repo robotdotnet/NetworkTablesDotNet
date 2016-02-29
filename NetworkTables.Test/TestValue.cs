@@ -102,11 +102,6 @@ namespace NetworkTables.Test
             Assert.That(v.GetRaw(), Is.Not.EquivalentTo(raw));
             raw[1] = 19;
 
-            var vR = v.GetRaw();
-            vR[1] = (byte)'b';
-
-            Assert.That(v.GetRaw(), Is.EquivalentTo(raw));
-
             //Assign with same size
             raw = new byte[] { 0, 28, 53 };
             v = Value.MakeRaw(raw);
@@ -139,11 +134,6 @@ namespace NetworkTables.Test
             raw[1] = (byte)'a';
             Assert.That(v.GetRpc(), Is.Not.EquivalentTo(raw));
             raw[1] = 19;
-
-            var vR = v.GetRpc();
-            vR[1] = (byte)'b';
-
-            Assert.That(v.GetRpc(), Is.EquivalentTo(raw));
 
             //Assign with same size
             raw = new byte[] { 0, 28, 53 };
@@ -178,11 +168,6 @@ namespace NetworkTables.Test
             Assert.That(v.GetBooleanArray(), Is.Not.EquivalentTo(raw));
             raw[1] = false;
 
-            var vR = v.GetBooleanArray();
-            vR[1] = true;
-
-            Assert.That(v.GetBooleanArray(), Is.EquivalentTo(raw));
-
             //Assign with same size
             raw = new bool[] { false, true, false };
             v = Value.MakeBooleanArray(raw);
@@ -216,11 +201,6 @@ namespace NetworkTables.Test
             Assert.That(v.GetDoubleArray(), Is.Not.EquivalentTo(raw));
             raw[1] = 0.25;
 
-            var vR = v.GetDoubleArray();
-            vR[1] = 0.85;
-
-            Assert.That(v.GetDoubleArray(), Is.EquivalentTo(raw));
-
             //Assign with same size
             raw = new double[] { 0.25, 0.5, 0.25 };
             v = Value.MakeDoubleArray(raw);
@@ -253,11 +233,6 @@ namespace NetworkTables.Test
             raw[1] = "falsehood";
             Assert.That(v.GetStringArray(), Is.Not.EquivalentTo(raw));
             raw[1] = "goodbye";
-
-            var vR = v.GetStringArray();
-            vR[1] = "foobar";
-
-            Assert.That(v.GetStringArray(), Is.EquivalentTo(raw));
 
             //Assign with same size
             raw = new string[] { "s1", "str2", "string3" };
@@ -293,11 +268,6 @@ namespace NetworkTables.Test
             Assert.That(v.GetRaw(), Is.Not.EquivalentTo(raw));
             raw[1] = 19;
 
-            var vR = v.GetRaw();
-            vR[1] = (byte)'b';
-
-            Assert.That(v.GetRaw(), Is.EquivalentTo(raw));
-
             //Assign with same size
             raw = new List<byte> { 0, 28, 53 };
             v = Value.MakeRaw(raw);
@@ -330,11 +300,6 @@ namespace NetworkTables.Test
             raw[1] = (byte)'a';
             Assert.That(v.GetRpc(), Is.Not.EquivalentTo(raw));
             raw[1] = 19;
-
-            var vR = v.GetRpc();
-            vR[1] = (byte)'b';
-
-            Assert.That(v.GetRpc(), Is.EquivalentTo(raw));
 
             //Assign with same size
             raw = new List<byte> { 0, 28, 53 };
@@ -369,11 +334,6 @@ namespace NetworkTables.Test
             Assert.That(v.GetBooleanArray(), Is.Not.EquivalentTo(raw));
             raw[1] = false;
 
-            var vR = v.GetBooleanArray();
-            vR[1] = true;
-
-            Assert.That(v.GetBooleanArray(), Is.EquivalentTo(raw));
-
             //Assign with same size
             raw = new List<bool> { false, true, false };
             v = Value.MakeBooleanArray(raw);
@@ -407,11 +367,6 @@ namespace NetworkTables.Test
             Assert.That(v.GetDoubleArray(), Is.Not.EquivalentTo(raw));
             raw[1] = 0.25;
 
-            var vR = v.GetDoubleArray();
-            vR[1] = 0.85;
-
-            Assert.That(v.GetDoubleArray(), Is.EquivalentTo(raw));
-
             //Assign with same size
             raw = new List<double> { 0.25, 0.5, 0.25 };
             v = Value.MakeDoubleArray(raw);
@@ -444,11 +399,6 @@ namespace NetworkTables.Test
             raw[1] = "falsehood";
             Assert.That(v.GetStringArray(), Is.Not.EquivalentTo(raw));
             raw[1] = "goodbye";
-
-            var vR = v.GetStringArray();
-            vR[1] = "foobar";
-
-            Assert.That(v.GetStringArray(), Is.EquivalentTo(raw));
 
             //Assign with same size
             raw = new List<string> { "s1", "str2", "string3" };

@@ -664,7 +664,7 @@ namespace NetworkTables
 
         ///<inheritdoc/>
         [Obsolete("Please use the Default Value Get... Methods instead.")]
-        public string[] GetStringArray(string key)
+        public IReadOnlyList<string> GetStringArray(string key)
         {
             var v = GetEntryValue(m_path + PathSeperatorChar + key);
             if (v == null || v.Type != NtType.StringArray)
@@ -673,7 +673,7 @@ namespace NetworkTables
         }
 
         ///<inheritdoc/>
-        public string[] GetStringArray(string key, string[] defaultValue)
+        public IReadOnlyList<string> GetStringArray(string key, string[] defaultValue)
         {
             var v = GetEntryValue(m_path + PathSeperatorChar + key);
             if (v == null || v.Type != NtType.StringArray) return defaultValue;
@@ -688,7 +688,7 @@ namespace NetworkTables
 
         ///<inheritdoc/>
         [Obsolete("Please use the Default Value Get... Methods instead.")]
-        public double[] GetNumberArray(string key)
+        public IReadOnlyList<double> GetNumberArray(string key)
         {
             var v = GetEntryValue(m_path + PathSeperatorChar + key);
             if (v == null || v.Type != NtType.DoubleArray)
@@ -697,7 +697,7 @@ namespace NetworkTables
         }
 
         ///<inheritdoc/>
-        public double[] GetNumberArray(string key, double[] defaultValue)
+        public IReadOnlyList<double> GetNumberArray(string key, double[] defaultValue)
         {
             var v = GetEntryValue(m_path + PathSeperatorChar + key);
             if (v == null || v.Type != NtType.DoubleArray) return defaultValue;
@@ -712,7 +712,7 @@ namespace NetworkTables
 
         ///<inheritdoc/>
         [Obsolete("Please use the Default Value Get... Methods instead.")]
-        public bool[] GetBooleanArray(string key)
+        public IReadOnlyList<bool> GetBooleanArray(string key)
         {
             var v = GetEntryValue(m_path + PathSeperatorChar + key);
             if (v == null || v.Type != NtType.BooleanArray)
@@ -727,7 +727,7 @@ namespace NetworkTables
         }
         ///<inheritdoc/>
         [Obsolete("Please use the Default Value Get... Methods instead.")]
-        public byte[] GetRaw(string key)
+        public IReadOnlyList<byte> GetRaw(string key)
         {
             var v = GetEntryValue(m_path + PathSeperatorChar + key);
             if (v == null || v.Type != NtType.Raw)
@@ -735,7 +735,7 @@ namespace NetworkTables
             return v.GetRaw();
         }
         ///<inheritdoc/>
-        public byte[] GetRaw(string key, byte[] defaultValue)
+        public IReadOnlyList<byte> GetRaw(string key, byte[] defaultValue)
         {
             var v = GetEntryValue(m_path + PathSeperatorChar + key);
             if (v == null || v.Type != NtType.Raw) return defaultValue;
@@ -743,7 +743,7 @@ namespace NetworkTables
         }
 
         ///<inheritdoc/>
-        public bool[] GetBooleanArray(string key, bool[] defaultValue)
+        public IReadOnlyList<bool> GetBooleanArray(string key, bool[] defaultValue)
         {
             var v = GetEntryValue(m_path + PathSeperatorChar + key);
             if (v == null || v.Type != NtType.BooleanArray) return defaultValue;
