@@ -11,10 +11,10 @@ namespace NetworkTables.Test
     {
         public ITable Source = null;
         public string Key = null;
-        public object Value = null;
+        public Value Value = null;
         public NotifyFlags Flags = 0;
 
-        public void ValueChanged(ITable source, string key, object value, NotifyFlags flags)
+        public void ValueChanged(ITable source, string key, Value value, NotifyFlags flags)
         {
             Source = source;
             Key = key;
@@ -94,7 +94,8 @@ namespace NetworkTables.Test
 
             Assert.That(listener.Source, Is.EqualTo(m_table));
             Assert.That(listener.Key, Is.EqualTo(key));
-            Assert.That(listener.Value, Is.EqualTo(value));
+            Assert.That(listener.Value.IsString());
+            Assert.That(listener.Value.GetString(), Is.EqualTo(value));
             Assert.That(listener.Flags, Is.EqualTo(NotifyFlags.NotifyImmediate));
 
             string key2 = "key2";
@@ -106,7 +107,8 @@ namespace NetworkTables.Test
 
             Assert.That(listener.Source, Is.EqualTo(m_table));
             Assert.That(listener.Key, Is.EqualTo(key2));
-            Assert.That(listener.Value, Is.EqualTo(val2));
+            Assert.That(listener.Value.IsString());
+            Assert.That(listener.Value.GetString(), Is.EqualTo(val2));
             Assert.That(listener.Flags, Is.EqualTo(NotifyFlags.NotifyNew | NotifyFlags.NotifyLocal));
 
             m_table.RemoveTableListener(listener);
@@ -132,7 +134,8 @@ namespace NetworkTables.Test
 
             Assert.That(listener.Source, Is.EqualTo(m_table));
             Assert.That(listener.Key, Is.EqualTo(key));
-            Assert.That(listener.Value, Is.EqualTo(value));
+            Assert.That(listener.Value.IsString());
+            Assert.That(listener.Value.GetString(), Is.EqualTo(value));
             Assert.That(listener.Flags, Is.EqualTo(NotifyFlags.NotifyImmediate));
 
             m_table.RemoveTableListener(listener);
@@ -158,7 +161,7 @@ namespace NetworkTables.Test
 
             Assert.That(listener.Source, Is.EqualTo(m_table));
             Assert.That(listener.Key, Is.EqualTo(subTableName));
-            Assert.That(listener.Value.ToString(), Is.EqualTo(subTable.ToString()));
+            Assert.That(listener.Value, Is.Null);
             Assert.That(listener.Flags, Is.EqualTo(NotifyFlags.NotifyLocal | NotifyFlags.NotifyNew));
 
             m_table.RemoveTableListener(listener);
@@ -239,10 +242,10 @@ namespace NetworkTables.Test
         {
             ITable Source = null;
             string Key = null;
-            object Value = null;
+            Value Value = null;
             NotifyFlags Flags = 0;
 
-            Action<ITable, string, object, NotifyFlags> listener = (s, k, v, _f) =>
+            Action<ITable, string, Value, NotifyFlags> listener = (s, k, v, _f) =>
             {
                 Source = s;
                 Key = k;
@@ -264,7 +267,8 @@ namespace NetworkTables.Test
 
             Assert.That(Source, Is.EqualTo(m_table));
             Assert.That(Key, Is.EqualTo(key));
-            Assert.That(Value, Is.EqualTo(value));
+            Assert.That(Value.IsString());
+            Assert.That(Value.GetString(), Is.EqualTo(value));
             Assert.That(Flags, Is.EqualTo(NotifyFlags.NotifyImmediate));
 
             string key2 = "key2";
@@ -276,7 +280,8 @@ namespace NetworkTables.Test
 
             Assert.That(Source, Is.EqualTo(m_table));
             Assert.That(Key, Is.EqualTo(key2));
-            Assert.That(Value, Is.EqualTo(val2));
+            Assert.That(Value.IsString());
+            Assert.That(Value.GetString(), Is.EqualTo(val2));
             Assert.That(Flags, Is.EqualTo(NotifyFlags.NotifyNew | NotifyFlags.NotifyLocal));
 
             m_table.RemoveTableListener(listener);
@@ -287,10 +292,10 @@ namespace NetworkTables.Test
         {
             ITable Source = null;
             string Key = null;
-            object Value = null;
+            Value Value = null;
             NotifyFlags Flags = 0;
 
-            Action<ITable, string, object, NotifyFlags> listener = (s, k, v, _f) =>
+            Action<ITable, string, Value, NotifyFlags> listener = (s, k, v, _f) =>
             {
                 Source = s;
                 Key = k;
@@ -313,7 +318,8 @@ namespace NetworkTables.Test
 
             Assert.That(Source, Is.EqualTo(m_table));
             Assert.That(Key, Is.EqualTo(key));
-            Assert.That(Value, Is.EqualTo(value));
+            Assert.That(Value.IsString());
+            Assert.That(Value.GetString(), Is.EqualTo(value));
             Assert.That(Flags, Is.EqualTo(NotifyFlags.NotifyImmediate));
 
             m_table.RemoveTableListener(listener);
@@ -350,7 +356,7 @@ namespace NetworkTables.Test
 
             Assert.That(Source, Is.EqualTo(m_table));
             Assert.That(Key, Is.EqualTo(subTableName));
-            Assert.That(Value.ToString(), Is.EqualTo(subTable.ToString()));
+            Assert.That(Value, Is.Null);
             Assert.That(Flags, Is.EqualTo(NotifyFlags.NotifyLocal | NotifyFlags.NotifyNew));
 
             m_table.RemoveTableListener(listener);
